@@ -12,6 +12,11 @@ async def test_tool_search_documentation():
     assert "Search Results" in res
     assert "transition" in res.lower()
 
+    # Empty / whitespace query does not crash and returns results
+    res_empty = await server.search_documentation("   ")
+    assert "Search Results" in res_empty
+    assert "Relevance Score" in res_empty
+
     # Empty match query
     res_none = await server.search_documentation("xyz_unmatched_term_qwerty")
     assert "No documentation sections matched" in res_none
@@ -108,12 +113,24 @@ async def test_tool_draft_ha_config():
     assert 'where: "14"' in res
     assert "dimmable: true" in res
 
+    # Binary sensor draft
+    res_bin = await server.draft_ha_config(platform="binary_sensor", name="Front Door Contact", where="31", device_class="door")
+    assert "binary_sensor:" in res_bin
+    assert "binary_sensors:" in res_bin
+    assert "class: door" in res_bin
+    assert 'where: "31"' in res_bin
+
 
 @pytest.mark.asyncio
 async def test_tool_get_code_signature():
     res = await server.get_code_signature("MyHOMELight")
     assert "# `MyHOMELight`" in res
     assert "async_turn_on" in res
+
+    # Class.method lookup
+    res_method = await server.get_code_signature("MyHOMELight.async_turn_on")
+    assert "MyHOMELight.async_turn_on" in res_method
+    assert "async def async_turn_on" in res_method
 
     # Cached hit
     res_cached = await server.get_code_signature("MyHOMELight")
@@ -268,3 +285,43 @@ async def test_lookup_frame_syntax_missing_grammar(monkeypatch, tmp_path):
     monkeypatch.setattr(server, "get_protocol_grammar_path", lambda: tmp_path / "missing.json")
     res = await server.lookup_frame_syntax()
     assert "**Error**" in res
+
+
+def test_prompt_boost():
+    # Verify prompt_boost function
+    boost_text = server.prompt_boost(topic="lighting")
+    assert "OpenWebNet & Home Assistant MyHOME AI Agent Context Boost" in boost_text
+    assert "lighting" in boost_text
+    assert "WHO=1" in boost_text
+    assert "myhome.yaml" in boost_text
+
+
+@pytest.mark.asyncio
+async def test_draft_ha_config_with_gateway():
+    res = await server.draft_ha_config(
+        platform="light",
+        name="Study Dimmer",
+        where="23",
+        dimmable=True,
+        gateway_id="mh202",
+        mac="00:03:50:11:22:33",
+    )
+    assert "mh202:" in res
+    assert "00:03:50:11:22:33" in res
+    assert "light:" in res
+    assert "study_dimmer:" in res
+
+
+def test_main_and_dunder_main(monkeypatch):
+    called = []
+    monkeypatch.setattr(server.mcp, "run", lambda: called.append("run"))
+
+    server.main()
+    assert called == ["run"]
+
+    # Test __main__ module
+    import runpy
+    called.clear()
+    runpy.run_module("openwebnet_mcp", run_name="__main__")
+    assert called == ["run"]
+

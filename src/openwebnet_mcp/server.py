@@ -269,11 +269,10 @@ async def get_ha_guide(topic: str) -> str:
             indexer = _get_doc_indexer()
             guide = indexer.get_guide(topic)
             if not guide:
+                avail = ", ".join(f"'{t}'" for t in sorted(indexer.docs_by_topic.keys()))
                 return (
                     f"**Error**: No guide found matching topic '{topic}'. "
-                    "Available topics include: 'lighting', 'automation_covers', 'climate_thermoregulation', "
-                    "'cen_scenarios', 'energy_sensors', 'sound_system', 'light_transitions', "
-                    "'advanced_uses', 'troubleshooting_faq'."
+                    f"Available topics include: {avail}."
                 )
             return guide
 
@@ -457,19 +456,27 @@ async def draft_ha_config(
     heat_support: bool = True,
     cool_support: bool = False,
     sensor_type: str = "power",
+    device_class: str = "opening",
+    who: int | str = "25",
+    gateway_id: str = "f454",
+    mac: str = "00:03:50:xx:xx:xx",
 ) -> str:
     """Generate production-ready Home Assistant YAML configuration for any MyHOME entity.
 
     Args:
-        platform: Platform type ('light', 'cover', 'climate', 'sensor', 'switch', 'media_player').
-        name: Friendly name for the entity (e.g. 'Living Room Dimmer').
-        where: OpenWebNet bus address (e.g. '12', '21#4#1').
+        platform: Platform type ('light', 'cover', 'climate', 'sensor', 'binary_sensor', 'switch', 'media_player').
+        name: Friendly name for the entity (e.g. 'Living Room Dimmer', 'Garage Door Contact').
+        where: OpenWebNet bus address (e.g. '12', '21#4#1', '31').
         dimmable: True if light is dimmable (platform=light).
         transition: Default transition speed 1-10 (platform=light).
         run_time: Full travel runtime in seconds (platform=cover).
         heat_support: Enable heating capability (platform=climate).
         cool_support: Enable cooling capability (platform=climate).
         sensor_type: Type of sensor measurement ('power', 'energy', 'temperature') (platform=sensor).
+        device_class: Binary sensor device class ('opening', 'motion', 'garage_door', 'door', 'window') (platform=binary_sensor).
+        who: Subsystem WHO code for binary sensors (default '25' for dry contacts, '1' for motion, '9' for aux) (platform=binary_sensor).
+        gateway_id: Gateway identifier for /config/myhome.yaml (e.g. 'f454', 'mh202').
+        mac: Physical gateway MAC address (mandatory in modern MyHOME integration).
     """
     try:
         generator = _get_generator()
@@ -478,6 +485,10 @@ async def draft_ha_config(
             "heat_support": heat_support,
             "cool_support": cool_support,
             "type": sensor_type,
+            "device_class": device_class,
+            "who": who,
+            "gateway": gateway_id,
+            "mac": mac,
         }
         if transition is not None:
             kwargs["transition"] = transition
@@ -575,11 +586,68 @@ async def resource_guide(topic: str) -> str:
     return f"Guide '{topic}' not found."
 
 
+# ── Prompts ──────────────────────────────────────────────────────────
+@mcp.prompt("boost")
+def prompt_boost(topic: str = "general") -> str:
+    """Context boost for AI agents: OpenWebNet protocol syntax, WHO subsystem mappings, and Home Assistant integration standards."""
+    return f"""# OpenWebNet & Home Assistant MyHOME AI Agent Context Boost
+
+You are equipped with the `openwebnet-mcp` documentation and protocol server.
+Current requested context focus: **{topic}**
+
+## Core Protocol Architecture
+1. **Frame Delimiters**: OpenWebNet frames ALWAYS start with `*` and terminate with `##`.
+   - Fields separated by `*`, subparameters separated by `#`.
+   - Command / Status Event: `*WHO*WHAT*WHERE##` (e.g. `*1*1*12##` = Turn light 12 ON).
+   - Status Request: `*#WHO*WHERE##` (e.g. `*#1*12##` = Query light 12 state).
+   - Dimension Request: `*#WHO*WHERE*DIMENSION##` (e.g. `*#4*1*0##` = Read temperature in zone 1).
+   - Dimension Writing: `*#WHO*WHERE*#DIMENSION*VAL1*VAL2##` (e.g. `*#4*1*#14*0215*1##` = Set 21.5°C in heating mode).
+   - Dimension Reply: `*#WHO*WHERE*DIMENSION*VAL1*VAL2##` (e.g. `*#4*1*0*0215##` = Measured 21.5°C).
+   - Standard Handshakes: ACK is `*#*1##`, NACK is `*#*0##`, Command Session `*99*0##`, Event Session `*99*1##`.
+
+2. **Primary WHO Subsystems**:
+   - `WHO=1` (Lighting): WHAT 0=OFF, 1=ON, 2-10=Stepped dimming, 1#speed=Transition speed. Dim 1=exact 1-100% brightness.
+   - `WHO=2` (Automation / Covers): WHAT 0=Stop, 1=UP/Open, 2=DOWN/Close. Dim 10=Position 0-100%.
+   - `WHO=4` (Climate / Heating): WHAT 100=OFF, 101=Manual Heat, 102=Manual Cool, 110=Antifreeze. Dim 0=Temperature probe (tenths of °C), Dim 14=Target setpoint (tenths + mode).
+   - `WHO=15` (CEN Scenarios): Pushbuttons WHERE#B. WHAT 0=Start long press, 1=Short press, 2=Release, 3=Heartbeat.
+   - `WHO=25` (CEN+ Scenarios / Dry Contacts): Interface WHERE. WHAT is `event#button` (21=short press, 22=start long, 24=release).
+   - `WHO=16` (Sound System): Multi-room audio matrix (F441), sources, amplifiers.
+   - `WHO=18` (Energy Management): Dim 1=Instantaneous active power (W), Dim 52=Active energy totalizer (Wh).
+
+3. **Home Assistant MyHOME Integration (v0.9+)**:
+   - Configuration file: `/config/myhome.yaml` (placed in the same folder as `configuration.yaml`).
+   - Devices are mapped under the gateway MAC address:
+     ```yaml
+     f454:
+       mac: '00:03:50:xx:xx:xx'
+       light:
+         living_room:
+           where: '12'
+           name: "Living Room Light"
+           dimmable: true
+     ```
+   - Platform domains in `myhome.yaml` are singular: `light:`, `cover:`, `climate:`, `sensor:`, `switch:`, `binary_sensor:`.
+
+## Recommended Agent Workflow
+1. Use `search_documentation(query)` or `get_ha_guide(topic)` to verify installation and configuration requirements.
+2. Use `get_who_spec(who)` or `lookup_frame_syntax(frame_type, who)` to verify exact commands and dimension registers.
+3. Use `parse_and_validate_frame(frame)` to verify frame syntax, parameter definitions, and semantic meanings.
+4. Use `draft_own_frame(...)` and `draft_ha_config(...)` to build copy-pasteable frames and Home Assistant configurations.
+5. Use `get_code_signature(symbol)` to inspect Python classes and methods in `custom_components/myhome` or `OWNd`.
+"""
+
+
 # ── CLI Entrypoint ───────────────────────────────────────────────────
 def main():
     """Main CLI entrypoint for openwebnet-mcp."""
-    # Restore stdout for MCP JSON-RPC protocol
-    sys.stdout = os.fdopen(_real_stdout_fd, "w", encoding="utf-8", closefd=False)
+    from io import TextIOWrapper
+
+    # Restore line-buffered stdout for MCP JSON-RPC protocol
+    sys.stdout = TextIOWrapper(
+        os.fdopen(_real_stdout_fd, "wb", closefd=False),
+        encoding="utf-8",
+        line_buffering=True,
+    )
     mcp.run()
 
 

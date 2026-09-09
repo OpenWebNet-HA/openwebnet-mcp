@@ -152,63 +152,171 @@ class FrameGenerator:
         platform: str,
         name: str,
         where: str,
+        gateway: str = "f454",
+        mac: str = "00:03:50:xx:xx:xx",
         **kwargs: Any,
     ) -> str:
-        """Generate Home Assistant configuration YAML block."""
+        """Generate Home Assistant configuration YAML block (both modern myhome.yaml and legacy)."""
         plat = platform.lower().strip()
-        lines = [f"# Home Assistant MyHOME Configuration for {name}"]
+        slug = self._slugify(name)
+        lines = [
+            f"# ==========================================================",
+            f"# Home Assistant MyHOME Configuration for '{name}'",
+            f"# ==========================================================",
+            f"#",
+            f"# Option A: Modern MyHOME (v0.9+) -> Add to /config/myhome.yaml",
+            f"# ----------------------------------------------------------",
+            f"{gateway}:",
+            f"  mac: '{mac}'  # Gateway MAC address (mandatory in modern integration)",
+        ]
 
         if plat in ("light", "lights"):
-            lines.append("myhome:")
-            lines.append("  lights:")
-            lines.append(f"    {self._slugify(name)}:")
+            dim = kwargs.get("dimmable", False)
+            lines.append("  light:")
+            lines.append(f"    {slug}:")
             lines.append(f"      where: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
-            dim = kwargs.get("dimmable", False)
             lines.append(f"      dimmable: {str(dim).lower()}")
             if "transition" in kwargs:
                 lines.append(f"      transition: {kwargs['transition']}")
 
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  lights:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+                f"      dimmable: {str(dim).lower()}",
+            ])
+            if "transition" in kwargs:
+                lines.append(f"      transition: {kwargs['transition']}")
+
         elif plat in ("cover", "covers"):
-            lines.append("myhome:")
-            lines.append("  covers:")
-            lines.append(f"    {self._slugify(name)}:")
+            lines.append("  cover:")
+            lines.append(f"    {slug}:")
             lines.append(f"      where: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
             if "run_time" in kwargs:
                 lines.append(f"      run_time: {kwargs['run_time']}")
 
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  covers:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+            ])
+            if "run_time" in kwargs:
+                lines.append(f"      run_time: {kwargs['run_time']}")
+
         elif plat in ("climate", "climates"):
-            lines.append("myhome:")
-            lines.append("  climates:")
-            lines.append(f"    {self._slugify(name)}:")
-            lines.append(f"      zone: {where}")
+            heat_val = str(kwargs.get("heat", kwargs.get("heat_support", True))).lower()
+            cool_val = str(kwargs.get("cool", kwargs.get("cool_support", False))).lower()
+            lines.append("  climate:")
+            lines.append(f"    {slug}:")
+            lines.append(f"      zone: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
-            lines.append(f"      heat_support: {str(kwargs.get('heat_support', True)).lower()}")
-            lines.append(f"      cool_support: {str(kwargs.get('cool_support', False)).lower()}")
+            lines.append(f"      heat: {heat_val}")
+            lines.append(f"      cool: {cool_val}")
+            lines.append("      standalone: false")
+
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  climates:",
+                f"    {slug}:",
+                f"      zone: {where}",
+                f"      name: \"{name}\"",
+                f"      heat_support: {heat_val}",
+                f"      cool_support: {cool_val}",
+            ])
 
         elif plat in ("sensor", "sensors", "energy"):
-            lines.append("myhome:")
-            lines.append("  sensors:")
-            lines.append(f"    {self._slugify(name)}:")
+            s_type = kwargs.get("type", "power")
+            lines.append("  sensor:")
+            lines.append(f"    {slug}:")
             lines.append(f"      where: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
-            s_type = kwargs.get("type", "power")
             lines.append(f"      type: \"{s_type}\"")
 
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  sensors:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+                f"      type: \"{s_type}\"",
+            ])
+
         elif plat in ("switch", "switches"):
-            lines.append("myhome:")
-            lines.append("  switches:")
-            lines.append(f"    {self._slugify(name)}:")
+            lines.append("  switch:")
+            lines.append(f"    {slug}:")
             lines.append(f"      where: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
 
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  switches:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+            ])
+
         elif plat in ("media_player", "sound"):
-            lines.append("myhome:")
-            lines.append("  media_players:")
-            lines.append(f"    {self._slugify(name)}:")
+            lines.append("  media_player:")
+            lines.append(f"    {slug}:")
             lines.append(f"      where: \"{where}\"")
             lines.append(f"      name: \"{name}\"")
+
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  media_players:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+            ])
+
+        elif plat in ("binary_sensor", "binary_sensors", "contact", "motion"):
+            dev_class = kwargs.get("class", kwargs.get("device_class", "opening"))
+            who_val = str(kwargs.get("who", "25"))
+            lines.append("  binary_sensor:")
+            lines.append(f"    {slug}:")
+            lines.append(f"      where: \"{where}\"")
+            lines.append(f"      name: \"{name}\"")
+            lines.append(f"      class: {dev_class}")
+            if who_val != "25":
+                lines.append(f"      who: \"{who_val}\"")
+
+            lines.extend([
+                "",
+                "# Option B: Legacy MyHOME (pre-v0.9) -> configuration.yaml",
+                "# ----------------------------------------------------------",
+                "myhome:",
+                "  binary_sensors:",
+                f"    {slug}:",
+                f"      where: \"{where}\"",
+                f"      name: \"{name}\"",
+                f"      class: {dev_class}",
+            ])
+            if who_val != "25":
+                lines.append(f"      who: \"{who_val}\"")
 
         else:
             lines.append(f"# Custom entity for platform '{plat}'")

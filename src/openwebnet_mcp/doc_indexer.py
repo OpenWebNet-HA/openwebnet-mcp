@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import logging
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -49,32 +50,71 @@ class DocIndexer:
         self.external_paths = external_paths if external_paths is not None else get_external_docs_paths()
         self.sections: list[DocSection] = []
         self.docs_by_topic: dict[str, str] = {}
+        self.category_by_topic: dict[str, str] = {}
         self.reindex()
 
     def reindex(self) -> int:
         """Scan all documentation locations and rebuild in-memory search index."""
         self.sections.clear()
         self.docs_by_topic.clear()
+        self.category_by_topic.clear()
+        self._seen_files: set[str] = set()
 
         # 1. Index embedded documentation (primary source of truth)
         if self.embedded_docs_dir.exists():
-            for md_file in self.embedded_docs_dir.glob("*.md"):
+            for md_file in sorted(self.embedded_docs_dir.glob("*.md")):
                 self._index_file(md_file, category="embedded_guide")
 
         # 2. Index external documentation directories (if present on local filesystem)
         for ext_path in self.external_paths:
             if not ext_path.exists():
                 continue
-            if ext_path.is_file() and ext_path.suffix.lower() in (".md", ".txt"):
+            if ext_path.is_file() and ext_path.suffix.lower() in (".md", ".markdown", ".txt"):
                 self._index_file(ext_path, category="external_reference")
             elif ext_path.is_dir():
-                for md_file in ext_path.glob("*.md"):
-                    self._index_file(md_file, category="external_reference")
+                for doc_file in self._safe_find_files(ext_path):
+                    self._index_file(doc_file, category="external_reference")
 
         logger.info("Indexed %d document sections across %d unique files", len(self.sections), len(self.docs_by_topic))
         return len(self.sections)
 
+    def _safe_find_files(self, dir_path: Path) -> list[Path]:
+        """Safely find markdown and text files avoiding broken symlinks, venvs, and build folders."""
+        found: list[Path] = []
+        try:
+            for root, dirs, files in os.walk(str(dir_path), followlinks=False):
+                dirs[:] = [
+                    d for d in dirs
+                    if not (
+                        d.startswith(".")
+                        or d.endswith(".egg-info")
+                        or d.lower() in (
+                            "venv", "env", ".venv", "lib64", "build", "dist",
+                            "node_modules", "__pycache__", "htmlcov", "openhab-addons"
+                        )
+                    )
+                ]
+                for f in sorted(files):
+                    f_lower = f.lower()
+                    if f.startswith("_"):
+                        continue
+                    if f_lower.endswith((".md", ".markdown")) or f_lower == "who16_doc.txt":
+                        found.append(Path(root) / f)
+        except Exception as err:
+            logger.debug("Error traversing %s: %s", dir_path, err)
+        return found
+
     def _index_file(self, file_path: Path, category: str) -> None:
+        try:
+            resolved_key = str(file_path.resolve())
+        except Exception:
+            resolved_key = str(file_path)
+
+        if hasattr(self, "_seen_files") and resolved_key in self._seen_files:
+            return
+        if hasattr(self, "_seen_files"):
+            self._seen_files.add(resolved_key)
+
         try:
             text = file_path.read_text(encoding="utf-8", errors="replace")
         except Exception as err:
@@ -83,6 +123,7 @@ class DocIndexer:
 
         stem = file_path.stem.lower().replace("-", "_")
         self.docs_by_topic[stem] = text
+        self.category_by_topic[stem] = category
 
         # Parse sections by headers (#, ##, ###)
         current_heading = file_path.stem.replace("-", " ").replace("_", " ").title()
@@ -135,8 +176,14 @@ class DocIndexer:
         """Search documentation using ranked token matching and difflib similarity."""
         q = query.strip().lower()
         if not q:
-            # Return first few sections
-            return [s.to_dict() for s in self.sections[:limit]]
+            # Return first few sections with full metadata expected by callers
+            output: list[dict[str, Any]] = []
+            for sec in self.sections[:limit]:
+                d = sec.to_dict()
+                d["relevance_score"] = 0.0
+                d["snippet"] = self._create_snippet(sec.content, "")
+                output.append(d)
+            return output
 
         query_tokens = self._tokenize(q)
         results: list[tuple[float, DocSection]] = []
@@ -182,16 +229,29 @@ class DocIndexer:
     def get_guide(self, topic: str) -> str | None:
         """Get the full text of a guide by topic keyword."""
         t = topic.lower().strip().replace("-", "_")
-        # Direct match
+        # 1. Direct match
         if t in self.docs_by_topic:
             return self.docs_by_topic[t]
 
-        # Substring match
-        for k, v in self.docs_by_topic.items():
-            if t in k or k in t:
-                return v
+        # 2. Canonical guide suffixes (e.g. "lighting" -> "lighting_guide", "light" -> "lighting_guide")
+        for candidate in (f"{t}_guide", f"{t}ing_guide", f"{t}s_guide", f"{t}_configuration", f"{t}s_configuration"):
+            if candidate in self.docs_by_topic:
+                return self.docs_by_topic[candidate]
 
-        # Fuzzy match
+        # 3. Substring match prioritizing keys that start with query or have higher similarity
+        matching_keys = [k for k in self.docs_by_topic if t in k or k in t]
+        if matching_keys:
+            matching_keys.sort(
+                key=lambda k: (
+                    k.startswith(t),
+                    difflib.SequenceMatcher(None, t, k).ratio(),
+                    -abs(len(k) - len(t)),
+                ),
+                reverse=True,
+            )
+            return self.docs_by_topic[matching_keys[0]]
+
+        # 4. Fuzzy match
         keys = list(self.docs_by_topic.keys())
         matches = difflib.get_close_matches(t, keys, n=1, cutoff=0.5)
         if matches:
@@ -206,11 +266,22 @@ class DocIndexer:
             "",
             f"Total indexed sections: {len(self.sections)} across {len(self.docs_by_topic)} documents.",
             "",
-            "## Available Guides & Topics",
+            "## Embedded Guides & Architectural References",
         ]
-        for topic in sorted(self.docs_by_topic.keys()):
+        embedded = [t for t in sorted(self.docs_by_topic.keys()) if self.category_by_topic.get(t) == "embedded_guide"]
+        for topic in embedded:
             title = topic.replace("_", " ").title()
             lines.append(f"- **`{topic}`**: {title}")
+
+        external = [t for t in sorted(self.docs_by_topic.keys()) if self.category_by_topic.get(t) != "embedded_guide"]
+        if external:
+            lines.extend([
+                "",
+                "## External Wiki & Community Specifications",
+            ])
+            for topic in external:
+                title = topic.replace("_", " ").title()
+                lines.append(f"- **`{topic}`**: {title}")
 
         lines.extend([
             "",

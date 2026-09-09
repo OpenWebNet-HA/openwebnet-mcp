@@ -231,7 +231,7 @@ class FrameParser:
             return
 
         subsystem = family.get("name", f"WHO {parsed.who}")
-        where_desc = self._describe_where(parsed.where, parsed.where_params)
+        where_desc = self._describe_where(parsed.where, parsed.where_params, who=parsed.who)
 
         if parsed.frame_type == "STATUS_REQUEST":
             parsed.explanation = f"Query status of {subsystem} at {where_desc}"
@@ -241,18 +241,20 @@ class FrameParser:
             dims = family.get("dimensions", {})
             dim_meta = dims.get(str(parsed.dimension), {})
             dim_name = dim_meta.get("name", f"Dimension {parsed.dimension}")
-            
+
             if str(parsed.dimension) not in dims and parsed.dimension is not None:
                 parsed.warnings.append(f"Dimension {parsed.dimension} is not officially documented for WHO={parsed.who}.")
 
             if parsed.frame_type == "DIMENSION_REQUEST":
                 parsed.explanation = f"Request {dim_name} from {subsystem} at {where_desc}"
-            elif parsed.frame_type == "DIMENSION_WRITING":
-                vals = ", ".join(parsed.dimension_values)
-                parsed.explanation = f"Write values [{vals}] to {dim_name} for {subsystem} at {where_desc}"
             else:
                 vals = ", ".join(parsed.dimension_values)
-                parsed.explanation = f"{subsystem} reports {dim_name} = [{vals}] for {where_desc}"
+                semantic = self._decode_dimension_values(parsed.who, parsed.dimension, parsed.dimension_values)
+                semantic_suffix = f" ({semantic})" if semantic else ""
+                if parsed.frame_type == "DIMENSION_WRITING":
+                    parsed.explanation = f"Write values [{vals}]{semantic_suffix} to {dim_name} for {subsystem} at {where_desc}"
+                else:
+                    parsed.explanation = f"{subsystem} reports {dim_name} = [{vals}]{semantic_suffix} for {where_desc}"
             return
 
         if parsed.frame_type in ("STATUS_EVENT", "COMMAND_TRANSLATION"):
@@ -263,9 +265,15 @@ class FrameParser:
             whats = family.get("what_commands", {})
             what_desc = whats.get(what_str) or whats.get(str(parsed.what))
 
-            # Handle transition speed specifically
+            # Handle transition speed specifically for WHO 1
             if parsed.who == 1 and parsed.what == 1 and parsed.what_params:
                 what_desc = f"Turn ON with transition speed {parsed.what_params[0]}"
+
+            # Handle CEN+ button parameter in WHAT (WHO 25: *25*21#1*12##)
+            if parsed.who == 25 and parsed.what_params:
+                btn = parsed.what_params[0]
+                base_desc = whats.get(str(parsed.what), f"Event {parsed.what}")
+                what_desc = f"{base_desc} on pushbutton {btn}"
 
             if not what_desc and parsed.what is not None:
                 parsed.warnings.append(f"WHAT={what_str} is not standard for WHO={parsed.who}.")
@@ -274,17 +282,108 @@ class FrameParser:
             prefix = "[Translation] " if parsed.frame_type == "COMMAND_TRANSLATION" else ""
             parsed.explanation = f"{prefix}{subsystem}: {what_desc} at {where_desc}"
 
-    def _describe_where(self, where: str | None, where_params: list[str]) -> str:
+    def _decode_dimension_values(self, who: int, dimension: int | None, values: list[str]) -> str:
+        """Provide human-readable semantic interpretation of raw dimension value lists."""
+        if not values or dimension is None:
+            return ""
+
+        # WHO 4: Climate / Thermoregulation
+        if who == 4:
+            if dimension == 0 and values:
+                v = values[0]
+                if v.isdigit() and len(v) >= 2:
+                    return f"{int(v)/10.0:.1f}°C"
+            elif dimension == 14 and values:
+                t_str = values[0]
+                m_str = values[1] if len(values) > 1 else None
+                modes = {"1": "Heating", "2": "Cooling", "3": "Generic"}
+                m_desc = modes.get(m_str, f"Mode {m_str}") if m_str else ""
+                if t_str.isdigit() and len(t_str) >= 2:
+                    t_val = int(t_str) / 10.0
+                    return f"Target {t_val:.1f}°C" + (f" in {m_desc} mode" if m_desc else "")
+            elif dimension == 11 and values:
+                spd = values[0]
+                spd_desc = "Auto" if spd == "0" else f"Speed {spd}"
+                return f"Fancoil {spd_desc}"
+            elif dimension == 22 and values:
+                return f"Offset {values[0]}"
+
+        # WHO 18: Energy management
+        elif who == 18:
+            if dimension == 1 and values:
+                return f"{values[0]} W"
+            elif dimension == 52 and values:
+                return f"{values[0]} Wh"
+
+        # WHO 1: Lighting
+        elif who == 1:
+            if dimension == 1 and values:
+                level = values[0]
+                speed = values[1] if len(values) > 1 else None
+                return f"{level}% brightness" + (f" with transition speed {speed}" if speed else "")
+            elif dimension == 2 and len(values) >= 3:
+                return f"RGB({values[0]}, {values[1]}, {values[2]})"
+            elif dimension == 3 and values:
+                return f"{values[0]} K"
+
+        # WHO 2: Automation / Covers
+        elif who == 2:
+            if dimension == 10 and values:
+                return f"{values[0]}% open"
+            elif dimension == 11 and values:
+                return f"Slat tilt {values[0]}%"
+
+        # WHO 16: Sound System / Audio
+        elif who == 16:
+            if dimension == 1 and values:
+                val = values[0]
+                if val.isdigit():
+                    pct = int(val) * 100 // 30
+                    return f"Volume {val}/30 ({pct}%)"
+                return f"Volume {val}"
+            elif dimension == 2 and values:
+                val = values[0]
+                if val.isdigit() and int(val) > 1000:
+                    return f"Tuner {int(val)/1000.0:.1f} MHz ({val} kHz)"
+                return f"Tuner {val} kHz"
+            elif dimension == 3 and len(values) >= 2:
+                return f"Equalizer (Bass {values[0]}, Treble {values[1]})"
+
+        return ""
+
+    def _describe_where(self, where: str | None, where_params: list[str], who: int | None = None) -> str:
         """Provide a readable description for the WHERE address."""
         if where is None:
             return "system-wide"
         if where == "0":
             return "General (all devices)"
-        
+
+        # Special decoding for CEN (WHO 15) pushbuttons: WHERE#B
+        if who == 15 and where_params:
+            btn = where_params[0]
+            desc = f"pushbutton {btn} on CEN interface '{where}'"
+            extra = where_params[1:]
+            if "4" in extra:
+                idx = extra.index("4")
+                if idx + 1 < len(extra):
+                    bus_id = extra[idx + 1]
+                    desc += f" routed to private SCS bus {bus_id}"
+            elif extra:
+                desc += f" with parameters ({', '.join(extra)})"
+            return desc
+
+        # Special decoding for WHO 4 manual setpoints: WHERE#TEMP
+        if who == 4 and where_params and where_params[0].isdigit() and len(where_params[0]) >= 2:
+            t_val = int(where_params[0]) / 10.0
+            desc = f"Zone {where} with target setpoint {t_val:.1f}°C"
+            extra = where_params[1:]
+            if extra:
+                desc += f" (duration {extra[0]} min)"
+            return desc
+
         desc = f"address '{where}'"
         if where_params:
             if "4" in where_params:
-                # Bus routing: where#4#bus
                 idx = where_params.index("4")
                 if idx + 1 < len(where_params):
                     bus_id = where_params[idx + 1]

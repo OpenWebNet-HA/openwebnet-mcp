@@ -23,9 +23,15 @@ def test_doc_search_query():
     hits_cen = indexer.search("cen pushbutton")
     assert len(hits_cen) > 0
 
-    # Search with empty query returns top sections
+    # Search with empty and whitespace query returns top sections with complete metadata
     hits_empty = indexer.search("")
     assert len(hits_empty) > 0
+    assert "relevance_score" in hits_empty[0]
+    assert "snippet" in hits_empty[0]
+
+    hits_spaces = indexer.search("   ")
+    assert len(hits_spaces) > 0
+    assert "relevance_score" in hits_spaces[0]
 
 
 def test_get_guide():

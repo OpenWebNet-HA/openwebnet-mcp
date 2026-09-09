@@ -64,3 +64,44 @@ def test_myhome_repo_path(monkeypatch, tmp_path):
     with monkeypatch.context() as m:
         m.setattr(_paths, "get_project_root", lambda: tmp_path / "dummy" / "dummy")
         assert _paths.get_myhome_repo_path() is None
+
+
+def test_cache_and_log_dir(monkeypatch, tmp_path):
+    monkeypatch.delenv("OPENWEBNET_LOG_DIR", raising=False)
+    cache = _paths.get_cache_dir()
+    assert cache.exists()
+    assert cache.name == "openwebnet-mcp"
+
+    log_dir = _paths.get_log_dir()
+    assert log_dir.exists()
+    assert log_dir.name == "logs"
+
+    # Test darwin platform branch
+    with monkeypatch.context() as m:
+        m.setattr(_paths.sys, "platform", "darwin")
+        m.setattr(_paths.Path, "home", lambda: tmp_path / "home")
+        cache_darwin = _paths.get_cache_dir()
+        assert cache_darwin.name == "openwebnet-mcp"
+
+    # Test linux / other platform branch
+    with monkeypatch.context() as m:
+        m.setattr(_paths.sys, "platform", "linux")
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+        cache_linux = _paths.get_cache_dir()
+        assert cache_linux.name == "openwebnet-mcp"
+
+
+
+def test_ownd_repo_path(monkeypatch, tmp_path):
+    repo_dir = tmp_path / "OWNd"
+    repo_dir.mkdir()
+    monkeypatch.setenv("OWND_REPO_PATH", str(repo_dir))
+
+    p = _paths.get_ownd_repo_path()
+    assert p == repo_dir
+
+    monkeypatch.setenv("OWND_REPO_PATH", str(tmp_path / "does_not_exist"))
+    with monkeypatch.context() as m:
+        m.setattr(_paths, "get_project_root", lambda: tmp_path / "dummy" / "dummy")
+        assert _paths.get_ownd_repo_path() is None
+

@@ -125,6 +125,7 @@ def test_parse_cen_frames():
     assert p_cen.what == 1
     assert p_cen.where == "11"
     assert p_cen.where_params == ["2"]
+    assert "pushbutton 2 on CEN interface '11'" in p_cen.explanation
 
     # CEN+ button press: *25*21#2*11##
     p_cenp = parser.parse("*25*21#2*11##")
@@ -132,6 +133,59 @@ def test_parse_cen_frames():
     assert p_cenp.who == 25
     assert p_cenp.what == 21
     assert p_cenp.what_params == ["2"]
+    assert "on pushbutton 2" in p_cenp.explanation
+
+    # Rich dimension decoding: WHO 4 setpoint
+    p_target = parser.parse("*#4*1*#14*0215*1##")
+    assert p_target.is_valid is True
+    assert "Target 21.5" in p_target.explanation
+    assert "Heating mode" in p_target.explanation
+
+    # Rich dimension decoding: WHO 18 power
+    p_power = parser.parse("*#18*1*1*1450##")
+    assert p_power.is_valid is True
+    assert "1450 W" in p_power.explanation
+
+    # Rich dimension decoding: WHO 2 cover position
+    p_cov = parser.parse("*#2*21*10*60##")
+    assert p_cov.is_valid is True
+    assert "60% open" in p_cov.explanation
+
+    # WHO 18 totalizer
+    p_wh = parser.parse("*#18*1*52*12345##")
+    assert "12345 Wh" in p_wh.explanation
+
+    # WHO 1 RGB and Kelvin
+    p_rgb = parser.parse("*#1*12*#2*255*128*0##")
+    assert "RGB(255, 128, 0)" in p_rgb.explanation
+
+    p_k = parser.parse("*#1*12*#3*3000##")
+    assert "3000 K" in p_k.explanation
+
+    # WHO 2 Slat angle
+    p_slat = parser.parse("*#2*21*#11*45##")
+    assert "Slat tilt 45%" in p_slat.explanation
+
+    # WHO 4 Fancoil and offset
+    p_fan = parser.parse("*#4*1*11*2##")
+    assert "Fancoil Speed 2" in p_fan.explanation
+
+    p_off = parser.parse("*#4*1*22*1##")
+    assert "Offset 1" in p_off.explanation
+
+    # WHO 16 Sound system volume and tuner
+    p_vol = parser.parse("*#16*1*1*15##")
+    assert "Volume 15/30 (50%)" in p_vol.explanation
+
+    p_tune = parser.parse("*#16*1*2*102500##")
+    assert "Tuner 102.5 MHz" in p_tune.explanation
+
+    # WHO 4 Manual heating setpoint command (*4*301*Z#T##)
+    p_sp = parser.parse("*4*301*2#0215##")
+    assert p_sp.is_valid is True
+    assert "Zone 2 with target setpoint 21.5" in p_sp.explanation
+
+
 
 
 def test_parse_errors_and_edge_cases():

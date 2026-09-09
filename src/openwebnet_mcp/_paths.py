@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+
+_APP_NAME = "openwebnet-mcp"
 
 
 def get_package_root() -> Path:
@@ -42,33 +45,70 @@ def get_embedded_docs_dir() -> Path:
     return get_data_dir() / "docs"
 
 
+def get_cache_dir() -> Path:
+    """Return the platform-specific runtime cache directory.
+
+    - Windows: %LOCALAPPDATA%/openwebnet-mcp/
+    - Linux: $XDG_CACHE_HOME/openwebnet-mcp/ (defaults to ~/.cache/openwebnet-mcp/)
+    - macOS: ~/Library/Caches/openwebnet-mcp/
+    """
+    if sys.platform == "win32":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Caches"
+    else:
+        base = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+
+    cache = base / _APP_NAME
+    cache.mkdir(parents=True, exist_ok=True)
+    return cache
+
+
+def get_log_dir() -> Path:
+    """Return directory where server logs are stored.
+
+    Resolution order:
+    1. OPENWEBNET_LOG_DIR environment variable
+    2. Platform cache directory (<cache_dir>/logs)
+    """
+    env_log = os.environ.get("OPENWEBNET_LOG_DIR")
+    if env_log:
+        p = Path(env_log)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    log_dir = get_cache_dir() / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir
+
+
 def get_external_docs_paths() -> list[Path]:
     """Return list of candidate external documentation directories to index."""
     candidates: list[Path] = []
-    
+    seen: set[str] = set()
+
+    def _add(cand: Path):
+        norm = str(cand.resolve()) if cand.exists() else str(cand)
+        if cand.exists() and norm not in seen:
+            candidates.append(cand)
+            seen.add(norm)
+
     # Explicit env override
     env_docs = os.environ.get("OPENWEBNET_DOCS_PATH")
     if env_docs:
         for p in env_docs.split(os.pathsep):
             cand = Path(p.strip())
-            if cand.exists():
-                candidates.append(cand)
+            _add(cand)
 
-    # Standard adjacent directories if available
+    # Standard adjacent directories
     project_root = get_project_root()
     parent_dir = project_root.parent
 
-    myhome_docs = parent_dir / "MyHOME" / "docs"
-    if myhome_docs.exists():
-        candidates.append(myhome_docs)
-
-    myhome_root = parent_dir / "MyHOME"
-    if myhome_root.exists():
-        candidates.append(myhome_root)
-
-    wiki_dir = parent_dir / "OpenWebNet-HA_wiki"
-    if wiki_dir.exists():
-        candidates.append(wiki_dir)
+    if parent_dir.exists():
+        _add(parent_dir / "MyHOME" / "docs")
+        _add(parent_dir / "MyHOME")
+        _add(parent_dir / "OpenWebNet-HA_wiki")
+        _add(parent_dir / "who16_doc.txt")
 
     return candidates
 
@@ -87,14 +127,15 @@ def get_myhome_repo_path() -> Path | None:
     return None
 
 
-def get_log_dir() -> Path:
-    """Return path to directory where server logs are stored."""
-    env_log = os.environ.get("OPENWEBNET_LOG_DIR")
-    if env_log:
-        p = Path(env_log)
-        p.mkdir(parents=True, exist_ok=True)
-        return p
+def get_ownd_repo_path() -> Path | None:
+    """Return path to OWNd repository if available."""
+    env_repo = os.environ.get("OWND_REPO_PATH")
+    if env_repo:
+        p = Path(env_repo)
+        if p.exists():
+            return p
 
-    # Fallback to local project root
-    p = get_project_root()
-    return p
+    cand = get_project_root().parent / "OWNd"
+    if cand.exists():
+        return cand
+    return None

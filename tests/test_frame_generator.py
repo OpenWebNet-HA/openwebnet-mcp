@@ -125,6 +125,13 @@ def test_generate_ha_yaml():
     yaml_mp = gen.generate_ha_yaml("media_player", "Dining Audio", "1")
     assert "media_players:" in yaml_mp
 
+    # Binary Sensor
+    yaml_bin = gen.generate_ha_yaml("binary_sensor", "Garage Contact", "31", device_class="garage_door", who="1")
+    assert "binary_sensor:" in yaml_bin
+    assert "binary_sensors:" in yaml_bin
+    assert "class: garage_door" in yaml_bin
+    assert 'who: "1"' in yaml_bin
+
     # Custom
     yaml_custom = gen.generate_ha_yaml("custom_platform", "Custom Device", "99", extra_attr="abc")
     assert "Custom entity for platform 'custom_platform'" in yaml_custom

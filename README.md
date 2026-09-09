@@ -102,6 +102,19 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `docs://toc` | Master Table of Contents for all indexed OpenWebNet & MyHOME documentation. |
 | `docs://guide/{topic}` | Read-only full text of a specific documentation guide. |
 
+### MCP Prompts (1)
+
+| Prompt / Slash Command | Description |
+|---|---|
+| `/boost [topic]` | Injects authoritative OpenWebNet protocol architecture, WHO subsystem mappings, frame delimiters, and modern Home Assistant `/config/myhome.yaml` standards directly into the AI agent context window. |
+
+#### Using `/boost` in MCP Clients
+In Claude Desktop, Cursor, or Antigravity, trigger the prompt by typing `/boost` or selecting it from the prompt menu:
+```text
+/boost topic: lighting
+```
+The server primes the LLM with strict frame grammar rules, hardware capabilities, and modern Home Assistant configuration standards, eliminating hallucinated syntax.
+
 ---
 
 ## 📚 Master WHO Family Inventory
