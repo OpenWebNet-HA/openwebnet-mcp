@@ -5,10 +5,10 @@
 [![Python Support](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue?logo=python)](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **Empower AI Agents to Browse, Understand, and Generate OpenWebNet Protocol & Home Assistant MyHOME Automations.**
-> Zero hallucinations: Built directly from official BTicino/Legrand technical specifications, community manuals, and production Home Assistant integration source code.
+> **Developer MCP Tool for OpenWebNet Protocol Validation, WHO Specifications, and Home Assistant Integration Knowledge.**
+> Deterministic syntax checking, formal WHO catalog reference, and AST signature introspection for AI coding assistants.
 
-`openwebnet-mcp` is an asynchronous, Model Context Protocol (MCP) server built with Python 3.11+ using the official `FastMCP` framework. It provides AI agents (Claude Desktop, Cursor, VS Code, Antigravity) with immediate, deep semantic context over the entire OpenWebNet protocol, 20+ WHO specification families, frame validation grammar, and Home Assistant `myhome` custom component architecture.
+`openwebnet-mcp` is an offline, read-only Model Context Protocol (MCP) server built with Python 3.11+ using the `FastMCP` framework. It provides AI coding assistants (Claude Desktop, Cursor, VS Code, Antigravity) with fast semantic lookups, deterministic frame grammar validation, and reference documentation for OpenWebNet WHO families and Home Assistant `myhome` configuration patterns.
 
 ---
 
@@ -28,14 +28,14 @@
 }
 ```
 
-#### Local Development Run (using uv or virtualenv):
+#### Local Development Run:
 ```json
 {
   "mcpServers": {
     "openwebnet-mcp": {
       "command": "python",
       "args": ["-m", "openwebnet_mcp.server"],
-      "cwd": "C:\\Users\\laurensvdb\\Documents\\GitHub\\openwebnet-mcp"
+      "cwd": "/path/to/openwebnet-mcp"
     }
   }
 }
