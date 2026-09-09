@@ -453,25 +453,33 @@
     {
       "who": 14,
       "name": "Actuators Diagnostics & Lock",
-      "italian_name": "Diagnostica Attuatori",
-      "document_title": "WHO 14 Actuator Diagnostics",
-      "pdf_filename": "WHO_14.pdf",
+      "italian_name": "Diagnostica e Blocco Attuatori",
+      "document_title": "Light & Shutter Actuators Lock",
+      "pdf_filename": "None (Internal / Reverse-Engineered)",
       "version": "v1.0.0",
       "date": "2008",
-      "status": "Needed / Missing",
+      "status": "Reverse-Engineered & Documented",
       "ha_platform": "diagnostics",
-      "hardware_models": ["F411", "F418"],
-      "description": "Actuator diagnostic parameters, physical lock/unlock status, thermal overload flags, and operating cycle counters.",
-      "addressing": "WHERE represents physical actuator address.",
+      "hardware_models": ["F411", "F411U2", "F418", "LN4672M2"],
+      "description": "Actuator safety lock mechanism for lighting and automation endpoints. Inverts/inhibits physical wall switches (CEN buttons, rocker switches) and remote actuation during maintenance, child safety locks, or window/door interlocks. Legrand never distributed an official public PDF for this WHO.",
+      "addressing": "WHERE represents physical actuator address (e.g. point-to-point ID '12' or 'A*PL').",
       "what_commands": {
-        "0": "Unlock actuator",
-        "1": "Lock actuator"
+        "0": "Disable commands / Lock (freezes relay state, local physical wall buttons and bus commands ignored)",
+        "1": "Enable commands / Unlock (restores normal physical switch and bus operation)"
       },
       "dimensions": {},
       "examples": [
         {
+          "frame": "*14*0*12##",
+          "description": "Disable commands / Lock actuator 12 (ignores local wall buttons)"
+        },
+        {
+          "frame": "*14*1*12##",
+          "description": "Enable commands / Unlock actuator 12 (restores normal operation)"
+        },
+        {
           "frame": "*#14*12##",
-          "description": "Query diagnostic state for actuator 12"
+          "description": "Query lock status for actuator 12"
         }
       ]
     },

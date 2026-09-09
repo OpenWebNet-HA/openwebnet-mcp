@@ -244,3 +244,29 @@ def test_parse_errors_and_edge_cases():
     d = p_empty.to_dict()
     assert isinstance(d, dict)
     assert d["raw_frame"] == ""
+
+
+def test_parse_who_14():
+    parser = FrameParser()
+
+    # Lock command
+    p_lock = parser.parse("*14*0*12##")
+    assert p_lock.is_valid is True
+    assert p_lock.who == 14
+    assert p_lock.what == 0
+    assert p_lock.where == "12"
+    assert "Lock" in p_lock.explanation
+
+    # Unlock command
+    p_unlock = parser.parse("*14*1*12##")
+    assert p_unlock.is_valid is True
+    assert p_unlock.who == 14
+    assert p_unlock.what == 1
+    assert p_unlock.where == "12"
+    assert "Unlock" in p_unlock.explanation
+
+    # Status request
+    p_status = parser.parse("*#14*12##")
+    assert p_status.is_valid is True
+    assert p_status.who == 14
+    assert p_status.frame_type == "STATUS_REQUEST"

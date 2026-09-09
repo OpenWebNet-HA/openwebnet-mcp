@@ -131,7 +131,7 @@ The server primes the LLM with strict frame grammar rules, hardware capabilities
 | **7** | Video Door Entry | `WHO_7.pdf` | 🟢 Archived | `camera` |
 | **9** | Auxiliary | `WHO_9.pdf` | 🟡 Legacy | `switch` |
 | **13** | Gateway Management | `WHO_13.pdf` | 🟢 Archived | Diagnostics |
-| **14** | Actuators & Lock | `WHO_14.pdf` | 🔴 Needed | Diagnostics |
+| **14** | Actuators & Lock | *(Reverse-Engineered)* | 🟢 Documented | Diagnostics, `lock` |
 | **15** | CEN Pushbuttons | `WHO_15.pdf` | 🟢 Archived | `event` |
 | **16** | Sound System | `WHO_16.pdf` | 🟢 Archived | `media_player` |
 | **17** | MH200N Scenarios | `WHO_17.pdf` | 🟢 Archived | `event` |
