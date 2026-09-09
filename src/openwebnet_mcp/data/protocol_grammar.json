@@ -1,0 +1,102 @@
+{
+  "protocol_name": "OpenWebNet",
+  "version": "1.0",
+  "standard": "BTicino / Legrand SCS Bus & Gateway Protocol",
+  "encoding": "ASCII",
+  "frame_delimiters": {
+    "start": "*",
+    "end": "##",
+    "field_separator": "*",
+    "param_separator": "#"
+  },
+  "session_types": {
+    "command_session": {
+      "handshake": "*99*0##",
+      "description": "Used to send commands and request dimension values. Gateway executes command and responds with ACK (*#*1##) or NACK (*#*0##)."
+    },
+    "event_session": {
+      "handshake": "*99*1##",
+      "description": "Used for asynchronous monitoring of the SCS bus. Gateway streams all bus frames in real time to the client."
+    }
+  },
+  "standard_responses": {
+    "ack": {
+      "frame": "*#*1##",
+      "meaning": "Acknowledge (Command accepted and dispatched to SCS bus)"
+    },
+    "nack": {
+      "frame": "*#*0##",
+      "meaning": "Negative Acknowledge (Command rejected, syntax error, or bus busy)"
+    }
+  },
+  "frame_types": [
+    {
+      "type": "STATUS_EVENT",
+      "pattern": "^\\*(?P<who>\\d+)\\*(?P<what>\\d+)(?P<what_param>(?:#\\d+)*)\\*(?P<where>\\*|#?\\d+)(?P<where_param>(?:#\\d+)*)##$",
+      "template": "*WHO*WHAT*WHERE##",
+      "description": "Command or status event frame representing an actuation or state change on the bus.",
+      "examples": ["*1*1*12##", "*2*1*21##", "*15*1*11#2##"]
+    },
+    {
+      "type": "COMMAND_TRANSLATION",
+      "pattern": "^\\*(?P<who>\\d+)\\*1000#(?P<what>\\d+)(?P<what_param>(?:#\\d+)*)\\*(?P<where>\\*|#?\\d+)(?P<where_param>(?:#\\d+)*)##$",
+      "template": "*WHO*1000#WHAT*WHERE##",
+      "description": "Command translation frame used by scenario programmers or gateways.",
+      "examples": ["*1*1000#1*12##"]
+    },
+    {
+      "type": "STATUS_REQUEST",
+      "pattern": "^\\*#(?P<who>\\d+)(?:\\*(?P<where>#?\\d+)(?P<where_param>(?:#\\d+)*))?##$",
+      "template": "*#WHO*WHERE## or *#WHO##",
+      "description": "Queries the current state of a device or subsystem.",
+      "examples": ["*#1*12##", "*#2*21##", "*#5*0##"]
+    },
+    {
+      "type": "DIMENSION_REQUEST",
+      "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*(?P<dimension>\\d+)##$",
+      "template": "*#WHO*WHERE*DIMENSION##",
+      "description": "Queries specific dimension parameter(s) from a device.",
+      "examples": ["*#4*1*0##", "*#18*1*1##", "*#13**1##"]
+    },
+    {
+      "type": "DIMENSION_WRITING",
+      "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*#(?P<dimension>\\d+)(?P<dimension_param>(?:#\\d+)*)?(?P<dimension_value>(?:\\*\\d*)+)##$",
+      "template": "*#WHO*WHERE*#DIMENSION*VAL1*...*VALn##",
+      "description": "Writes values into a device dimension register.",
+      "examples": ["*#1*12*#1*75*5##", "*#4*1*#14*0210*3##", "*#16*1*#1*15##"]
+    },
+    {
+      "type": "DIMENSION_RESPONSE",
+      "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*(?P<dimension>\\d+)(?P<dimension_param>(?:#\\d+)*)?(?P<dimension_value>(?:\\*\\d*)+)##$",
+      "template": "*#WHO*WHERE*DIMENSION*VAL1*...*VALn##",
+      "description": "Gateway reply to a dimension request conveying measured values or settings.",
+      "examples": ["*#4*1*0*0215##", "*#18*1*1*1450##"]
+    }
+  ],
+  "addressing_conventions": {
+    "general": {
+      "syntax": "0",
+      "description": "Broadcasts to all devices in the system for that WHO family."
+    },
+    "area": {
+      "syntax": "A (e.g. 1 to 9)",
+      "description": "Targets all devices belonging to room/area A."
+    },
+    "group": {
+      "syntax": "#G (e.g. #1 to #255)",
+      "description": "Targets all devices programmed into group G."
+    },
+    "point_to_point": {
+      "syntax": "A*PL or APL (e.g. 12 = Area 1, Point-Light 2)",
+      "description": "Targets an individual device actuator directly."
+    },
+    "bus_routing": {
+      "syntax": "WHERE#4#bus (e.g. 12#4#1 = device 12 on private SCS bus 1)",
+      "description": "Routes frames across physical bus interfaces via F422 inter-bus couplers."
+    },
+    "scenario_button": {
+      "syntax": "WHERE#B (e.g. 11#2 = button 2 on CEN interface 11)",
+      "description": "Identifies physical pushbutton numbers on multi-gang CEN/CEN+ wall plates."
+    }
+  }
+}

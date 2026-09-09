@@ -1,0 +1,829 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-09-09",
+  "families": [
+    {
+      "who": 0,
+      "name": "Scenarios (Basic)",
+      "italian_name": "Scenari",
+      "document_title": "Open Web Net Language (Scenarios)",
+      "pdf_filename": "WHO_0.pdf",
+      "version": "v2.0.0",
+      "date": "2010-10-01",
+      "status": "Archived & Verified",
+      "ha_platform": "event, automations",
+      "hardware_models": ["Legrand 03551", "Legrand 88301", "BTicino F420", "IR interface 3456"],
+      "description": "Basic scenario module handling up to 32 pre-programmed SCS bus scenes triggered by physical buttons or gateway events.",
+      "addressing": "WHERE represents the scenario index (1 to 32).",
+      "what_commands": {
+        "1": "Activate / Execute scenario",
+        "0": "Stop / Disable scenario"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*0*1*1##",
+          "description": "Execute scenario 1"
+        },
+        {
+          "frame": "*0*0*5##",
+          "description": "Stop execution of scenario 5"
+        }
+      ]
+    },
+    {
+      "who": 1,
+      "name": "Lighting",
+      "italian_name": "Illuminazione",
+      "document_title": "Who = 1 LIGHTING",
+      "pdf_filename": "WHO_1.pdf",
+      "version": "v1.1.0",
+      "date": "2014-11-17",
+      "status": "Archived & Verified",
+      "ha_platform": "light",
+      "hardware_models": ["F411/1..4", "F418 (dimmer)", "F429 (DALI)", "F429G", "067557", "BMSE3001"],
+      "description": "Controls ON/OFF, stepped dimming (10 levels or 1-100%), timed lighting, blinking, and transition speed across point-to-point, area, group, and general addresses.",
+      "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL', e.g. '12' for A=1, PL=2), or Local Bus ('A*PL#4#bus').",
+      "what_commands": {
+        "0": "Turn OFF",
+        "1": "Turn ON (100% or last saved level)",
+        "2": "Dimming Level 2 (20%)",
+        "3": "Dimming Level 3 (30%)",
+        "4": "Dimming Level 4 (40%)",
+        "5": "Dimming Level 5 (50%)",
+        "6": "Dimming Level 6 (60%)",
+        "7": "Dimming Level 7 (70%)",
+        "8": "Dimming Level 8 (80%)",
+        "9": "Dimming Level 9 (90%)",
+        "10": "Dimming Level 10 (100%)",
+        "11": "Dim UP one step",
+        "12": "Dim DOWN one step",
+        "13": "Toggle ON/OFF",
+        "14": "Timed ON (fixed duration)",
+        "15": "Blinking / Flashing",
+        "1#<speed>": "Turn ON with transition speed 1-10 (e.g. *1*1#5*12##)"
+      },
+      "dimensions": {
+        "1": {
+          "name": "Light Level / Dimming Percentage",
+          "description": "Set or read exact dimming percentage (1-100) and optional transition speed parameter.",
+          "query": "*#1*WHERE*1##",
+          "write": "*#1*WHERE*#1*<LEVEL>*<SPEED>##"
+        },
+        "2": {
+          "name": "RGB Color Control",
+          "description": "Control RGB values for color actuators (F429 DALI).",
+          "query": "*#1*WHERE*2##",
+          "write": "*#1*WHERE*#2*<R>*<G>*<B>##"
+        },
+        "3": {
+          "name": "Tunable White / Color Temperature",
+          "description": "Set color temperature in Kelvin for tunable white lights.",
+          "query": "*#1*WHERE*3##",
+          "write": "*#1*WHERE*#3*<KELVIN>##"
+        }
+      },
+      "examples": [
+        {
+          "frame": "*1*1*12##",
+          "description": "Turn ON light at Point-to-Point address 12 (Area 1, Point 2)"
+        },
+        {
+          "frame": "*1*0*12##",
+          "description": "Turn OFF light at address 12"
+        },
+        {
+          "frame": "*#1*12##",
+          "description": "Status request for light at address 12"
+        },
+        {
+          "frame": "*#1*12*#1*50*5##",
+          "description": "Set light 12 to 50% brightness with transition speed 5"
+        },
+        {
+          "frame": "*1*1*0##",
+          "description": "General Turn ON: All lights in the system"
+        }
+      ]
+    },
+    {
+      "who": 2,
+      "name": "Automation (Covers & Shutters)",
+      "italian_name": "Automazione",
+      "document_title": "Messages - Automation",
+      "pdf_filename": "WHO_2.pdf",
+      "version": "v1.0.0",
+      "date": "2015-11-12",
+      "status": "Archived & Verified",
+      "ha_platform": "cover",
+      "hardware_models": ["F411U2", "F401", "LN4672M2", "067557"],
+      "description": "Controls motorized shutters, blinds, rolling gates, and venetian louvres. Supports UP, DOWN, STOP, and advanced percentage positioning.",
+      "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL'), or Bus routed ('where#4#bus').",
+      "what_commands": {
+        "0": "STOP movement",
+        "1": "UP (Open shutter)",
+        "2": "DOWN (Close shutter)",
+        "30": "Advanced STOP",
+        "31": "Advanced UP",
+        "32": "Advanced DOWN"
+      },
+      "dimensions": {
+        "10": {
+          "name": "Absolute Position / Shutter Level",
+          "description": "Absolute opening position percentage (0 = closed, 100 = fully open).",
+          "query": "*#2*WHERE*10##",
+          "write": "*#2*WHERE*#10*<LEVEL>##"
+        },
+        "11": {
+          "name": "Slat / Louvre Tilt Angle",
+          "description": "Tilt angle for venetian blinds (0 to 100%).",
+          "query": "*#2*WHERE*11##",
+          "write": "*#2*WHERE*#11*<ANGLE>##"
+        }
+      },
+      "examples": [
+        {
+          "frame": "*2*1*21##",
+          "description": "Move cover 21 UP (Open)"
+        },
+        {
+          "frame": "*2*2*21##",
+          "description": "Move cover 21 DOWN (Close)"
+        },
+        {
+          "frame": "*2*0*21##",
+          "description": "STOP movement for cover 21"
+        },
+        {
+          "frame": "*#2*21*#10*75##",
+          "description": "Move cover 21 to 75% position"
+        }
+      ]
+    },
+    {
+      "who": 3,
+      "name": "Load Control (Legacy)",
+      "italian_name": "Controllo Carichi",
+      "document_title": "OpenWebNet_Community_3_LoadControl",
+      "pdf_filename": "WHO_3.pdf",
+      "version": "v1.0.0",
+      "date": "2006",
+      "status": "Legacy Copy Available",
+      "ha_platform": "switch, sensor",
+      "hardware_models": ["F421", "3522", "3523"],
+      "description": "Priority-based load shedding and disconnection central unit (F421) to prevent main breaker tripping.",
+      "addressing": "WHERE represents load actuator index (1 to 8) or central unit address.",
+      "what_commands": {
+        "0": "Disconnect / shed load",
+        "1": "Reconnect / force load",
+        "2": "Normal operation mode"
+      },
+      "dimensions": {
+        "1": {
+          "name": "Instantaneous Load Power",
+          "description": "Power measured on the load channel.",
+          "query": "*#3*WHERE*1##",
+          "write": ""
+        }
+      },
+      "examples": [
+        {
+          "frame": "*3*1*1##",
+          "description": "Force reconnect load 1"
+        },
+        {
+          "frame": "*#3*1##",
+          "description": "Request load 1 status"
+        }
+      ]
+    },
+    {
+      "who": 4,
+      "name": "Heating / Thermoregulation",
+      "italian_name": "Termoregolazione",
+      "document_title": "Open Web Net Language - Heating adjustment",
+      "pdf_filename": "WHO_4 2.pdf",
+      "version": "v2.0.0",
+      "date": "2013-11-27",
+      "status": "Archived & Verified",
+      "ha_platform": "climate, sensor",
+      "hardware_models": ["3550 (4-zone / 99-zone)", "L/N/NT4691", "3475 (probe)", "3476", "F430/2", "F430/4"],
+      "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, and local knob offsets.",
+      "addressing": "WHERE is zone number (1 to 99), probe number ('#0' for master probe), or central unit ('0').",
+      "what_commands": {
+        "100": "Conditioning: Conditioning OFF",
+        "101": "Conditioning: Manual Heating",
+        "102": "Conditioning: Manual Cooling",
+        "103": "Conditioning: Auto Heating/Cooling",
+        "110": "Antifreeze mode (*4*110*Z##)",
+        "111": "Thermal Protection mode (*4*111*Z##)",
+        "301": "Manual Heating setpoint (*4*301*Z#T##)",
+        "302": "Manual Cooling setpoint (*4*302*Z#T##)",
+        "311": "Set manual heating temperature with timeout (*4*311*Z#T#M##)"
+      },
+      "dimensions": {
+        "0": {
+          "name": "Measured Temperature",
+          "description": "Zone temperature probe reading in tenths of a degree (e.g. 0215 = 21.5°C).",
+          "query": "*#4*WHERE*0##",
+          "write": ""
+        },
+        "11": {
+          "name": "Fancoil Fan Speed",
+          "description": "Fan speed 0 (auto), 1, 2, 3.",
+          "query": "*#4*WHERE*11##",
+          "write": "*#4*WHERE*#11*<SPEED>##"
+        },
+        "14": {
+          "name": "Target Setpoint Temperature",
+          "description": "Target temperature in tenths of a degree (T) and operation mode (M).",
+          "query": "*#4*WHERE*14##",
+          "write": "*#4*WHERE*#14*<TEMP>*<MODE>##"
+        },
+        "22": {
+          "name": "Local Knob Offset",
+          "description": "Physical thermostat knob offset (-3 to +3 degrees in 0.5 steps).",
+          "query": "*#4*WHERE*22##",
+          "write": "*#4*WHERE*#22*<OFFSET>##"
+        }
+      },
+      "examples": [
+        {
+          "frame": "*#4*1*0##",
+          "description": "Request measured temperature for Zone 1"
+        },
+        {
+          "frame": "*#4*1*0*0215##",
+          "description": "Temperature response: Zone 1 is at 21.5°C"
+        },
+        {
+          "frame": "*#4*1*#14*0205*1##",
+          "description": "Set Zone 1 target temperature to 20.5°C in Heating mode"
+        },
+        {
+          "frame": "*4*110*1##",
+          "description": "Set Zone 1 to Antifreeze protection mode"
+        }
+      ]
+    },
+    {
+      "who": 5,
+      "name": "Burglar Alarm",
+      "italian_name": "Antifurto",
+      "document_title": "MyHome Burglar Alarm",
+      "pdf_filename": "WHO_5.pdf",
+      "version": "v1.0.0",
+      "date": "2008-02-13",
+      "status": "Archived & Verified",
+      "ha_platform": "alarm_control_panel",
+      "hardware_models": ["3485", "3486", "HC4600", "L4600", "3481"],
+      "description": "Central unit intrusion alarm status, arming, disarming, partition monitoring, and technical alarms (gas/water).",
+      "addressing": "WHERE can be: Central unit ('0'), Zone/Partition ('1' to '8'), or Auxiliary detector.",
+      "what_commands": {
+        "0": "Disarm / Alarm idle",
+        "1": "Arm system (Total)",
+        "2": "Arm partition / Partial",
+        "3": "Intrusion alarm active",
+        "4": "Technical alarm active (Gas/Water leak)"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*5*1*0##",
+          "description": "Arm the burglar alarm system"
+        },
+        {
+          "frame": "*5*0*0##",
+          "description": "Disarm the burglar alarm system"
+        },
+        {
+          "frame": "*#5*0##",
+          "description": "Request alarm central unit status"
+        }
+      ]
+    },
+    {
+      "who": 6,
+      "name": "Door Entry Call & Lock",
+      "italian_name": "Citofonia",
+      "document_title": "OpenWebNet_Community_DoorEntry",
+      "pdf_filename": "WHO_6.pdf",
+      "version": "v1.0.0",
+      "date": "2006",
+      "status": "Legacy Copy Available",
+      "ha_platform": "lock, switch, event",
+      "hardware_models": ["346200", "346210", "346850"],
+      "description": "Audio door entry calls, entrance panel ring triggers, door lock release, and staircase lighting activation.",
+      "addressing": "WHERE is Entrance Panel address or Internal Handset address.",
+      "what_commands": {
+        "10": "Release door lock (*6*10*WHERE##)",
+        "11": "Turn on staircase light",
+        "20": "Incoming call chime"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*6*10*1##",
+          "description": "Unlock door at Entrance Panel 1"
+        },
+        {
+          "frame": "*6*11*0##",
+          "description": "Activate staircase light from door entry system"
+        }
+      ]
+    },
+    {
+      "who": 7,
+      "name": "Video Door Entry / Multimedia",
+      "italian_name": "Videocitofonia",
+      "document_title": "Open Web Net WHO=7",
+      "pdf_filename": "WHO_7.pdf",
+      "version": "v1.0.1",
+      "date": "2011-12-01",
+      "status": "Archived & Verified",
+      "ha_platform": "camera",
+      "hardware_models": ["F453AV", "344502", "344522"],
+      "description": "Video session establishment, camera cycling, and video stream routing over IP for Video Server F453AV.",
+      "addressing": "WHERE represents external entrance panel or camera index.",
+      "what_commands": {
+        "0": "Terminate video session",
+        "1": "Start video session with camera 1",
+        "2": "Cycle to next camera"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*7*1*1##",
+          "description": "Activate video stream from camera 1"
+        },
+        {
+          "frame": "*7*0*1##",
+          "description": "Close video stream from camera 1"
+        }
+      ]
+    },
+    {
+      "who": 9,
+      "name": "Auxiliary",
+      "italian_name": "Comandi Ausiliari",
+      "document_title": "OpenWebNet_Community_Auxiliary",
+      "pdf_filename": "WHO_9.pdf",
+      "version": "v1.0.0",
+      "date": "2006",
+      "status": "Legacy Copy Available",
+      "ha_platform": "switch",
+      "hardware_models": ["F411/1..4", "067553"],
+      "description": "Auxiliary channels (AUX 1 through AUX 9) for triggering remote relays, inter-system signaling, and non-lighting loads without consuming lighting addresses.",
+      "addressing": "WHERE represents AUX channel number (1 to 9).",
+      "what_commands": {
+        "0": "Deactivate AUX channel",
+        "1": "Activate AUX channel"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*9*1*3##",
+          "description": "Activate Auxiliary channel 3"
+        },
+        {
+          "frame": "*9*0*3##",
+          "description": "Deactivate Auxiliary channel 3"
+        }
+      ]
+    },
+    {
+      "who": 13,
+      "name": "Gateway Management",
+      "italian_name": "Gestione Gateway",
+      "document_title": "OpenWebNet_Community_2_device_v1_0_0_EN",
+      "pdf_filename": "WHO_13.pdf",
+      "version": "v1.0.0",
+      "date": "2006-06-13",
+      "status": "Archived & Verified",
+      "ha_platform": "diagnostics",
+      "hardware_models": ["F454", "F452", "F453", "MH200", "MH200N", "MH202", "MyHOMEServer1"],
+      "description": "Gateway device management, clock/calendar synchronization, firmware versions, MAC address, uptime, and reboot commands.",
+      "addressing": "WHERE is usually empty or '0' for the local gateway.",
+      "what_commands": {
+        "1": "Reboot gateway"
+      },
+      "dimensions": {
+        "0": {
+          "name": "Date & Time Synchronization",
+          "description": "Set or read gateway RTC clock: hour, minute, second, day of week, day, month, year.",
+          "query": "*#13**0##",
+          "write": "*#13**#0*<HH>*<MM>*<SS>*<DAY>*<DD>*<MM>*<YYYY>##"
+        },
+        "1": {
+          "name": "Firmware Version",
+          "description": "Read gateway firmware build release string.",
+          "query": "*#13**1##",
+          "write": ""
+        },
+        "2": {
+          "name": "IP Address & Netmask",
+          "description": "Query Ethernet network parameters.",
+          "query": "*#13**2##",
+          "write": ""
+        },
+        "3": {
+          "name": "MAC Address",
+          "description": "Hardware MAC address string.",
+          "query": "*#13**3##",
+          "write": ""
+        },
+        "4": {
+          "name": "Uptime",
+          "description": "Gateway uptime seconds since last reboot.",
+          "query": "*#13**4##",
+          "write": ""
+        }
+      },
+      "examples": [
+        {
+          "frame": "*#13**0##",
+          "description": "Request date and time from gateway"
+        },
+        {
+          "frame": "*#13**1##",
+          "description": "Request gateway firmware version"
+        }
+      ]
+    },
+    {
+      "who": 14,
+      "name": "Actuators Diagnostics & Lock",
+      "italian_name": "Diagnostica Attuatori",
+      "document_title": "WHO 14 Actuator Diagnostics",
+      "pdf_filename": "WHO_14.pdf",
+      "version": "v1.0.0",
+      "date": "2008",
+      "status": "Needed / Missing",
+      "ha_platform": "diagnostics",
+      "hardware_models": ["F411", "F418"],
+      "description": "Actuator diagnostic parameters, physical lock/unlock status, thermal overload flags, and operating cycle counters.",
+      "addressing": "WHERE represents physical actuator address.",
+      "what_commands": {
+        "0": "Unlock actuator",
+        "1": "Lock actuator"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*#14*12##",
+          "description": "Query diagnostic state for actuator 12"
+        }
+      ]
+    },
+    {
+      "who": 15,
+      "name": "CEN (Scenario Pushbuttons)",
+      "italian_name": "Comandi Scenari CEN",
+      "document_title": "OpenWebNet CEN Scenario Controls",
+      "pdf_filename": "WHO_15.pdf",
+      "version": "v1.0.0",
+      "date": "2008",
+      "status": "Archived & Verified",
+      "ha_platform": "event, automation",
+      "hardware_models": ["F420", "L/N/NT4652", "067552", "067554", "HC4652"],
+      "description": "Event pushbuttons configured in CEN mode. Emits short press, start of long press, and release events to trigger automations and scenario programmers.",
+      "addressing": "WHERE format is 'A*PL#B' or 'WHERE#B' where B is the physical button number (1 to 32).",
+      "what_commands": {
+        "0": "Start of long pressure (press & hold)",
+        "1": "Short pressure (instant press & release)",
+        "2": "End of long pressure (release after hold)",
+        "3": "Pushbutton still pressed (periodic heartbeat during long hold)"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*15*1*11#2##",
+          "description": "Short press on button 2 of CEN interface at address 11"
+        },
+        {
+          "frame": "*15*0*11#2##",
+          "description": "Start of long press on button 2 of CEN interface 11"
+        },
+        {
+          "frame": "*15*2*11#2##",
+          "description": "Release button 2 of CEN interface 11"
+        }
+      ]
+    },
+    {
+      "who": 16,
+      "name": "Sound System / Audio",
+      "italian_name": "Diffusione Sonora",
+      "document_title": "OpenWebNet_Community_4_soundsystem_v1_0_1_EN.doc",
+      "pdf_filename": "WHO_16.pdf",
+      "version": "v1.0.1",
+      "date": "2011-11-24",
+      "status": "Archived & Verified",
+      "ha_platform": "media_player",
+      "hardware_models": ["F441 (Audio Matrix)", "3484", "3484/1", "F441M", "3487", "F500"],
+      "description": "Multi-room audio matrix system. Controls amplifier power in rooms, source selection (tuner, aux, media inputs), volume level, audio follow-me, and radio station tuning.",
+      "addressing": "WHERE can be: General ('0'), Room / Amplifier ('1' to '9'), Source ('#1' to '#4'), or Room+Source.",
+      "what_commands": {
+        "0": "Turn OFF amplifier in room",
+        "1": "Turn ON amplifier (last source)",
+        "10": "Volume UP one step",
+        "11": "Volume DOWN one step",
+        "20": "Next radio station / track",
+        "21": "Previous radio station / track",
+        "30": "Audio Follow-Me activate",
+        "100": "Select Audio Source 1 (*16*100*WHERE##)",
+        "101": "Select Audio Source 2",
+        "102": "Select Audio Source 3",
+        "103": "Select Audio Source 4"
+      },
+      "dimensions": {
+        "1": {
+          "name": "Exact Volume Level",
+          "description": "Volume level scaled from 0 (mute) to 30.",
+          "query": "*#16*WHERE*1##",
+          "write": "*#16*WHERE*#1*<LEVEL>##"
+        },
+        "2": {
+          "name": "Radio Frequency / Tuning",
+          "description": "FM Tuner frequency in kHz (e.g. 102500 for 102.5 MHz).",
+          "query": "*#16*WHERE*2##",
+          "write": "*#16*WHERE*#2*<FREQ_KHZ>##"
+        },
+        "3": {
+          "name": "Equalizer / Tone",
+          "description": "Treble and Bass adjustment values.",
+          "query": "*#16*WHERE*3##",
+          "write": "*#16*WHERE*#3*<BASS>*<TREBLE>##"
+        }
+      },
+      "examples": [
+        {
+          "frame": "*16*1*1##",
+          "description": "Turn ON audio amplifier in Room 1"
+        },
+        {
+          "frame": "*16*0*1##",
+          "description": "Turn OFF audio amplifier in Room 1"
+        },
+        {
+          "frame": "*16*100*1##",
+          "description": "Switch Room 1 audio source to Source 1"
+        },
+        {
+          "frame": "*#16*1*#1*15##",
+          "description": "Set volume in Room 1 to step 15 (50%)"
+        }
+      ]
+    },
+    {
+      "who": 17,
+      "name": "Scene Management (Advanced / MH200N)",
+      "italian_name": "Gestione Scenari MH200",
+      "document_title": "MH200/MH200N Scenario Language",
+      "pdf_filename": "WHO_17.pdf",
+      "version": "v1.0.0",
+      "date": "2009",
+      "status": "Archived & Verified",
+      "ha_platform": "event, automation",
+      "hardware_models": ["MH200", "MH200N", "MH202"],
+      "description": "Advanced programmable scenarios executing conditional logic, timers, logical equations, and complex multi-subsystem scenes on MH200/MH200N controllers.",
+      "addressing": "WHERE represents the advanced scenario ID (1 to 300).",
+      "what_commands": {
+        "1": "Execute advanced scenario",
+        "0": "Stop / abort advanced scenario",
+        "2": "Enable scenario automation",
+        "3": "Disable scenario automation"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*17*1*10##",
+          "description": "Trigger MH200 advanced scenario 10"
+        },
+        {
+          "frame": "*17*0*10##",
+          "description": "Abort running scenario 10"
+        }
+      ]
+    },
+    {
+      "who": 18,
+      "name": "Energy Management",
+      "italian_name": "Gestione Energia",
+      "document_title": "OpenWebNet Energy Management",
+      "pdf_filename": "WHO_18.pdf",
+      "version": "v1.0.0",
+      "date": "2010",
+      "status": "Archived & Verified",
+      "ha_platform": "sensor",
+      "hardware_models": ["F520 (Power meter)", "F521", "F522", "F523", "3523"],
+      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active power in Watts, total accumulated energy in Wh/kWh, and hourly/daily/monthly pulses.",
+      "addressing": "WHERE indicates meter probe line: '1' to '255', or '#1' to '#3' for multi-phase tariffs.",
+      "what_commands": {},
+      "dimensions": {
+        "1": {
+          "name": "Instantaneous Active Power",
+          "description": "Current power consumption in Watts.",
+          "query": "*#18*WHERE*1##",
+          "write": ""
+        },
+        "2": {
+          "name": "Hourly Consumption Totalizer",
+          "description": "Energy consumed in the current hour (Wh).",
+          "query": "*#18*WHERE*2##",
+          "write": ""
+        },
+        "3": {
+          "name": "Daily Consumption Totalizer",
+          "description": "Energy consumed in current day (Wh).",
+          "query": "*#18*WHERE*3##",
+          "write": ""
+        },
+        "4": {
+          "name": "Monthly Consumption Totalizer",
+          "description": "Energy consumed in current month (Wh).",
+          "query": "*#18*WHERE*4##",
+          "write": ""
+        },
+        "11": {
+          "name": "Lifetime Accumulated Energy Totalizer",
+          "description": "Total cumulative energy recorded by meter (Wh).",
+          "query": "*#18*WHERE*11##",
+          "write": ""
+        }
+      },
+      "examples": [
+        {
+          "frame": "*#18*1*1##",
+          "description": "Request instantaneous active power from meter 1"
+        },
+        {
+          "frame": "*#18*1*1*1450##",
+          "description": "Meter 1 reports 1450 Watts instantaneous consumption"
+        },
+        {
+          "frame": "*#18*1*11*00452300##",
+          "description": "Cumulative totalizer reports 45,230.0 kWh"
+        }
+      ]
+    },
+    {
+      "who": 22,
+      "name": "Sound Diffusion (Extended)",
+      "italian_name": "Diffusione Sonora Avanzata",
+      "document_title": "Sound Diffusion Extended",
+      "pdf_filename": "WHO_22.pdf",
+      "version": "v1.0.0",
+      "date": "2012",
+      "status": "Archived & Verified",
+      "ha_platform": "media_player",
+      "hardware_models": ["F441", "3484"],
+      "description": "Extended audio matrix commands supporting granular spatial balance, multi-zone volume grouping, and DSP profile switching.",
+      "addressing": "WHERE represents extended audio zone.",
+      "what_commands": {
+        "1": "Group activate audio zones",
+        "0": "Group deactivate audio zones"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*22*1*1##",
+          "description": "Extended audio activate zone 1"
+        }
+      ]
+    },
+    {
+      "who": 24,
+      "name": "Lighting Management / DALI",
+      "italian_name": "Gestione Illuminazione Avanzata",
+      "document_title": "Who = 24 LIGHTING MANAGEMENT",
+      "pdf_filename": "WHO_24.pdf",
+      "version": "v1.0.0",
+      "date": "2015",
+      "status": "Archived & Verified",
+      "ha_platform": "light",
+      "hardware_models": ["F429", "F429G", "067557"],
+      "description": "DALI ballasts and advanced lighting management. Direct ballast addressing, DALI groups, emergency lighting status, and daylight harvesting sensor integration.",
+      "addressing": "WHERE represents DALI Gateway address followed by ballast or group index.",
+      "what_commands": {
+        "0": "DALI Ballast OFF",
+        "1": "DALI Ballast ON",
+        "2": "DALI Step Dim"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*24*1*101##",
+          "description": "Turn ON DALI ballast 1 on gateway 1"
+        }
+      ]
+    },
+    {
+      "who": 25,
+      "name": "CEN+ / Dry Contacts",
+      "italian_name": "Comandi Scenari CEN+ / Contatti Puliti",
+      "document_title": "OpenWebNet CEN+ Specification",
+      "pdf_filename": "WHO_25.pdf",
+      "version": "v1.0.0",
+      "date": "2011",
+      "status": "Archived & Verified",
+      "ha_platform": "event, binary_sensor",
+      "hardware_models": ["3477", "L/N/NT4652/2", "067554", "F428"],
+      "description": "Modern CEN+ pushbuttons and dry contact interfaces. Supports up to 255 buttons per interface with distinct short press, start pressure, release, and contact state signals.",
+      "addressing": "WHERE represents interface address 'A*PL' or 'WHERE', button number is in what/dimension parameter.",
+      "what_commands": {
+        "21": "Short press / pulse event",
+        "22": "Start of long press event",
+        "23": "Long press heartbeat",
+        "24": "Release after long press",
+        "31": "Dry contact closed",
+        "32": "Dry contact opened"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*25*21#1*12##",
+          "description": "CEN+ Short press on button 1 of interface 12"
+        },
+        {
+          "frame": "*25*22#1*12##",
+          "description": "CEN+ Start long press on button 1 of interface 12"
+        },
+        {
+          "frame": "*25*24#1*12##",
+          "description": "CEN+ Release button 1 of interface 12"
+        },
+        {
+          "frame": "*25*31#1*15##",
+          "description": "Dry contact input 1 on interface 15 CLOSED"
+        }
+      ]
+    },
+    {
+      "who": 1001,
+      "name": "Diagnostic (Lighting / Bus)",
+      "italian_name": "Diagnostica Illuminazione",
+      "document_title": "WHO 1001 Diagnostic Specification",
+      "pdf_filename": "WHO_1001.pdf",
+      "version": "v1.0.0",
+      "date": "2008",
+      "status": "Archived & Verified",
+      "ha_platform": "diagnostics",
+      "hardware_models": ["F411", "F429", "MH200N"],
+      "description": "Low-level SCS physical layer diagnostic frames for lighting bus topology, actuator responsiveness, and short-circuit warnings.",
+      "addressing": "WHERE represents diagnostic target actuator.",
+      "what_commands": {},
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*#1001*12##",
+          "description": "Query physical diagnostics for lighting node 12"
+        }
+      ]
+    },
+    {
+      "who": 1004,
+      "name": "Heating Diagnostic",
+      "italian_name": "Diagnostica Termoregolazione",
+      "document_title": "WHO 1004 Diagnostic Heating",
+      "pdf_filename": "WHO_1004.pdf",
+      "version": "v1.0.0",
+      "date": "2008",
+      "status": "Archived & Verified",
+      "ha_platform": "diagnostics",
+      "hardware_models": ["3550", "3475"],
+      "description": "HVAC probe diagnostics, sensor battery status, probe open/short circuit fault codes, and communication timeouts.",
+      "addressing": "WHERE is zone or probe number.",
+      "what_commands": {},
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*#1004*1##",
+          "description": "Query probe diagnostic status for zone 1"
+        }
+      ]
+    },
+    {
+      "who": 1013,
+      "name": "Gateway Diagnostic",
+      "italian_name": "Diagnostica Gateway",
+      "document_title": "WHO 1013 Gateway Diagnostics",
+      "pdf_filename": "WHO_1013.pdf",
+      "version": "v1.0.0",
+      "date": "2008",
+      "status": "Archived & Verified",
+      "ha_platform": "diagnostics",
+      "hardware_models": ["F454", "MH200N", "MyHOMEServer1"],
+      "description": "Gateway buffer status, active connection sockets, TCP queue depth, and internal memory state.",
+      "addressing": "WHERE is local gateway ('0').",
+      "what_commands": {},
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*#1013*0##",
+          "description": "Query gateway socket and buffer diagnostics"
+        }
+      ]
+    }
+  ]
+}
