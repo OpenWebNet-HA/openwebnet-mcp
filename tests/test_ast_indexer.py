@@ -81,6 +81,9 @@ class OWNEvent:
 
     def configure(self, mode: str, speed: int = 5, *, timeout: int = 10) -> None:
         pass
+
+    def pos_only(self, x: int = 1, /, y: int = 2) -> None:
+        pass
 """
     (ownd_dir / "event.py").write_text(py_code, encoding="utf-8")
 

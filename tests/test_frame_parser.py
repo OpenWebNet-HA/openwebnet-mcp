@@ -173,17 +173,30 @@ def test_parse_cen_frames():
     p_off = parser.parse("*#4*1*22*1##")
     assert "Offset 1" in p_off.explanation
 
-    # WHO 16 Sound system volume and tuner
+    # WHO 16 Sound system volume, tuner, and equalizer
     p_vol = parser.parse("*#16*1*1*15##")
     assert "Volume 15/30 (50%)" in p_vol.explanation
 
     p_tune = parser.parse("*#16*1*2*102500##")
     assert "Tuner 102.5 MHz" in p_tune.explanation
 
-    # WHO 4 Manual heating setpoint command (*4*301*Z#T##)
+    p_tune_low = parser.parse("*#16*1*2*500##")
+    assert "Tuner 500 kHz" in p_tune_low.explanation
+
+    p_eq = parser.parse("*#16*1*3*5*10##")
+    assert "Equalizer (Bass 5, Treble 10)" in p_eq.explanation
+
+    # WHO 4 Manual heating setpoint command (*4*301*Z#T##) and with timeout
     p_sp = parser.parse("*4*301*2#0215##")
     assert p_sp.is_valid is True
     assert "Zone 2 with target setpoint 21.5" in p_sp.explanation
+
+    p_sp_timeout = parser.parse("*4*311*2#0215#60##")
+    assert "duration 60 min" in p_sp_timeout.explanation
+
+    # CEN with non-bus extra parameters
+    p_cen_extra = parser.parse("*15*1*11#2#8##")
+    assert "parameters (8)" in p_cen_extra.explanation
 
 
 
