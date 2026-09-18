@@ -249,7 +249,7 @@ class FrameParser:
                 parsed.explanation = f"Request {dim_name} from {subsystem} at {where_desc}"
             else:
                 vals = ", ".join(parsed.dimension_values)
-                semantic = self._decode_dimension_values(parsed.who, parsed.dimension, parsed.dimension_values)
+                semantic = self._decode_dimension_values(parsed.who, parsed.dimension, parsed.dimension_values, parsed)
                 semantic_suffix = f" ({semantic})" if semantic else ""
                 if parsed.frame_type == "DIMENSION_WRITING":
                     parsed.explanation = f"Write values [{vals}]{semantic_suffix} to {dim_name} for {subsystem} at {where_desc}"
@@ -282,7 +282,9 @@ class FrameParser:
             prefix = "[Translation] " if parsed.frame_type == "COMMAND_TRANSLATION" else ""
             parsed.explanation = f"{prefix}{subsystem}: {what_desc} at {where_desc}"
 
-    def _decode_dimension_values(self, who: int, dimension: int | None, values: list[str]) -> str:
+    def _decode_dimension_values(
+        self, who: int, dimension: int | None, values: list[str], parsed: ParsedFrame | None = None
+    ) -> str:
         """Provide human-readable semantic interpretation of raw dimension value lists."""
         if not values or dimension is None:
             return ""
@@ -303,8 +305,23 @@ class FrameParser:
                     return f"Target {t_val:.1f}°C" + (f" in {m_desc} mode" if m_desc else "")
             elif dimension == 11 and values:
                 spd = values[0]
-                spd_desc = "Auto" if spd == "0" else f"Speed {spd}"
-                return f"Fancoil {spd_desc}"
+                valid_speeds = {"0": "Auto", "1": "Speed 1 (Low)", "2": "Speed 2 (Medium)", "3": "Speed 3 (High)"}
+                if spd in valid_speeds:
+                    return f"Fancoil {valid_speeds[spd]}"
+                if spd == "15":
+                    if parsed is not None and parsed.frame_type == "DIMENSION_WRITING":
+                        parsed.warnings.append(
+                            "Value '15' (OFF) is documented as Read-Only in BTicino WHO=4 specifications. "
+                            "Writing *#11*15 is not handled on real SCS bus gateways."
+                        )
+                    return "Fancoil OFF (status only)"
+                if parsed is not None:
+                    parsed.warnings.append(
+                        f"Invalid fan speed code '{spd}' for Dimension 11. "
+                        "Valid write speeds are: 0 (Auto), 1 (Low), 2 (Medium), 3 (High). "
+                        "Speed code 4 does not exist in OpenWebNet; physical gateways silently drop this frame."
+                    )
+                return f"Fancoil Unknown Speed ({spd})"
             elif dimension == 22 and values:
                 return f"Offset {values[0]}"
 

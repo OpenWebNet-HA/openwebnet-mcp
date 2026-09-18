@@ -213,9 +213,9 @@
       "what_commands": {
         "100": "Conditioning: Conditioning OFF",
         "101": "Conditioning: Manual Heating",
-        "102": "Conditioning: Manual Cooling",
+        "102": "Conditioning: Antifreeze mode (*4*102*Z##) / Central Unit Manual Cooling (*4*102*#0##)",
         "103": "Conditioning: Auto Heating/Cooling",
-        "110": "Antifreeze mode (*4*110*Z##)",
+        "110": "Manual Heating mode (*4*110*Z##)",
         "111": "Thermal Protection mode (*4*111*Z##)",
         "301": "Manual Heating setpoint (*4*301*Z#T##)",
         "302": "Manual Cooling setpoint (*4*302*Z#T##)",
@@ -230,9 +230,26 @@
         },
         "11": {
           "name": "Fancoil Fan Speed",
-          "description": "Fan speed 0 (auto), 1, 2, 3.",
+          "description": "Fancoil fan speed control. Write support (*#4*WHERE*#11*<SPEED>##) accepts: 0 (Auto), 1 (Low), 2 (Medium), 3 (High). Status responses may report 15 (OFF). Note: physical thermostats have no independent fan OFF state while active; writing speed 4 or 15 is dropped/ignored by physical gateways.",
           "query": "*#4*WHERE*11##",
-          "write": "*#4*WHERE*#11*<SPEED>##"
+          "write": "*#4*WHERE*#11*<SPEED>##",
+          "allowed_values": {
+            "write": ["0", "1", "2", "3"],
+            "read": ["0", "1", "2", "3", "15"]
+          },
+          "hardware_notes": "Physical thermostats (4691, 3550) only cycle Auto -> Speed 1 -> Speed 2 -> Speed 3 -> Auto. Fan shutdown is automated by actuator idle status (Dimension 20, Val 5) when setpoint is satisfied, or when turning the zone to HVACMode.OFF (*4*303*WHERE##)."
+        },
+        "12": {
+          "name": "Complete Probe Status / Operational Target",
+          "description": "Active operational target setpoint in tenths of a degree (T) taking into account offsets and antifreeze/protection mode overrides, plus operation mode (M).",
+          "query": "*#4*WHERE*12##",
+          "write": ""
+        },
+        "13": {
+          "name": "Local Offset / Control State",
+          "description": "Thermostat knob offset or local control state on central unit systems (0=normal, 1-3=+offset, 11-13=-offset, 4=off, 5=protection, 6=override).",
+          "query": "*#4*WHERE*13##",
+          "write": ""
         },
         "14": {
           "name": "Target Setpoint Temperature",

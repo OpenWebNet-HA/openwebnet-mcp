@@ -169,6 +169,20 @@ def test_parse_cen_frames():
     # WHO 4 Fancoil and offset
     p_fan = parser.parse("*#4*1*11*2##")
     assert "Fancoil Speed 2" in p_fan.explanation
+    assert len(p_fan.warnings) == 0
+
+    # WHO 4 invalid fan speed code 4
+    p_fan_invalid = parser.parse("*#4*1*#11*4##")
+    assert any("Invalid fan speed code '4'" in w for w in p_fan_invalid.warnings)
+
+    # WHO 4 fan speed 15 write warning (read-only in spec)
+    p_fan_off_write = parser.parse("*#4*1*#11*15##")
+    assert any("Read-Only" in w for w in p_fan_off_write.warnings)
+
+    # WHO 4 fan speed 15 read response (allowed status)
+    p_fan_off_read = parser.parse("*#4*1*11*15##")
+    assert "Fancoil OFF" in p_fan_off_read.explanation
+    assert len(p_fan_off_read.warnings) == 0
 
     p_off = parser.parse("*#4*1*22*1##")
     assert "Offset 1" in p_off.explanation
