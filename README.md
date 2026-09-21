@@ -5,10 +5,10 @@
 [![Python Support](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue?logo=python)](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **Developer MCP Tool for OpenWebNet Protocol Validation, WHO Specifications, and Home Assistant Integration Knowledge.**
+> **Developer MCP Tool for the OpenWebNet Encyclopedia, Protocol Validation, and Home Assistant Integration Knowledge.**
 > Deterministic syntax checking, formal WHO catalog reference, and AST signature introspection for AI coding assistants.
 
-`openwebnet-mcp` is an offline, read-only Model Context Protocol (MCP) server built with Python 3.11+ using the `FastMCP` framework. It provides AI coding assistants (Claude Desktop, Cursor, VS Code, Antigravity) with fast semantic lookups, deterministic frame grammar validation, and reference documentation for OpenWebNet WHO families and Home Assistant `myhome` configuration patterns.
+`openwebnet-mcp` is an offline, read-only Model Context Protocol (MCP) server built with Python 3.11+ using the `FastMCP` framework. It acts as the intelligent search engine and interface for the massive 160+ document **OpenWebNet-Encyclopedia**, providing AI coding assistants (Claude Desktop, Cursor, VS Code, Antigravity) with fast semantic lookups, deterministic frame grammar validation, and deep reference documentation for OpenWebNet WHO families and Home Assistant `myhome` configuration patterns.
 
 ---
 
