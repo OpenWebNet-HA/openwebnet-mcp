@@ -105,6 +105,7 @@ def get_external_docs_paths() -> list[Path]:
     parent_dir = project_root.parent
 
     if parent_dir.exists():
+        _add(parent_dir / "OpenWebNet-Encyclopedia")
         _add(parent_dir / "MyHOME" / "docs")
         _add(parent_dir / "MyHOME")
         _add(parent_dir / "OpenWebNet-HA_wiki")
