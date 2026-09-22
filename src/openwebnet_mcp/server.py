@@ -392,6 +392,61 @@ async def parse_and_validate_frame(frame: str) -> str:
         return f"**Error**: {err}"
 
 
+# ── 6b. Draft sound source selection ─────────────────────────────────
+@mcp.tool()
+async def draft_sound_source_selection(
+    amplifier: str,
+    source: int,
+    base_band: bool = False,
+) -> str:
+    """Build the WHO=16 frames that switch a room's audio source.
+
+    WHO_16.pdf documents source cycling but no directed selection, so the
+    frames below cannot be derived from the specification. They come from
+    captures on two F441M installations: `*16*3*10S##` activates the source
+    device and `*16*3*1ES##` routes environment `E` to it, where `E` is the
+    first digit of a two-digit amplifier address.
+
+    Do not use WHAT 100-102 for this. Those are "source busy" and RDS control.
+
+    Args:
+        amplifier: Amplifier address such as '23', or a bare environment digit.
+        source: Source device number, 1-9.
+        base_band: Use base band (WHAT 0) rather than stereo channel (WHAT 3).
+    """
+    try:
+        generator = _get_generator()
+        frames = generator.generate_sound_source_selection(
+            amplifier=amplifier, source=source, base_band=base_band
+        )
+        address = str(amplifier).strip()
+        environment = address[0] if len(address) > 1 else address
+
+        parser = _get_parser()
+        lines = [
+            f"# Source selection for amplifier `{amplifier}` to source `{source}`",
+            "",
+            "Send both frames, in this order:",
+            "",
+        ]
+        for frame in frames:
+            lines.append(f"- `{frame}` : {parser.parse(frame).explanation}")
+        lines.extend([
+            "",
+            "## Scope",
+            "",
+            f"- The matrix routes per output, and an output serves environment `{environment}` as a whole. "
+            f"Every amplifier whose address starts with `{environment}` follows this change.",
+            "- Not documented in `WHO_16.pdf`; established from captures on two F441M installations "
+            "(see the Encyclopedia, `reverse-engineering/sound-matrix-routing.md`).",
+            "- Untested: base-band installations, the `#E` environment address form, and sources above 4.",
+        ])
+        return "\n".join(lines)
+    except Exception as err:
+        logger.error("draft_sound_source_selection failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
 # ── 7. Draft OpenWebNet Frame ────────────────────────────────────────
 @mcp.tool()
 async def draft_own_frame(

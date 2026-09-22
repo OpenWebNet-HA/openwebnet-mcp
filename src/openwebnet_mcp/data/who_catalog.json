@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "last_updated": "2026-09-09",
+  "last_updated": "2026-09-22",
   "families": [
     {
       "who": 0,
@@ -12,7 +12,12 @@
       "date": "2010-10-01",
       "status": "Archived & Verified",
       "ha_platform": "event, automations",
-      "hardware_models": ["Legrand 03551", "Legrand 88301", "BTicino F420", "IR interface 3456"],
+      "hardware_models": [
+        "Legrand 03551",
+        "Legrand 88301",
+        "BTicino F420",
+        "IR interface 3456"
+      ],
       "description": "Basic scenario module handling up to 32 pre-programmed SCS bus scenes triggered by physical buttons or gateway events.",
       "addressing": "WHERE represents the scenario index (1 to 32).",
       "what_commands": {
@@ -41,7 +46,14 @@
       "date": "2014-11-17",
       "status": "Archived & Verified",
       "ha_platform": "light",
-      "hardware_models": ["F411/1..4", "F418 (dimmer)", "F429 (DALI)", "F429G", "067557", "BMSE3001"],
+      "hardware_models": [
+        "F411/1..4",
+        "F418 (dimmer)",
+        "F429 (DALI)",
+        "F429G",
+        "067557",
+        "BMSE3001"
+      ],
       "description": "Controls ON/OFF, stepped dimming (10 levels or 1-100%), timed lighting, blinking, and transition speed across point-to-point, area, group, and general addresses.",
       "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL', e.g. '12' for A=1, PL=2), or Local Bus ('A*PL#4#bus').",
       "what_commands": {
@@ -116,7 +128,12 @@
       "date": "2015-11-12",
       "status": "Archived & Verified",
       "ha_platform": "cover",
-      "hardware_models": ["F411U2", "F401", "LN4672M2", "067557"],
+      "hardware_models": [
+        "F411U2",
+        "F401",
+        "LN4672M2",
+        "067557"
+      ],
       "description": "Controls motorized shutters, blinds, rolling gates, and venetian louvres. Supports UP, DOWN, STOP, and advanced percentage positioning.",
       "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL'), or Bus routed ('where#4#bus').",
       "what_commands": {
@@ -170,7 +187,11 @@
       "date": "2006",
       "status": "Legacy Copy Available",
       "ha_platform": "switch, sensor",
-      "hardware_models": ["F421", "3522", "3523"],
+      "hardware_models": [
+        "F421",
+        "3522",
+        "3523"
+      ],
       "description": "Priority-based load shedding and disconnection central unit (F421) to prevent main breaker tripping.",
       "addressing": "WHERE represents load actuator index (1 to 8) or central unit address.",
       "what_commands": {
@@ -207,7 +228,14 @@
       "date": "2013-11-27",
       "status": "Archived & Verified",
       "ha_platform": "climate, sensor",
-      "hardware_models": ["3550 (4-zone / 99-zone)", "L/N/NT4691", "3475 (probe)", "3476", "F430/2", "F430/4"],
+      "hardware_models": [
+        "3550 (4-zone / 99-zone)",
+        "L/N/NT4691",
+        "3475 (probe)",
+        "3476",
+        "F430/2",
+        "F430/4"
+      ],
       "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, and local knob offsets.",
       "addressing": "WHERE is zone number (1 to 99), probe number ('#0' for master probe), or central unit ('0').",
       "what_commands": {
@@ -234,8 +262,19 @@
           "query": "*#4*WHERE*11##",
           "write": "*#4*WHERE*#11*<SPEED>##",
           "allowed_values": {
-            "write": ["0", "1", "2", "3"],
-            "read": ["0", "1", "2", "3", "15"]
+            "write": [
+              "0",
+              "1",
+              "2",
+              "3"
+            ],
+            "read": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "15"
+            ]
           },
           "hardware_notes": "Physical thermostats (4691, 3550) only cycle Auto -> Speed 1 -> Speed 2 -> Speed 3 -> Auto. Fan shutdown is automated by actuator idle status (Dimension 20, Val 5) when setpoint is satisfied, or when turning the zone to HVACMode.OFF (*4*303*WHERE##)."
         },
@@ -293,7 +332,13 @@
       "date": "2008-02-13",
       "status": "Archived & Verified",
       "ha_platform": "alarm_control_panel",
-      "hardware_models": ["3485", "3486", "HC4600", "L4600", "3481"],
+      "hardware_models": [
+        "3485",
+        "3486",
+        "HC4600",
+        "L4600",
+        "3481"
+      ],
       "description": "Central unit intrusion alarm status, arming, disarming, partition monitoring, and technical alarms (gas/water).",
       "addressing": "WHERE can be: Central unit ('0'), Zone/Partition ('1' to '8'), or Auxiliary detector.",
       "what_commands": {
@@ -329,7 +374,11 @@
       "date": "2006",
       "status": "Legacy Copy Available",
       "ha_platform": "lock, switch, event",
-      "hardware_models": ["346200", "346210", "346850"],
+      "hardware_models": [
+        "346200",
+        "346210",
+        "346850"
+      ],
       "description": "Audio door entry calls, entrance panel ring triggers, door lock release, and staircase lighting activation.",
       "addressing": "WHERE is Entrance Panel address or Internal Handset address.",
       "what_commands": {
@@ -359,7 +408,11 @@
       "date": "2011-12-01",
       "status": "Archived & Verified",
       "ha_platform": "camera",
-      "hardware_models": ["F453AV", "344502", "344522"],
+      "hardware_models": [
+        "F453AV",
+        "344502",
+        "344522"
+      ],
       "description": "Video session establishment, camera cycling, and video stream routing over IP for Video Server F453AV.",
       "addressing": "WHERE represents external entrance panel or camera index.",
       "what_commands": {
@@ -389,7 +442,10 @@
       "date": "2006",
       "status": "Legacy Copy Available",
       "ha_platform": "switch",
-      "hardware_models": ["F411/1..4", "067553"],
+      "hardware_models": [
+        "F411/1..4",
+        "067553"
+      ],
       "description": "Auxiliary channels (AUX 1 through AUX 9) for triggering remote relays, inter-system signaling, and non-lighting loads without consuming lighting addresses.",
       "addressing": "WHERE represents AUX channel number (1 to 9).",
       "what_commands": {
@@ -418,7 +474,15 @@
       "date": "2006-06-13",
       "status": "Archived & Verified",
       "ha_platform": "diagnostics",
-      "hardware_models": ["F454", "F452", "F453", "MH200", "MH200N", "MH202", "MyHOMEServer1"],
+      "hardware_models": [
+        "F454",
+        "F452",
+        "F453",
+        "MH200",
+        "MH200N",
+        "MH202",
+        "MyHOMEServer1"
+      ],
       "description": "Gateway device management, clock/calendar synchronization, firmware versions, MAC address, uptime, and reboot commands.",
       "addressing": "WHERE is usually empty or '0' for the local gateway.",
       "what_commands": {
@@ -477,7 +541,12 @@
       "date": "2008",
       "status": "Reverse-Engineered & Documented",
       "ha_platform": "diagnostics",
-      "hardware_models": ["F411", "F411U2", "F418", "LN4672M2"],
+      "hardware_models": [
+        "F411",
+        "F411U2",
+        "F418",
+        "LN4672M2"
+      ],
       "description": "Actuator safety lock mechanism for lighting and automation endpoints. Inverts/inhibits physical wall switches (CEN buttons, rocker switches) and remote actuation during maintenance, child safety locks, or window/door interlocks. Legrand never distributed an official public PDF for this WHO.",
       "addressing": "WHERE represents physical actuator address (e.g. point-to-point ID '12' or 'A*PL').",
       "what_commands": {
@@ -510,7 +579,13 @@
       "date": "2008",
       "status": "Archived & Verified",
       "ha_platform": "event, automation",
-      "hardware_models": ["F420", "L/N/NT4652", "067552", "067554", "HC4652"],
+      "hardware_models": [
+        "F420",
+        "L/N/NT4652",
+        "067552",
+        "067554",
+        "HC4652"
+      ],
       "description": "Event pushbuttons configured in CEN mode. Emits short press, start of long press, and release events to trigger automations and scenario programmers.",
       "addressing": "WHERE format is 'A*PL#B' or 'WHERE#B' where B is the physical button number (1 to 32).",
       "what_commands": {
@@ -545,60 +620,213 @@
       "date": "2011-11-24",
       "status": "Archived & Verified",
       "ha_platform": "media_player",
-      "hardware_models": ["F441 (Audio Matrix)", "3484", "3484/1", "F441M", "3487", "F500"],
-      "description": "Multi-room audio matrix system. Controls amplifier power in rooms, source selection (tuner, aux, media inputs), volume level, audio follow-me, and radio station tuning.",
-      "addressing": "WHERE can be: General ('0'), Room / Amplifier ('1' to '9'), Source ('#1' to '#4'), or Room+Source.",
+      "hardware_models": [
+        "F441 (Audio Matrix)",
+        "F441M (Multichannel Matrix)",
+        "3484",
+        "3484/1",
+        "3487",
+        "F500 (Tuner)",
+        "L4561 (Stereo Control)"
+      ],
+      "description": "Multi-room audio matrix. Controls amplifier power, volume, tone, balance, sleep and Follow Me, source device power, tuner frequency, stored stations and RDS. Source selection uses a routing pseudo address that the specification does not document; see addressing.",
+      "addressing": "WHERE is one of: General 0; environment #0-#9; amplifier 01-99, where the first digit is the environment and the second the amplifier within it (23 is amplifier 3 in environment 2); all sources 100; source device 101-109. A three-digit 1ES form (E in 1-9) routes the amplifiers of environment E to source S; it is absent from WHO_16.pdf and is established from captures on two F441M installations. Preserve leading zeros on amplifier addresses.",
       "what_commands": {
-        "0": "Turn OFF amplifier in room",
-        "1": "Turn ON amplifier (last source)",
-        "10": "Volume UP one step",
-        "11": "Volume DOWN one step",
-        "20": "Next radio station / track",
-        "21": "Previous radio station / track",
-        "30": "Audio Follow-Me activate",
-        "100": "Select Audio Source 1 (*16*100*WHERE##)",
-        "101": "Select Audio Source 2",
-        "102": "Select Audio Source 3",
-        "103": "Select Audio Source 4"
+        "0": "ON amplifier / source, base band",
+        "3": "ON amplifier / source, stereo channel",
+        "10": "OFF amplifier / source, base band",
+        "13": "OFF amplifier / source, stereo channel",
+        "20": "Source cycle, base band (*16*20*100##)",
+        "23": "Source cycle, stereo channel (*16*23*100##)",
+        "30": "Sleep activation, base band",
+        "33": "Sleep activation, stereo channel",
+        "40": "Sleep OFF",
+        "50": "Follow Me, base band",
+        "53": "Follow Me, stereo channel",
+        "100": "Source busy",
+        "101": "Start sending RDS",
+        "102": "Stop sending RDS"
       },
+      "what_ranges": [
+        {
+          "from": 1001,
+          "to": 1015,
+          "description": "Increase volume by 1-15 steps (WHAT = 1000 + steps)"
+        },
+        {
+          "from": 1101,
+          "to": 1115,
+          "description": "Decrease volume by 1-15 steps (WHAT = 1100 + steps)"
+        },
+        {
+          "from": 2001,
+          "to": 2015,
+          "description": "Increase high tones by 1-15 steps"
+        },
+        {
+          "from": 2101,
+          "to": 2115,
+          "description": "Decrease high tones by 1-15 steps"
+        },
+        {
+          "from": 5000,
+          "to": 5000,
+          "description": "Seek the next higher free frequency (source address)"
+        },
+        {
+          "from": 5001,
+          "to": 5015,
+          "description": "Increase frequency by 0.05-0.75 MHz (source address)"
+        },
+        {
+          "from": 5100,
+          "to": 5100,
+          "description": "Seek the next lower free frequency (source address)"
+        },
+        {
+          "from": 5101,
+          "to": 5115,
+          "description": "Decrease frequency by 0.05-0.75 MHz (source address)"
+        },
+        {
+          "from": 6001,
+          "to": 6015,
+          "description": "Advance station or track by 1-15 (source address)"
+        },
+        {
+          "from": 6101,
+          "to": 6115,
+          "description": "Move back station or track by 1-15 (source address)"
+        }
+      ],
+      "where_forms": [
+        {
+          "pattern": "^0$",
+          "description": "General: all amplifiers"
+        },
+        {
+          "pattern": "^#([0-9])$",
+          "description": "Environment {1}: every amplifier in that room"
+        },
+        {
+          "pattern": "^1([1-9])([0-9])$",
+          "description": "Matrix routing: environment {1} listening to source {2} (not in WHO_16.pdf; established from captures)"
+        },
+        {
+          "pattern": "^100$",
+          "description": "All source devices"
+        },
+        {
+          "pattern": "^10([1-9])$",
+          "description": "Source device {1}"
+        },
+        {
+          "pattern": "^([0-9])([0-9])$",
+          "description": "Amplifier {2} in environment {1}"
+        }
+      ],
       "dimensions": {
         "1": {
-          "name": "Exact Volume Level",
-          "description": "Volume level scaled from 0 (mute) to 30.",
+          "name": "Volume",
+          "description": "Amplifier volume, 0 (mute) to 31.",
           "query": "*#16*WHERE*1##",
           "write": "*#16*WHERE*#1*<LEVEL>##"
         },
         "2": {
-          "name": "Radio Frequency / Tuning",
-          "description": "FM Tuner frequency in kHz (e.g. 102500 for 102.5 MHz).",
-          "query": "*#16*WHERE*2##",
-          "write": "*#16*WHERE*#2*<FREQ_KHZ>##"
+          "name": "High tones",
+          "description": "High tone value. Listed in the specification's global table without a detailed message flow; payload not established.",
+          "query": "*#16*WHERE*2##"
         },
         "3": {
-          "name": "Equalizer / Tone",
-          "description": "Treble and Bass adjustment values.",
-          "query": "*#16*WHERE*3##",
-          "write": "*#16*WHERE*#3*<BASS>*<TREBLE>##"
+          "name": "Low tones",
+          "description": "Low tone value. Table only; payload not established.",
+          "query": "*#16*WHERE*3##"
+        },
+        "4": {
+          "name": "Balance",
+          "description": "Balance value. Table only; payload not established.",
+          "query": "*#16*WHERE*4##"
+        },
+        "5": {
+          "name": "State",
+          "description": "Returns ordinary *16*WHAT*WHERE## state frames rather than a scalar value; a collective request can expand to one frame per active amplifier or source.",
+          "query": "*#16*WHERE*5##"
+        },
+        "6": {
+          "name": "Frequency",
+          "description": "Tuner frequency as six decimal digits, expressed in kHz by the specification's examples (107000 = 107.00 MHz). Source addresses only.",
+          "query": "*#16*SOURCE*6##",
+          "write": "*#16*SOURCE*#6*0*<FREQUENCY>##"
+        },
+        "7": {
+          "name": "Stored station or track",
+          "description": "Station 1-5 on a source address.",
+          "query": "*#16*SOURCE*7##",
+          "write": "*#16*SOURCE*#7*0*<STATION>##"
+        },
+        "8": {
+          "name": "RDS",
+          "description": "RDS text as eight separate decimal ASCII codes, not literal characters.",
+          "query": "*#16*SOURCE*8##"
+        },
+        "9": {
+          "name": "Frequency plus station or track",
+          "description": "Listed in the global table; no detailed flow, payload not established."
+        },
+        "10": {
+          "name": "Memorized station",
+          "description": "Station 1-5.",
+          "write": "*#16*SOURCE*#10*<STATION>##"
         }
       },
       "examples": [
         {
-          "frame": "*16*1*1##",
-          "description": "Turn ON audio amplifier in Room 1"
+          "frame": "*16*3*23##",
+          "description": "Turn ON amplifier 3 in environment 2 (stereo channel)"
         },
         {
-          "frame": "*16*0*1##",
-          "description": "Turn OFF audio amplifier in Room 1"
+          "frame": "*16*13*23##",
+          "description": "Turn OFF the same amplifier"
         },
         {
-          "frame": "*16*100*1##",
-          "description": "Switch Room 1 audio source to Source 1"
+          "frame": "*16*3*102##",
+          "description": "Activate source device 2"
         },
         {
-          "frame": "*#16*1*#1*15##",
-          "description": "Set volume in Room 1 to step 15 (50%)"
+          "frame": "*16*3*122##",
+          "description": "Route environment 2 to source 2; every amplifier in that environment follows"
+        },
+        {
+          "frame": "*16*3*112##",
+          "description": "Route environment 1 to source 2"
+        },
+        {
+          "frame": "*#16*23*#1*15##",
+          "description": "Set amplifier 23 to volume 15 of 31"
+        },
+        {
+          "frame": "*#16*23*1*15##",
+          "description": "Amplifier 23 reports volume 15"
+        },
+        {
+          "frame": "*16*23*100##",
+          "description": "Cycle to the next source, stereo channel"
+        },
+        {
+          "frame": "*#16*101*#6*0*107000##",
+          "description": "Tune source 1 to 107.00 MHz"
+        },
+        {
+          "frame": "*16*6001*101##",
+          "description": "Advance source 1 to the next station"
+        },
+        {
+          "frame": "*#16*101*8*32*82*97*100*105*111*32*49##",
+          "description": "Source 1 reports RDS text as eight ASCII codes"
         }
-      ]
+      ],
+      "notes": "WHAT values carry their magnitude in the final digits and must not be truncated. The base-band and stereo-channel variants (0/10, 3/13, 20/23, 30/33, 50/53) address the same operations on different signal paths; captured F441M installations use the stereo-channel set. Relative WHAT operations and absolute DIMENSION values are complementary: prefer a reported value over counting increments.",
+      "evidence": "WHAT, WHERE and DIMENSION tables from WHO_16.pdf v1.0.1 and the OpenWebNet Encyclopedia page functional/who-16-sound-system. The 1ES routing form and the EA amplifier decomposition are corroborated from captures on two independent F441M installations and documented in the Encyclopedia under reverse-engineering/sound-matrix-routing.md; they are not in the published specification."
     },
     {
       "who": 17,
@@ -610,7 +838,11 @@
       "date": "2009",
       "status": "Archived & Verified",
       "ha_platform": "event, automation",
-      "hardware_models": ["MH200", "MH200N", "MH202"],
+      "hardware_models": [
+        "MH200",
+        "MH200N",
+        "MH202"
+      ],
       "description": "Advanced programmable scenarios executing conditional logic, timers, logical equations, and complex multi-subsystem scenes on MH200/MH200N controllers.",
       "addressing": "WHERE represents the advanced scenario ID (1 to 300).",
       "what_commands": {
@@ -641,7 +873,13 @@
       "date": "2010",
       "status": "Archived & Verified",
       "ha_platform": "sensor",
-      "hardware_models": ["F520 (Power meter)", "F521", "F522", "F523", "3523"],
+      "hardware_models": [
+        "F520 (Power meter)",
+        "F521",
+        "F522",
+        "F523",
+        "3523"
+      ],
       "description": "Monitors electricity, water, and gas meters. Provides instantaneous active power in Watts, total accumulated energy in Wh/kWh, and hourly/daily/monthly pulses.",
       "addressing": "WHERE indicates meter probe line: '1' to '255', or '#1' to '#3' for multi-phase tariffs.",
       "what_commands": {},
@@ -694,28 +932,205 @@
     },
     {
       "who": 22,
-      "name": "Sound Diffusion (Extended)",
+      "name": "Sound Diffusion",
       "italian_name": "Diffusione Sonora Avanzata",
-      "document_title": "Sound Diffusion Extended",
+      "document_title": "Who = 22 Sound Diffusion",
       "pdf_filename": "WHO_22.pdf",
-      "version": "v1.0.0",
-      "date": "2012",
+      "version": "v1.1.0",
+      "date": "2014-06-12",
       "status": "Archived & Verified",
       "ha_platform": "media_player",
-      "hardware_models": ["F441", "3484"],
-      "description": "Extended audio matrix commands supporting granular spatial balance, multi-zone volume grouping, and DSP profile switching.",
-      "addressing": "WHERE represents extended audio zone.",
+      "hardware_models": [
+        "F441",
+        "F441M",
+        "3484",
+        "F500",
+        "F500N"
+      ],
+      "description": "The later sound diffusion dialect. Sources, speakers, areas and general targets are structured addresses, and operation parameters are embedded in WHAT. Covers power, volume, tone, balance, 3D, loudness and presets, plus tuner frequency, modulation, stored stations, tracks and RDS. It is a separate dialect from WHO 16: similar terms do not imply compatible numeric values, address forms or parameter layouts.",
+      "addressing": "WHERE is a tagged target class, not a decimal number with punctuation: source 2#SOURCE_ID; speaker 3#AREA#POINT; speaker area 4#AREA; general 5#SENDER_ADDRESS; all sources 6. Source dimension requests use the general-source form 5#2#SOURCE_ID while some responses use 2#SOURCE_ID, so retain the reported address rather than requiring textual equality. Keep the structure intact.",
       "what_commands": {
-        "1": "Group activate audio zones",
-        "0": "Group deactivate audio zones"
+        "0": "Turn source or speaker OFF",
+        "1": "Turn source or speaker ON",
+        "2": "Source turned on",
+        "3": "Increase volume (WHAT#VOLUME_STEP)",
+        "4": "Decrease volume (WHAT#VOLUME_STEP)",
+        "5": "Search toward higher frequencies; empty step parameter requests automatic search",
+        "6": "Search toward lower frequencies; empty step parameter requests automatic search",
+        "9": "Next station",
+        "10": "Previous station",
+        "11": "Next track",
+        "12": "Previous track",
+        "22": "Sliding request",
+        "31": "Start RDS message reporting",
+        "32": "Stop RDS message reporting",
+        "33": "Store the tuned frequency as a station (WHAT#STATION)",
+        "34": "Turn amplifier ON using Follow Me (WHAT#MULTIMEDIA_TYPE#AREA)",
+        "35": "Turn amplifier ON using a specified source (WHAT#MULTIMEDIA_TYPE#AREA#SOURCE_ID)",
+        "36": "Increment low tones",
+        "37": "Decrement low tones",
+        "38": "Increment mid tones",
+        "39": "Decrement mid tones",
+        "40": "Increment high tones",
+        "41": "Decrement high tones",
+        "42": "Move balance right",
+        "43": "Move balance left",
+        "55": "Next preset",
+        "56": "Previous preset"
       },
-      "dimensions": {},
+      "what_parameters": {
+        "multimedia_type": "1 voice; 2 right; 3 left; 4 stereo; 11 all sources",
+        "source_id": "1-4",
+        "area_or_point": "1-9",
+        "device_state": "0 OFF; 1 ON",
+        "frequency_step": "1-15",
+        "modulation": "1 FM; 2 AM-LW; 3 AM-MW; 4 AM-SW",
+        "stored_station": "1-5 on F500; 1-15 on F500N",
+        "track": "1-999",
+        "volume": "absolute 0-31; step 1-31",
+        "tone_or_balance": "1-63",
+        "3d_level": "0-10",
+        "loudness": "0 OFF; 1 ON",
+        "preset": "2 normal; 3 dance; 4 pop; 5 rock; 6 classic; 7 techno; 8 party; 9 soft; 10 full bass; 11 full treble; 16-25 user defined"
+      },
+      "where_forms": [
+        {
+          "pattern": "^2$",
+          "description": "Source {p1}"
+        },
+        {
+          "pattern": "^3$",
+          "description": "Speaker: area {p1}, point {p2}"
+        },
+        {
+          "pattern": "^4$",
+          "description": "Speaker area {p1}"
+        },
+        {
+          "pattern": "^5$",
+          "description": "General, sender address {p1}#{p2}"
+        },
+        {
+          "pattern": "^6$",
+          "description": "All sources"
+        }
+      ],
+      "dimensions": {
+        "1": {
+          "name": "Volume",
+          "description": "Absolute volume 0-31.",
+          "query": "*#22*3#AREA#POINT*1##"
+        },
+        "2": {
+          "name": "High tones",
+          "description": "Tone value 1-63."
+        },
+        "3": {
+          "name": "Medium tones",
+          "description": "Tone value 1-63."
+        },
+        "4": {
+          "name": "Low tones",
+          "description": "Tone value 1-63."
+        },
+        "5": {
+          "name": "Frequency",
+          "description": "Payload MODULATION*FREQUENCY.",
+          "query": "*#22*5#2#SOURCE_ID*5##"
+        },
+        "6": {
+          "name": "Track or station",
+          "description": "Payload STATION_OR_TRACK."
+        },
+        "7": {
+          "name": "Play status",
+          "description": "Listed in the specification's dimension table."
+        },
+        "10": {
+          "name": "RDS text",
+          "description": "RDS text, appearing in the detailed flows rather than the summary table. Reported as decimal ASCII codes; WHO 16 reports the same payload under DIMENSION 8. The source does not supply a complete encoding."
+        },
+        "11": {
+          "name": "Frequency and station",
+          "description": "Payload MODULATION*FREQUENCY*STATION_OR_TRACK."
+        },
+        "12": {
+          "name": "Device state",
+          "description": "Payload DEVICE_STATE*MULTIMEDIA_TYPE."
+        },
+        "17": {
+          "name": "Balance",
+          "description": "Balance value 1-63.",
+          "write": "*#22*3#AREA#POINT*#17*<BALANCE>##"
+        },
+        "18": {
+          "name": "3D",
+          "description": "3D level 0-10."
+        },
+        "19": {
+          "name": "Preset",
+          "description": "Preset identifier.",
+          "write": "*#22*3#AREA#POINT*#19*<PRESET>##"
+        },
+        "20": {
+          "name": "Loudness",
+          "description": "0 OFF; 1 ON.",
+          "write": "*#22*3#AREA#POINT*#20*<LOUDNESS>##"
+        },
+        "21": {
+          "name": "Equalizer bands",
+          "description": "Reported under selectors 21#1, 21#2 and 21#3 carrying bands 1-3, 4-6 and 7-8 separated by *. The source does not supply a band-value domain."
+        }
+      },
       "examples": [
         {
-          "frame": "*22*1*1##",
-          "description": "Extended audio activate zone 1"
+          "frame": "*22*1#4#1*3#1#1##",
+          "description": "Turn ON speaker 1 in area 1, stereo"
+        },
+        {
+          "frame": "*22*0#4#1*3#1#1##",
+          "description": "Turn the same speaker OFF"
+        },
+        {
+          "frame": "*22*3#5*3#1#1##",
+          "description": "Increase that speaker's volume by 5 steps"
+        },
+        {
+          "frame": "*22*35#4#1#2*3#1#1##",
+          "description": "Turn the speaker ON using source 2"
+        },
+        {
+          "frame": "*22*34#4#1*3#1#1##",
+          "description": "Turn the amplifier ON using Follow Me"
+        },
+        {
+          "frame": "*22*33#3*2#1##",
+          "description": "Store the tuned frequency of source 1 as station 3"
+        },
+        {
+          "frame": "*#22*3#1#1*1##",
+          "description": "Request the volume of speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*1*17##",
+          "description": "That speaker reports volume 17"
+        },
+        {
+          "frame": "*#22*3#1#1*12*1*4##",
+          "description": "That speaker reports state ON, stereo"
+        },
+        {
+          "frame": "*#22*5#2#1*5##",
+          "description": "Request the frequency of source 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#17*32##",
+          "description": "Set the balance of that speaker"
         }
-      ]
+      ],
+      "notes": "Most commands are parameterized: a decoder must retain the entire WHAT field, because the operation and its magnitude, multimedia type and area live there. Follow Me (34) is a separate operation from ordinary ON and should not be normalized to it; 35 carries routing intent by selecting a source while turning an amplifier on. Absolute DIMENSION state complements relative WHAT operations; prefer reported values over reconstructing state from increments. One MH200N has been observed reporting every WHO 16 sound event a second time in this dialect, which is established for that device only.",
+      "known_source_inconsistencies": "The published specification is not uniformly reliable as a copy-and-send catalogue: speaker power examples omit separators that the address table uses; speaker writes for dimensions 1-4 join the dimension marker to WHERE without the usual *; preset commands 55 and 56 contain an early ##; some tone responses disagree with the requested tone dimension; RDS commands 31 and 32 are printed without a normal WHERE; and WHAT 21 source notifications appear outside the summary table. Preserve these as source discrepancies rather than silently repairing them. Occasional trailing empty fields in volume reports should be preserved by a parser.",
+      "evidence": "WHAT, WHERE, parameter and DIMENSION tables from WHO_22.pdf v1.1.0 and the OpenWebNet Encyclopedia page functional/who-22-sound-diffusion, which records where the specification's summary table and detailed flows disagree. The dual-dialect observation is documented in the Encyclopedia under reverse-engineering/sound-matrix-routing.md."
     },
     {
       "who": 24,
@@ -727,7 +1142,11 @@
       "date": "2015",
       "status": "Archived & Verified",
       "ha_platform": "light",
-      "hardware_models": ["F429", "F429G", "067557"],
+      "hardware_models": [
+        "F429",
+        "F429G",
+        "067557"
+      ],
       "description": "DALI ballasts and advanced lighting management. Direct ballast addressing, DALI groups, emergency lighting status, and daylight harvesting sensor integration.",
       "addressing": "WHERE represents DALI Gateway address followed by ballast or group index.",
       "what_commands": {
@@ -753,7 +1172,12 @@
       "date": "2011",
       "status": "Archived & Verified",
       "ha_platform": "event, binary_sensor",
-      "hardware_models": ["3477", "L/N/NT4652/2", "067554", "F428"],
+      "hardware_models": [
+        "3477",
+        "L/N/NT4652/2",
+        "067554",
+        "F428"
+      ],
       "description": "Modern CEN+ pushbuttons and dry contact interfaces. Supports up to 255 buttons per interface with distinct short press, start pressure, release, and contact state signals.",
       "addressing": "WHERE represents interface address 'A*PL' or 'WHERE', button number is in what/dimension parameter.",
       "what_commands": {
@@ -794,7 +1218,11 @@
       "date": "2008",
       "status": "Archived & Verified",
       "ha_platform": "diagnostics",
-      "hardware_models": ["F411", "F429", "MH200N"],
+      "hardware_models": [
+        "F411",
+        "F429",
+        "MH200N"
+      ],
       "description": "Low-level SCS physical layer diagnostic frames for lighting bus topology, actuator responsiveness, and short-circuit warnings.",
       "addressing": "WHERE represents diagnostic target actuator.",
       "what_commands": {},
@@ -816,7 +1244,10 @@
       "date": "2008",
       "status": "Archived & Verified",
       "ha_platform": "diagnostics",
-      "hardware_models": ["3550", "3475"],
+      "hardware_models": [
+        "3550",
+        "3475"
+      ],
       "description": "HVAC probe diagnostics, sensor battery status, probe open/short circuit fault codes, and communication timeouts.",
       "addressing": "WHERE is zone or probe number.",
       "what_commands": {},
@@ -838,7 +1269,11 @@
       "date": "2008",
       "status": "Archived & Verified",
       "ha_platform": "diagnostics",
-      "hardware_models": ["F454", "MH200N", "MyHOMEServer1"],
+      "hardware_models": [
+        "F454",
+        "MH200N",
+        "MyHOMEServer1"
+      ],
       "description": "Gateway buffer status, active connection sockets, TCP queue depth, and internal memory state.",
       "addressing": "WHERE is local gateway ('0').",
       "what_commands": {},

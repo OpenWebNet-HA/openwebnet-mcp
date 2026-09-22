@@ -325,3 +325,28 @@ def test_main_and_dunder_main(monkeypatch):
     runpy.run_module("openwebnet_mcp", run_name="__main__")
     assert called == ["run"]
 
+
+
+@pytest.mark.asyncio
+async def test_draft_sound_source_selection():
+    """The tool emits both frames and states the scope of the claim."""
+    from openwebnet_mcp.server import draft_sound_source_selection
+
+    out = await draft_sound_source_selection(amplifier="23", source=2)
+    assert "*16*3*102##" in out
+    assert "*16*3*122##" in out
+    assert "environment 2 listening to source 2" in out
+    # The caller must learn that the whole room follows
+    assert "Every amplifier whose address starts with `2`" in out
+    # ... and that this is capture-derived, not specified
+    assert "Not documented in `WHO_16.pdf`" in out
+
+
+@pytest.mark.asyncio
+async def test_draft_sound_source_selection_reports_errors():
+    """A bad source is reported, not silently turned into a wrong frame."""
+    from openwebnet_mcp.server import draft_sound_source_selection
+
+    out = await draft_sound_source_selection(amplifier="23", source=99)
+    assert "Error" in out
+    assert "*16*" not in out

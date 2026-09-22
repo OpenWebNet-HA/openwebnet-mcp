@@ -187,18 +187,19 @@ def test_parse_cen_frames():
     p_off = parser.parse("*#4*1*22*1##")
     assert "Offset 1" in p_off.explanation
 
-    # WHO 16 Sound system volume, tuner, and equalizer
+    # WHO 16 Sound system: volume is 0-31, and the tuner lives on DIMENSION 6
     p_vol = parser.parse("*#16*1*1*15##")
-    assert "Volume 15/30 (50%)" in p_vol.explanation
+    assert "Volume 15/31 (48%)" in p_vol.explanation
 
-    p_tune = parser.parse("*#16*1*2*102500##")
-    assert "Tuner 102.5 MHz" in p_tune.explanation
+    p_tune = parser.parse("*#16*101*6*0*102500##")
+    assert "Tuner 102.50 MHz" in p_tune.explanation
 
-    p_tune_low = parser.parse("*#16*1*2*500##")
-    assert "Tuner 500 kHz" in p_tune_low.explanation
+    p_station = parser.parse("*#16*101*7*0*3##")
+    assert "Stored station/track 3" in p_station.explanation
 
-    p_eq = parser.parse("*#16*1*3*5*10##")
-    assert "Equalizer (Bass 5, Treble 10)" in p_eq.explanation
+    p_rds = parser.parse("*#16*101*8*32*82*97*100*105*111*32*49##")
+    assert "RDS text" in p_rds.explanation
+    assert "Radio 1" in p_rds.explanation
 
     # WHO 4 Manual heating setpoint command (*4*301*Z#T##) and with timeout
     p_sp = parser.parse("*4*301*2#0215##")
@@ -284,3 +285,82 @@ def test_parse_who_14():
     assert p_status.is_valid is True
     assert p_status.who == 14
     assert p_status.frame_type == "STATUS_REQUEST"
+
+
+def test_who16_sound_addressing():
+    """WHO 16 addresses: amplifier EA, source 10S, and the 1ES routing form.
+
+    The routing form is not in WHO_16.pdf. It is corroborated by captures on
+    two F441M installations and by the WHO 22 frames one of them emits
+    alongside, where the environment and the source sit in separate fields.
+    """
+    parser = FrameParser()
+
+    amp = parser.parse("*16*3*23##")
+    assert "Amplifier 3 in environment 2" in amp.explanation
+    assert amp.warnings == []
+
+    source = parser.parse("*16*3*102##")
+    assert "Source device 2" in source.explanation
+
+    routing = parser.parse("*16*3*122##")
+    assert "environment 2 listening to source 2" in routing.explanation
+
+    other_env = parser.parse("*16*3*112##")
+    assert "environment 1 listening to source 2" in other_env.explanation
+
+    # 10S is a source device, never routing to "environment 0"
+    assert "environment" not in parser.parse("*16*3*101##").explanation
+
+
+def test_who16_stereo_channel_and_ranged_whats():
+    """Hardware uses the stereo-channel WHATs and magnitude-carrying ranges."""
+    parser = FrameParser()
+
+    for frame in ("*16*3*23##", "*16*13*23##", "*16*23*100##", "*16*33*23##", "*16*53*23##"):
+        parsed = parser.parse(frame)
+        assert parsed.warnings == [], f"{frame} should be recognised: {parsed.warnings}"
+
+    vol_up = parser.parse("*16*1005*23##")
+    assert "Increase volume" in vol_up.explanation
+    assert vol_up.warnings == []
+
+    station = parser.parse("*16*6001*101##")
+    assert "station or track" in station.explanation
+    assert station.warnings == []
+
+    # Outside every declared range, a warning is still the right answer
+    assert parser.parse("*16*7777*23##").warnings
+
+
+def test_who22_structured_addresses():
+    """WHO 22 WHERE is a tagged class, not a number with punctuation."""
+    parser = FrameParser()
+
+    speaker = parser.parse("*22*1#4#1*3#1#1##")
+    assert "area 1, point 1" in speaker.explanation
+    assert speaker.warnings == []
+
+    volume = parser.parse("*#22*3#1#1*1*17##")
+    assert "Volume" in volume.explanation
+    assert "area 1, point 1" in volume.explanation
+
+    source_on = parser.parse("*22*2#4#1*5#2#2##")
+    assert "Source turned on" in source_on.explanation
+
+    follow_me = parser.parse("*22*34#4#1*3#1#1##")
+    assert "Follow Me" in follow_me.explanation
+    assert follow_me.warnings == []
+
+
+def test_who16_source_selection_is_not_what_100():
+    """WHAT 100-102 are source busy and RDS control, not source selection.
+
+    An earlier catalog listed these as "Select Audio Source N", which would
+    send an agent to a frame that means something else entirely.
+    """
+    parser = FrameParser()
+
+    assert "busy" in parser.parse("*16*100*23##").explanation.lower()
+    assert "RDS" in parser.parse("*16*101*23##").explanation
+    assert "RDS" in parser.parse("*16*102*23##").explanation
