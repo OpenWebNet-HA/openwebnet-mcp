@@ -82,10 +82,15 @@ def test_generate_climate():
 
 def test_generate_cen():
     gen = FrameGenerator()
-    # CEN (WHO=15)
-    assert gen.generate_cen("11", button=2, press_type="short") == "*15*1*11#2##"
-    assert gen.generate_cen("11", button=2, press_type="start_long") == "*15*0*11#2##"
-    assert gen.generate_cen("11", button=2, press_type="release") == "*15*2*11#2##"
+    # CEN (WHO=15): *15*BUTTON[#PHASE]*WHERE##
+    assert gen.generate_cen("22", button=2, press_type="short") == "*15*02*22##"
+    assert gen.generate_cen("22", button=2, press_type="short_release") == "*15*02#1*22##"
+    assert gen.generate_cen("22", button=2, press_type="start_long") == "*15*02#3*22##"
+    assert gen.generate_cen("22", button=2, press_type="held") == "*15*02#3*22##"
+    assert gen.generate_cen("22", button=2, press_type="release") == "*15*02#2*22##"
+    assert gen.generate_cen("36#4#01", button=6) == "*15*06*36#4#01##"
+    with pytest.raises(ValueError, match="between 0 and 31"):
+        gen.generate_cen("22", button=32)
 
     # CEN+ (WHO=25)
     assert gen.generate_cen("12", button=1, press_type="short", is_cen_plus=True) == "*25*21#1*12##"

@@ -577,7 +577,8 @@
       "pdf_filename": "WHO_15.pdf",
       "version": "v1.0.0",
       "date": "2008",
-      "status": "Archived & Verified",
+      "status": "Corrected per OpenWebNet Encyclopedia",
+      "source": "https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/blob/305278651b593a785271c7c4df15d9e802a41ffb/functional/who-15-cen/README.md",
       "ha_platform": "event, automation",
       "hardware_models": [
         "F420",
@@ -586,27 +587,39 @@
         "067554",
         "HC4652"
       ],
-      "description": "Event pushbuttons configured in CEN mode. Emits short press, start of long press, and release events to trigger automations and scenario programmers.",
-      "addressing": "WHERE format is 'A*PL#B' or 'WHERE#B' where B is the physical button number (1 to 32).",
+      "description": "Event pushbuttons configured in CEN mode. A frame names the button in WHAT (00..31) and the command source in WHERE; the interaction phase is a WHAT parameter. A short press is pressure then #1; a long press is pressure, one or more #3 (about every 0.5 s while held), then #2. Frame form: *15*BUTTON[#PHASE]*WHERE##.",
+      "addressing": "WHERE is the command source, not the button: A/PL (e.g. '22'), advanced forms (e.g. '0001'), 'WHERE#3' for the private riser and 'WHERE#4#I' for local bus I. The button number never goes in WHERE.",
       "what_commands": {
-        "0": "Start of long pressure (press & hold)",
-        "1": "Short pressure (instant press & release)",
-        "2": "End of long pressure (release after hold)",
-        "3": "Pushbutton still pressed (periodic heartbeat during long hold)"
+        "BUTTON (00..31)": "Pressure on the button (start of any press; the leading zero is significant)",
+        "BUTTON#1": "Release after short pressure",
+        "BUTTON#2": "Release after extended (long) pressure",
+        "BUTTON#3": "Extended pressure, repeated about every 0.5 s while held"
       },
       "dimensions": {},
       "examples": [
         {
-          "frame": "*15*1*11#2##",
-          "description": "Short press on button 2 of CEN interface at address 11"
+          "frame": "*15*01*0001##",
+          "description": "Pressure on button 01 from advanced source 0001"
         },
         {
-          "frame": "*15*0*11#2##",
-          "description": "Start of long press on button 2 of CEN interface 11"
+          "frame": "*15*02*22##",
+          "description": "Pressure on button 02 from source 22"
         },
         {
-          "frame": "*15*2*11#2##",
-          "description": "Release button 2 of CEN interface 11"
+          "frame": "*15*02#1*22##",
+          "description": "Release after short pressure on button 02 from source 22"
+        },
+        {
+          "frame": "*15*02#3*22##",
+          "description": "Extended pressure on button 02 from source 22 (repeats while held)"
+        },
+        {
+          "frame": "*15*02#2*22##",
+          "description": "Release after extended pressure on button 02 from source 22"
+        },
+        {
+          "frame": "*15*06*36#4#01##",
+          "description": "Pressure on button 06 from source 36 on local bus 01"
         }
       ]
     },

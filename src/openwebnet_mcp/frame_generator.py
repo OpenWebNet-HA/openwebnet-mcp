@@ -140,12 +140,19 @@ class FrameGenerator:
                 return f"*25*24#{button}*{where}##"
             return f"*25*21#{button}*{where}##"
         else:
-            # WHO=15
-            if "start" in p_type or "long" in p_type:
-                return f"*15*0*{where}#{button}##"
+            # WHO=15: *15*BUTTON[#PHASE]*WHERE##, button 00..31 in WHAT.
+            # A short press is "short" then "short_release"; a long press is
+            # "short", one or more "start_long", then "release".
+            if not 0 <= int(button) <= 31:
+                raise ValueError("CEN button must be between 0 and 31")
+            btn = f"{int(button):02d}"
+            if "short_release" in p_type:
+                return f"*15*{btn}#1*{where}##"
+            if "start" in p_type or "long" in p_type or "held" in p_type:
+                return f"*15*{btn}#3*{where}##"
             if "release" in p_type:
-                return f"*15*2*{where}#{button}##"
-            return f"*15*1*{where}#{button}##"
+                return f"*15*{btn}#2*{where}##"
+            return f"*15*{btn}*{where}##"
 
     def generate_sound_source_selection(
         self,
