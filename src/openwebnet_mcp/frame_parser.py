@@ -276,6 +276,9 @@ class FrameParser:
                 what_desc = f"{base_desc} on pushbutton {btn}"
 
             if not what_desc and parsed.what is not None:
+                what_desc = self._describe_what_range(family, parsed.what)
+
+            if not what_desc and parsed.what is not None:
                 parsed.warnings.append(f"WHAT={what_str} is not standard for WHO={parsed.who}.")
                 what_desc = f"Action {what_str}"
 
@@ -355,17 +358,71 @@ class FrameParser:
             if dimension == 1 and values:
                 val = values[0]
                 if val.isdigit():
-                    pct = int(val) * 100 // 30
-                    return f"Volume {val}/30 ({pct}%)"
+                    pct = int(val) * 100 // 31
+                    return f"Volume {val}/31 ({pct}%)"
                 return f"Volume {val}"
-            elif dimension == 2 and values:
-                val = values[0]
-                if val.isdigit() and int(val) > 1000:
-                    return f"Tuner {int(val)/1000.0:.1f} MHz ({val} kHz)"
-                return f"Tuner {val} kHz"
-            elif dimension == 3 and len(values) >= 2:
-                return f"Equalizer (Bass {values[0]}, Treble {values[1]})"
+            elif dimension == 6 and values:
+                # Frequency is reported as "0*<six digits>" in kHz by the examples.
+                freq = values[-1]
+                if freq.isdigit() and int(freq) > 1000:
+                    return f"Tuner {int(freq)/1000.0:.2f} MHz ({freq} kHz)"
+                return f"Tuner {freq} kHz"
+            elif dimension == 7 and values:
+                return f"Stored station/track {values[-1]}"
+            elif dimension == 8 and values:
+                text = "".join(
+                    chr(int(v)) for v in values if v.isdigit() and 32 <= int(v) <= 126
+                )
+                return f"RDS text {text!r}" if text else "RDS text"
+            elif dimension == 10 and values:
+                return f"Memorized station {values[-1]}"
 
+        return ""
+
+    @staticmethod
+    def _describe_what_range(family: dict, what: int) -> str:
+        """Describe a WHAT that carries its magnitude in its final digits.
+
+        Families such as WHO=16 encode "increase volume by N steps" as
+        ``1000 + N``. Listing every value would bloat the catalog, so those are
+        declared as ranges instead.
+        """
+        for entry in family.get("what_ranges", []):
+            try:
+                low, high = int(entry["from"]), int(entry["to"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if low <= what <= high:
+                return str(entry.get("description", f"Action {what}"))
+        return ""
+
+    @staticmethod
+    def _describe_where_form(family: dict, where: str, where_params: list[str]) -> str:
+        """Describe a WHERE against the address forms a family declares.
+
+        ``{1}``/``{2}`` in a form's description are filled from the pattern's
+        capture groups, ``{p1}``/``{p2}`` from the WHERE parameters, so both
+        packed addresses (WHO=16 ``1ES``) and tagged ones (WHO=22
+        ``3#AREA#POINT``) can be described from data.
+        """
+        import re as _re
+
+        for form in family.get("where_forms", []):
+            pattern = form.get("pattern")
+            description = form.get("description")
+            if not pattern or not description:
+                continue
+            match = _re.match(pattern, where)
+            if not match:
+                continue
+            out = description
+            for index, group in enumerate(match.groups(), start=1):
+                out = out.replace(f"{{{index}}}", str(group))
+            for index, param in enumerate(where_params, start=1):
+                out = out.replace(f"{{p{index}}}", str(param))
+            if "{" in out:  # a placeholder had no value: the form does not fit
+                continue
+            return out
         return ""
 
     def _describe_where(self, where: str | None, where_params: list[str], who: int | None = None) -> str:
@@ -397,6 +454,12 @@ class FrameParser:
             if extra:
                 desc += f" (duration {extra[0]} min)"
             return desc
+
+        family = self.catalog.get_family(who) if who is not None else None
+        if isinstance(family, dict):
+            declared = self._describe_where_form(family, where, where_params)
+            if declared:
+                return declared
 
         desc = f"address '{where}'"
         if where_params:

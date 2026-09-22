@@ -138,3 +138,36 @@ def test_generate_ha_yaml():
 
     # Slugify edge case
     assert gen._slugify("---!@#") == "entity"
+
+
+def test_generate_sound_source_selection():
+    """The routing frame uses the environment digit, not the amplifier digit."""
+    generator = FrameGenerator()
+
+    assert generator.generate_sound_source_selection("23", 2) == [
+        "*16*3*102##",
+        "*16*3*122##",
+    ]
+    # Amplifier 3 versus amplifier 1 in the same room: identical routing
+    assert generator.generate_sound_source_selection("21", 2)[1] == "*16*3*122##"
+    # A different room
+    assert generator.generate_sound_source_selection("11", 2)[1] == "*16*3*112##"
+    # A bare environment digit is accepted
+    assert generator.generate_sound_source_selection("8", 1)[1] == "*16*3*181##"
+    # Base band swaps the WHAT on both frames
+    assert generator.generate_sound_source_selection("23", 2, base_band=True) == [
+        "*16*0*102##",
+        "*16*0*122##",
+    ]
+
+
+def test_generate_sound_source_selection_rejects_bad_input():
+    """A bad source or address fails loudly rather than emitting a wrong frame."""
+    generator = FrameGenerator()
+
+    with pytest.raises(ValueError):
+        generator.generate_sound_source_selection("23", 0)
+    with pytest.raises(ValueError):
+        generator.generate_sound_source_selection("23", 10)
+    with pytest.raises(ValueError):
+        generator.generate_sound_source_selection("kitchen", 2)

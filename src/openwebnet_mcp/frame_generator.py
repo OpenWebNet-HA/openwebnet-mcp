@@ -147,6 +147,49 @@ class FrameGenerator:
                 return f"*15*2*{where}#{button}##"
             return f"*15*1*{where}#{button}##"
 
+    def generate_sound_source_selection(
+        self,
+        amplifier: str,
+        source: int,
+        base_band: bool = False,
+    ) -> list[str]:
+        """Build the pair of frames that routes an amplifier's room to a source.
+
+        WHO=16 has no documented "select source" command: the specification
+        defines source cycling only. Installations perform directed selection
+        with a routing pseudo address, ``1`` + environment + source, where the
+        environment is the first digit of a two-digit amplifier address. That
+        form is established from captures on two F441M installations.
+
+        Because the matrix switches per output and an output serves a whole
+        environment, every amplifier in that environment follows the change.
+
+        Args:
+            amplifier: Amplifier address (``"23"``) or a bare environment digit.
+            source: Source device number, 1-9.
+            base_band: Use the base-band WHAT (0) instead of stereo channel (3).
+                Every captured installation uses the stereo channel.
+
+        Returns:
+            ``[activate_source, route_environment]`` in the order the wall
+            controls send them.
+
+        Raises:
+            ValueError: If the source is out of range or the address is not numeric.
+        """
+        address = str(amplifier).strip()
+        if not address.isdigit():
+            raise ValueError(f"amplifier address must be numeric, got {amplifier!r}")
+        if not 1 <= int(source) <= 9:
+            raise ValueError(f"source must be between 1 and 9, got {source!r}")
+
+        environment = address[0] if len(address) > 1 else address
+        what = 0 if base_band else 3
+        return [
+            f"*16*{what}*{100 + int(source)}##",
+            f"*16*{what}*1{environment}{int(source)}##",
+        ]
+
     def generate_ha_yaml(
         self,
         platform: str,

@@ -89,6 +89,7 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `lookup_frame_syntax` | Grammar, regex templates, and parameter formats for OpenWebNet message types. |
 | `parse_and_validate_frame` | Deep syntax and semantic validation of any raw OpenWebNet frame string. |
 | `draft_own_frame` | Construct and validate a syntactically correct OpenWebNet frame string. |
+| `draft_sound_source_selection` | Build the WHO=16 frame pair that switches a room's audio source, including which amplifiers the change reaches and how far the evidence for it goes. |
 | `draft_ha_config` | Generate production-ready Home Assistant configuration YAML for MyHOME entities. |
 | `get_code_signature` | Inspect Python AST signatures and docstrings from `custom_components/myhome` or `OWNd`. |
 | `rescan_documentation` | Flush caches and reload all OpenWebNet specifications, documents, and AST models. |
