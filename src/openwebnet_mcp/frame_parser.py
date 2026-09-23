@@ -269,6 +269,10 @@ class FrameParser:
             if parsed.who == 1 and parsed.what == 1 and parsed.what_params:
                 what_desc = f"Turn ON with transition speed {parsed.what_params[0]}"
 
+            # CEN (WHO 15: *15*BUTTON[#PHASE]*WHERE##): WHAT is the button, the phase its parameter
+            if parsed.who == 15 and parsed.what is not None:
+                what_desc = self._describe_cen(parsed)
+
             # Handle CEN+ button parameter in WHAT (WHO 25: *25*21#1*12##)
             if parsed.who == 25 and parsed.what_params:
                 btn = parsed.what_params[0]
@@ -425,26 +429,36 @@ class FrameParser:
             return out
         return ""
 
+    _CEN_PHASES = {
+        None: "Pressure",
+        "1": "Release after short pressure",
+        "2": "Release after extended pressure",
+        "3": "Extended pressure (repeats while held)",
+    }
+
+    def _describe_cen(self, parsed: ParsedFrame) -> str:
+        """Describe a WHO 15 frame: button in WHAT, phase as its parameter, source in WHERE."""
+        button = int(parsed.what or 0)
+        phase = parsed.what_params[0] if parsed.what_params else None
+        phase_desc = self._CEN_PHASES.get(phase)
+        if phase_desc is None:
+            parsed.warnings.append(f"CEN phase #{phase} is not defined; expected none, #1, #2 or #3.")
+            phase_desc = f"Phase #{phase}"
+        if not 0 <= button <= 31:
+            parsed.warnings.append(f"CEN button {button} is outside 00..31.")
+        if parsed.where_params and parsed.where_params[0] not in ("3", "4"):
+            parsed.warnings.append(
+                f"WHERE suffix #{'#'.join(parsed.where_params)} is not a documented CEN address form. "
+                "The button belongs in WHAT (*15*BUTTON*WHERE##), not in WHERE."
+            )
+        return f"{phase_desc} on pushbutton {button:02d}"
+
     def _describe_where(self, where: str | None, where_params: list[str], who: int | None = None) -> str:
         """Provide a readable description for the WHERE address."""
         if where is None:
             return "system-wide"
         if where == "0":
             return "General (all devices)"
-
-        # Special decoding for CEN (WHO 15) pushbuttons: WHERE#B
-        if who == 15 and where_params:
-            btn = where_params[0]
-            desc = f"pushbutton {btn} on CEN interface '{where}'"
-            extra = where_params[1:]
-            if "4" in extra:
-                idx = extra.index("4")
-                if idx + 1 < len(extra):
-                    bus_id = extra[idx + 1]
-                    desc += f" routed to private SCS bus {bus_id}"
-            elif extra:
-                desc += f" with parameters ({', '.join(extra)})"
-            return desc
 
         # Special decoding for WHO 4 manual setpoints: WHERE#TEMP
         if who == 4 and where_params and where_params[0].isdigit() and len(where_params[0]) >= 2:

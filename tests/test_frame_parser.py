@@ -118,14 +118,39 @@ def test_parse_dimensions():
 def test_parse_cen_frames():
     parser = FrameParser()
 
-    # CEN button press
-    p_cen = parser.parse("*15*1*11#2##")
+    # CEN: button in WHAT, phase as WHAT parameter, source in WHERE
+    p_cen = parser.parse("*15*02*22##")
     assert p_cen.is_valid is True
     assert p_cen.who == 15
-    assert p_cen.what == 1
-    assert p_cen.where == "11"
-    assert p_cen.where_params == ["2"]
-    assert "pushbutton 2 on CEN interface '11'" in p_cen.explanation
+    assert p_cen.what == 2
+    assert p_cen.where == "22"
+    assert "Pressure on pushbutton 02 at address '22'" in p_cen.explanation
+    assert p_cen.warnings == []
+
+    for frame, phase in [
+        ("*15*02#1*22##", "Release after short pressure"),
+        ("*15*02#2*22##", "Release after extended pressure"),
+        ("*15*02#3*22##", "Extended pressure"),
+    ]:
+        parsed = parser.parse(frame)
+        assert f"{phase}" in parsed.explanation and "pushbutton 02" in parsed.explanation, frame
+        assert parsed.warnings == [], frame
+
+    # Local-bus source keeps the button in WHAT
+    p_local = parser.parse("*15*06*36#4#01##")
+    assert "Pressure on pushbutton 06" in p_local.explanation
+    assert "private SCS bus 01" in p_local.explanation
+    assert p_local.warnings == []
+
+    # The old "button in WHERE" form is button 01 from an undocumented source, not button 2
+    p_old = parser.parse("*15*1*11#2##")
+    assert "Pressure on pushbutton 01" in p_old.explanation
+    assert "pushbutton 2" not in p_old.explanation
+    assert any("not a documented CEN address form" in w for w in p_old.warnings)
+
+    # Out-of-range button and unknown phase are flagged
+    assert any("outside 00..31" in w for w in parser.parse("*15*32*22##").warnings)
+    assert any("phase #5" in w for w in parser.parse("*15*02#5*22##").warnings)
 
     # CEN+ button press: *25*21#2*11##
     p_cenp = parser.parse("*25*21#2*11##")
@@ -209,9 +234,9 @@ def test_parse_cen_frames():
     p_sp_timeout = parser.parse("*4*311*2#0215#60##")
     assert "duration 60 min" in p_sp_timeout.explanation
 
-    # CEN with non-bus extra parameters
+    # CEN with non-bus extra WHERE parameters
     p_cen_extra = parser.parse("*15*1*11#2#8##")
-    assert "parameters (8)" in p_cen_extra.explanation
+    assert "parameters (2, 8)" in p_cen_extra.explanation
 
 
 

@@ -664,7 +664,7 @@ Current requested context focus: **{topic}**
    - `WHO=1` (Lighting): WHAT 0=OFF, 1=ON, 2-10=Stepped dimming, 1#speed=Transition speed. Dim 1=exact 1-100% brightness.
    - `WHO=2` (Automation / Covers): WHAT 0=Stop, 1=UP/Open, 2=DOWN/Close. Dim 10=Position 0-100%.
    - `WHO=4` (Climate / Heating): WHAT 100=OFF, 101=Manual Heat, 102=Manual Cool, 110=Antifreeze. Dim 0=Temperature probe (tenths of °C), Dim 14=Target setpoint (tenths + mode).
-   - `WHO=15` (CEN Scenarios): Pushbuttons WHERE#B. WHAT 0=Start long press, 1=Short press, 2=Release, 3=Heartbeat.
+   - `WHO=15` (CEN Scenarios): `*15*BUTTON[#PHASE]*WHERE##`. WHAT is the button 00..31, WHERE the source (never the button). No phase = pressure, #1 = release after short press, #3 = extended pressure (repeats ~0.5 s), #2 = release after long press.
    - `WHO=25` (CEN+ Scenarios / Dry Contacts): Interface WHERE. WHAT is `event#button` (21=short press, 22=start long, 24=release).
    - `WHO=16` (Sound System): Multi-room audio matrix (F441), sources, amplifiers.
    - `WHO=18` (Energy Management): Dim 1=Instantaneous active power (W), Dim 52=Active energy totalizer (Wh).
