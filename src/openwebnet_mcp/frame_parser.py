@@ -273,11 +273,9 @@ class FrameParser:
             if parsed.who == 15 and parsed.what is not None:
                 what_desc = self._describe_cen(parsed)
 
-            # Handle CEN+ button parameter in WHAT (WHO 25: *25*21#1*12##)
-            if parsed.who == 25 and parsed.what_params:
-                btn = parsed.what_params[0]
-                base_desc = whats.get(str(parsed.what), f"Event {parsed.what}")
-                what_desc = f"{base_desc} on pushbutton {btn}"
+            # WHO 25 carries CEN+ (*25*21#PUSHBUTTON*2OBJECT##) and dry contacts (*25*31#1*WHERE##)
+            if parsed.who == 25 and parsed.what is not None:
+                what_desc, where_desc = self._describe_who25(parsed, where_desc)
 
             if not what_desc and parsed.what is not None:
                 what_desc = self._describe_what_range(family, parsed.what)
@@ -452,6 +450,57 @@ class FrameParser:
                 "The button belongs in WHAT (*15*BUTTON*WHERE##), not in WHERE."
             )
         return f"{phase_desc} on pushbutton {button:02d}"
+
+    _CENPLUS_EVENTS = {
+        21: "Short pressure (complete; no release frame follows)",
+        22: "Start of extended pressure",
+        23: "Extended pressure (repeats while held)",
+        24: "Release after extended pressure",
+        25: "Rotary selector, slow clockwise",
+        26: "Rotary selector, fast clockwise",
+        27: "Rotary selector, slow counter-clockwise",
+        28: "Rotary selector, fast counter-clockwise",
+    }
+    _DRY_CONTACT_STATES = {31: "ON / IR detection", 32: "OFF / IR not detected"}
+    _DRY_CONTACT_CONTEXTS = {"1": "event", "0": "state reply"}
+
+    def _describe_who25(self, parsed: ParsedFrame, where_desc: str) -> tuple[str, str]:
+        """Describe a WHO 25 frame as CEN+ (WHAT 21..28) or dry contact / IR (WHAT 31/32).
+
+        The two functions share the WHO but not the fields: for CEN+ the WHAT
+        parameter is the pushbutton and WHERE is ``2`` + virtual Object; for a
+        dry contact the parameter says event (1) or state reply (0).
+        """
+        where = parsed.where or ""
+        param = parsed.what_params[0] if parsed.what_params else None
+
+        if parsed.what in self._CENPLUS_EVENTS:
+            if param is None:
+                parsed.warnings.append("CEN+ frame has no pushbutton; expected *25*WHAT#PUSHBUTTON*WHERE##.")
+                button_desc = "an unspecified pushbutton"
+            else:
+                button = int(param)
+                if not 0 <= button <= 31:
+                    parsed.warnings.append(f"CEN+ pushbutton {button} is outside 0..31.")
+                button_desc = f"pushbutton {button}"
+            if where.isdigit() and len(where) >= 2 and where[0] == "2" and int(where[1:]) <= 2047 and not parsed.where_params:
+                where_desc = f"CEN+ Object {int(where[1:])}"
+            else:
+                parsed.warnings.append(f"WHERE '{where}' is not a CEN+ virtual Object (2 followed by 0..2047).")
+            return f"{self._CENPLUS_EVENTS[parsed.what]} on {button_desc}", where_desc
+
+        if parsed.what in self._DRY_CONTACT_STATES:
+            context = self._DRY_CONTACT_CONTEXTS.get(param or "")
+            if context is None:
+                parsed.warnings.append(
+                    f"Dry contact parameter #{param} is not defined; expected #1 (event) or #0 (state reply)."
+                )
+                context = f"parameter #{param}"
+            if not (where.isdigit() and 1 <= int(where) <= 201) or parsed.where_params:
+                parsed.warnings.append(f"WHERE '{where}' is not a documented dry-contact / IR address (1..201).")
+            return f"Dry contact {self._DRY_CONTACT_STATES[parsed.what]} ({context})", f"interface '{where}'"
+
+        return "", where_desc
 
     def _describe_where(self, where: str | None, where_params: list[str], who: int | None = None) -> str:
         """Provide a readable description for the WHERE address."""

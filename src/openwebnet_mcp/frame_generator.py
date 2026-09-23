@@ -132,26 +132,33 @@ class FrameGenerator:
     ) -> str:
         """Generate CEN or CEN+ button event frame."""
         p_type = press_type.lower()
+        if not 0 <= int(button) <= 31:
+            raise ValueError(f"{'CEN+' if is_cen_plus else 'CEN'} button must be between 0 and 31")
+        # Release is matched first so "long_release" is not taken for a long press.
         if is_cen_plus:
-            # WHO=25
-            if "start" in p_type or "long" in p_type:
-                return f"*25*22#{button}*{where}##"
+            # WHO=25: *25*WHAT#PUSHBUTTON*WHERE##, WHERE = "2" + Object.
+            # A short press is one "short" frame (no release follows); a long
+            # press is "start_long", zero or more "held", then "release".
+            if "short_release" in p_type:
+                raise ValueError("CEN+ has no short-release frame: WHAT 21 is the whole short press")
             if "release" in p_type:
-                return f"*25*24#{button}*{where}##"
-            return f"*25*21#{button}*{where}##"
+                return f"*25*24#{int(button)}*{where}##"
+            if "held" in p_type or "repeat" in p_type:
+                return f"*25*23#{int(button)}*{where}##"
+            if "start" in p_type or "long" in p_type:
+                return f"*25*22#{int(button)}*{where}##"
+            return f"*25*21#{int(button)}*{where}##"
         else:
             # WHO=15: *15*BUTTON[#PHASE]*WHERE##, button 00..31 in WHAT.
             # A short press is "short" then "short_release"; a long press is
             # "short", one or more "start_long", then "release".
-            if not 0 <= int(button) <= 31:
-                raise ValueError("CEN button must be between 0 and 31")
             btn = f"{int(button):02d}"
             if "short_release" in p_type:
                 return f"*15*{btn}#1*{where}##"
-            if "start" in p_type or "long" in p_type or "held" in p_type:
-                return f"*15*{btn}#3*{where}##"
             if "release" in p_type:
                 return f"*15*{btn}#2*{where}##"
+            if "start" in p_type or "long" in p_type or "held" in p_type or "repeat" in p_type:
+                return f"*15*{btn}#3*{where}##"
             return f"*15*{btn}*{where}##"
 
     def generate_sound_source_selection(

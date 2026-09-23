@@ -1183,7 +1183,8 @@
       "pdf_filename": "WHO_25.pdf",
       "version": "v1.0.0",
       "date": "2011",
-      "status": "Archived & Verified",
+      "status": "Corrected per OpenWebNet Encyclopedia",
+      "source": "https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/blob/c57dcecbc1e3b1c9047aa21875ee3deb1b763010/functional/who-25-transversal/cen-plus.md",
       "ha_platform": "event, binary_sensor",
       "hardware_models": [
         "3477",
@@ -1191,33 +1192,49 @@
         "067554",
         "F428"
       ],
-      "description": "Modern CEN+ pushbuttons and dry contact interfaces. Supports up to 255 buttons per interface with distinct short press, start pressure, release, and contact state signals.",
-      "addressing": "WHERE represents interface address 'A*PL' or 'WHERE', button number is in what/dimension parameter.",
+      "description": "Two functions share WHO 25. CEN+ (WHAT 21..28): *25*WHAT#PUSHBUTTON*WHERE##, the interaction in WHAT and the pushbutton 0..31 as its parameter. A short press is a single 21 with no release frame; a long press is 22, zero or more 23 (about every 0.5 s while held), then 24. WHAT 25..28 are rotary-selector events. Dry contact / IR (WHAT 31/32): *25*31#P*WHERE## where P is 1 for an event and 0 for a state reply to *#25*WHERE##.",
+      "addressing": "CEN+: WHERE is the digit 2 followed by the virtual Object 0..2047 (21 = Object 1, 2101 = Object 101, 22047 = Object 2047); it is a composition, not an A/PL address. Dry contact / IR: WHERE 1..201 for automation interfaces (virtual configuration) or A/PL [1-9][1-9] for alarm contacts and IR detectors (physical Z/N configurators). The pushbutton never goes in WHERE.",
       "what_commands": {
-        "21": "Short press / pulse event",
-        "22": "Start of long press event",
-        "23": "Long press heartbeat",
-        "24": "Release after long press",
-        "31": "Dry contact closed",
-        "32": "Dry contact opened"
+        "21#PUSHBUTTON": "CEN+ short pressure (< 0.5 s); complete in one frame, no release follows",
+        "22#PUSHBUTTON": "CEN+ start of extended pressure (>= 0.5 s)",
+        "23#PUSHBUTTON": "CEN+ extended pressure, repeated about every 0.5 s while held",
+        "24#PUSHBUTTON": "CEN+ release after extended pressure",
+        "25#PUSHBUTTON": "CEN+ rotary selector, slow clockwise",
+        "26#PUSHBUTTON": "CEN+ rotary selector, fast clockwise",
+        "27#PUSHBUTTON": "CEN+ rotary selector, slow counter-clockwise",
+        "28#PUSHBUTTON": "CEN+ rotary selector, fast counter-clockwise",
+        "31#P": "Dry contact ON / IR detection (P: 1 = event, 0 = state reply)",
+        "32#P": "Dry contact OFF / IR not detected (P: 1 = event, 0 = state reply)"
       },
       "dimensions": {},
       "examples": [
         {
-          "frame": "*25*21#1*12##",
-          "description": "CEN+ Short press on button 1 of interface 12"
+          "frame": "*25*21#1*21##",
+          "description": "CEN+ short pressure on pushbutton 1 of Object 1"
         },
         {
-          "frame": "*25*22#1*12##",
-          "description": "CEN+ Start long press on button 1 of interface 12"
+          "frame": "*25*22#1*21##",
+          "description": "CEN+ start of extended pressure on pushbutton 1 of Object 1"
         },
         {
-          "frame": "*25*24#1*12##",
-          "description": "CEN+ Release button 1 of interface 12"
+          "frame": "*25*23#1*21##",
+          "description": "CEN+ extended pressure on pushbutton 1 of Object 1 (repeats while held)"
+        },
+        {
+          "frame": "*25*24#1*21##",
+          "description": "CEN+ release after extended pressure on pushbutton 1 of Object 1"
+        },
+        {
+          "frame": "*25*25#0*2101##",
+          "description": "CEN+ rotary selector turned slowly clockwise, pushbutton 0 of Object 101"
         },
         {
           "frame": "*25*31#1*15##",
-          "description": "Dry contact input 1 on interface 15 CLOSED"
+          "description": "Dry contact 15 ON (event)"
+        },
+        {
+          "frame": "*25*32#0*15##",
+          "description": "Dry contact 15 OFF (reply to *#25*15##)"
         }
       ]
     },
