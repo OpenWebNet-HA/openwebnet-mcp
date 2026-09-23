@@ -420,3 +420,39 @@ def test_who16_source_selection_is_not_what_100():
     assert "busy" in parser.parse("*16*100*23##").explanation.lower()
     assert "RDS" in parser.parse("*16*101*23##").explanation
     assert "RDS" in parser.parse("*16*102*23##").explanation
+
+
+@pytest.mark.parametrize(
+    ("frame", "expected"),
+    [
+        # WHO_2.pdf Where Table: A = 00, 1-9 or 100 is an environment, #GR a group
+        ("*2*0*1##", "STOP movement at Area 1: every automation actuator in that environment"),
+        ("*2*2*00##", "at Area 00:"),
+        ("*2*1*100##", "at Area 10 (WHERE 100):"),
+        ("*2*1*#3##", "at Group 3: every automation actuator programmed into it"),
+        ("*2*1*1#4#02##", "at Area 1: every automation actuator in that environment routed to private SCS bus 02"),
+        ("*#2*1#4#02##", "Area 1: every automation actuator in that environment routed to private SCS bus 02"),
+        ("*1*1*5##", "at Area 5: every light point in that environment"),
+        ("*1*0*#12##", "at Group 12: every light point programmed into it"),
+        # point-to-point and general are unchanged
+        ("*2*0*11##", "at address '11'"),
+        ("*2*1*11#4#02##", "at address '11' routed to private SCS bus 02"),
+        ("*2*1*0##", "at General (all devices)"),
+    ],
+)
+def test_who1_who2_area_and_group_where(frame, expected):
+    parsed = FrameParser().parse(frame)
+    assert parsed.is_valid is True
+    assert expected in parsed.explanation, parsed.explanation
+
+
+def test_who2_advanced_what_is_10_11_12():
+    """WHO_2.pdf 2.3.1: StopAdvanced 10, UpAdvanced 11, DownAdvanced 12 (not 30-32)."""
+    from openwebnet_mcp.who_catalog import WhoCatalog
+
+    whats = WhoCatalog().get_family(2)["what_commands"]
+    assert whats["10"].startswith("Advanced STOP")
+    assert whats["11"].startswith("Advanced UP")
+    assert whats["12"].startswith("Advanced DOWN")
+    assert not {"30", "31", "32"} & set(whats)
+    assert "Advanced UP" in FrameParser().parse("*2*11*21##").explanation

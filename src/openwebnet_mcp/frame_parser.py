@@ -405,7 +405,9 @@ class FrameParser:
         ``{1}``/``{2}`` in a form's description are filled from the pattern's
         capture groups, ``{p1}``/``{p2}`` from the WHERE parameters, so both
         packed addresses (WHO=16 ``1ES``) and tagged ones (WHO=22
-        ``3#AREA#POINT``) can be described from data.
+        ``3#AREA#POINT``) can be described from data. A form that uses no
+        ``{pN}`` leaves the parameters alone, so a local-bus qualifier
+        (``1#4#02``) is still described as routing.
         """
         import re as _re
 
@@ -424,8 +426,22 @@ class FrameParser:
                 out = out.replace(f"{{p{index}}}", str(param))
             if "{" in out:  # a placeholder had no value: the form does not fit
                 continue
+            if "{p" not in description:
+                out += FrameParser._describe_routing(where_params)
             return out
         return ""
+
+    @staticmethod
+    def _describe_routing(where_params: list[str]) -> str:
+        """The routing qualifier of a WHERE (``#4#02``), or its bare parameters."""
+        if not where_params:
+            return ""
+        if "4" in where_params:
+            idx = where_params.index("4")
+            if idx + 1 < len(where_params):
+                return f" routed to private SCS bus {where_params[idx + 1]}"
+            return ""
+        return f" with parameters ({', '.join(where_params)})"
 
     _CEN_PHASES = {
         None: "Pressure",
@@ -524,13 +540,4 @@ class FrameParser:
             if declared:
                 return declared
 
-        desc = f"address '{where}'"
-        if where_params:
-            if "4" in where_params:
-                idx = where_params.index("4")
-                if idx + 1 < len(where_params):
-                    bus_id = where_params[idx + 1]
-                    desc += f" routed to private SCS bus {bus_id}"
-            else:
-                desc += f" with parameters ({', '.join(where_params)})"
-        return desc
+        return f"address '{where}'" + self._describe_routing(where_params)

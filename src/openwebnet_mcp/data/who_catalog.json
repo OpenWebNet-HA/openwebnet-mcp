@@ -56,6 +56,24 @@
       ],
       "description": "Controls ON/OFF, stepped dimming (10 levels or 1-100%), timed lighting, blinking, and transition speed across point-to-point, area, group, and general addresses.",
       "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL', e.g. '12' for A=1, PL=2), or Local Bus ('A*PL#4#bus').",
+      "where_forms": [
+        {
+          "pattern": "^00$",
+          "description": "Area 00: every light point in that environment"
+        },
+        {
+          "pattern": "^100$",
+          "description": "Area 10 (WHERE 100): every light point in that environment"
+        },
+        {
+          "pattern": "^([1-9])$",
+          "description": "Area {1}: every light point in that environment"
+        },
+        {
+          "pattern": "^#([1-9][0-9]{0,2})$",
+          "description": "Group {1}: every light point programmed into it"
+        }
+      ],
       "what_commands": {
         "0": "Turn OFF",
         "1": "Turn ON (100% or last saved level)",
@@ -135,14 +153,32 @@
         "067557"
       ],
       "description": "Controls motorized shutters, blinds, rolling gates, and venetian louvres. Supports UP, DOWN, STOP, and advanced percentage positioning.",
-      "addressing": "WHERE can be: General ('0'), Area ('A'), Group ('#G'), Point-to-Point ('A*PL'), or Bus routed ('where#4#bus').",
+      "addressing": "WHERE can be: General ('0'), Area ('A': 00, 1-9 or 100), Group ('#G', 1-255), Point-to-Point ('A*PL'), or Bus routed ('where#4#bus'). The published table establishes the #4# form for Point-to-Point only.",
+      "where_forms": [
+        {
+          "pattern": "^00$",
+          "description": "Area 00: every automation actuator in that environment"
+        },
+        {
+          "pattern": "^100$",
+          "description": "Area 10 (WHERE 100): every automation actuator in that environment"
+        },
+        {
+          "pattern": "^([1-9])$",
+          "description": "Area {1}: every automation actuator in that environment"
+        },
+        {
+          "pattern": "^#([1-9][0-9]{0,2})$",
+          "description": "Group {1}: every automation actuator programmed into it"
+        }
+      ],
       "what_commands": {
         "0": "STOP movement",
         "1": "UP (Open shutter)",
         "2": "DOWN (Close shutter)",
-        "30": "Advanced STOP",
-        "31": "Advanced UP",
-        "32": "Advanced DOWN"
+        "10": "Advanced STOP (StopAdvanced: optional priority)",
+        "11": "Advanced UP (UpAdvanced: optional step 1-99, optional priority)",
+        "12": "Advanced DOWN (DownAdvanced: optional step 1-99, optional priority)"
       },
       "dimensions": {
         "10": {
