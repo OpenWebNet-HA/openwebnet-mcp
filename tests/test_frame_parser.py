@@ -152,13 +152,44 @@ def test_parse_cen_frames():
     assert any("outside 00..31" in w for w in parser.parse("*15*32*22##").warnings)
     assert any("phase #5" in w for w in parser.parse("*15*02#5*22##").warnings)
 
-    # CEN+ button press: *25*21#2*11##
-    p_cenp = parser.parse("*25*21#2*11##")
+    # CEN+: interaction in WHAT, pushbutton as its parameter, WHERE = "2" + Object
+    p_cenp = parser.parse("*25*21#2*21##")
     assert p_cenp.is_valid is True
     assert p_cenp.who == 25
     assert p_cenp.what == 21
     assert p_cenp.what_params == ["2"]
-    assert "on pushbutton 2" in p_cenp.explanation
+    assert "Short pressure (complete; no release frame follows) on pushbutton 2 at CEN+ Object 1" in p_cenp.explanation
+    assert p_cenp.warnings == []
+
+    for frame, phase in [
+        ("*25*22#1*21##", "Start of extended pressure on pushbutton 1"),
+        ("*25*23#1*21##", "Extended pressure (repeats while held) on pushbutton 1"),
+        ("*25*24#1*21##", "Release after extended pressure on pushbutton 1"),
+        ("*25*26#1*21##", "Rotary selector, fast clockwise on pushbutton 1"),
+        ("*25*28#0*20##", "Rotary selector, fast counter-clockwise on pushbutton 0 at CEN+ Object 0"),
+    ]:
+        parsed = parser.parse(frame)
+        assert phase in parsed.explanation, frame
+        assert parsed.warnings == [], frame
+
+    assert "CEN+ Object 101" in parser.parse("*25*21#1*2101##").explanation
+    assert "CEN+ Object 2047" in parser.parse("*25*21#1*22047##").explanation
+
+    # CEN+ misuse is flagged: no pushbutton, out-of-range pushbutton, non-Object WHERE
+    assert any("no pushbutton" in w for w in parser.parse("*25*21*21##").warnings)
+    assert any("outside 0..31" in w for w in parser.parse("*25*21#32*21##").warnings)
+    assert any("not a CEN+ virtual Object" in w for w in parser.parse("*25*21#1*12##").warnings)
+    assert any("not a CEN+ virtual Object" in w for w in parser.parse("*25*21#1*22048##").warnings)
+
+    # Dry contact / IR shares WHO 25: the parameter is event (1) or state reply (0), not a button
+    p_dry = parser.parse("*25*31#1*15##")
+    assert "Dry contact ON / IR detection (event) at interface '15'" in p_dry.explanation
+    assert "pushbutton" not in p_dry.explanation
+    assert p_dry.warnings == []
+    assert "Dry contact OFF / IR not detected (state reply)" in parser.parse("*25*32#0*15##").explanation
+    assert any("expected #1 (event) or #0" in w for w in parser.parse("*25*31#2*15##").warnings)
+    assert any("dry-contact / IR address" in w for w in parser.parse("*25*31#1*202##").warnings)
+    assert any("not standard for WHO=25" in w for w in parser.parse("*25*29#1*21##").warnings)
 
     # Rich dimension decoding: WHO 4 setpoint
     p_target = parser.parse("*#4*1*#14*0215*1##")

@@ -88,14 +88,21 @@ def test_generate_cen():
     assert gen.generate_cen("22", button=2, press_type="start_long") == "*15*02#3*22##"
     assert gen.generate_cen("22", button=2, press_type="held") == "*15*02#3*22##"
     assert gen.generate_cen("22", button=2, press_type="release") == "*15*02#2*22##"
+    assert gen.generate_cen("22", button=2, press_type="long_release") == "*15*02#2*22##"
     assert gen.generate_cen("36#4#01", button=6) == "*15*06*36#4#01##"
     with pytest.raises(ValueError, match="between 0 and 31"):
         gen.generate_cen("22", button=32)
 
-    # CEN+ (WHO=25)
-    assert gen.generate_cen("12", button=1, press_type="short", is_cen_plus=True) == "*25*21#1*12##"
-    assert gen.generate_cen("12", button=1, press_type="start_long", is_cen_plus=True) == "*25*22#1*12##"
-    assert gen.generate_cen("12", button=1, press_type="release", is_cen_plus=True) == "*25*24#1*12##"
+    # CEN+ (WHO=25): *25*WHAT#PUSHBUTTON*WHERE##, WHERE "21" = Object 1
+    assert gen.generate_cen("21", button=1, press_type="short", is_cen_plus=True) == "*25*21#1*21##"
+    assert gen.generate_cen("21", button=1, press_type="start_long", is_cen_plus=True) == "*25*22#1*21##"
+    assert gen.generate_cen("21", button=1, press_type="held", is_cen_plus=True) == "*25*23#1*21##"
+    assert gen.generate_cen("21", button=1, press_type="release", is_cen_plus=True) == "*25*24#1*21##"
+    assert gen.generate_cen("21", button=1, press_type="long_release", is_cen_plus=True) == "*25*24#1*21##"
+    with pytest.raises(ValueError, match="no short-release frame"):
+        gen.generate_cen("21", button=1, press_type="short_release", is_cen_plus=True)
+    with pytest.raises(ValueError, match="CEN\\+ button must be between 0 and 31"):
+        gen.generate_cen("21", button=32, is_cen_plus=True)
 
 
 def test_generate_ha_yaml():

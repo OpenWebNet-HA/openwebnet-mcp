@@ -665,7 +665,7 @@ Current requested context focus: **{topic}**
    - `WHO=2` (Automation / Covers): WHAT 0=Stop, 1=UP/Open, 2=DOWN/Close. Dim 10=Position 0-100%.
    - `WHO=4` (Climate / Heating): WHAT 100=OFF, 101=Manual Heat, 102=Manual Cool, 110=Antifreeze. Dim 0=Temperature probe (tenths of °C), Dim 14=Target setpoint (tenths + mode).
    - `WHO=15` (CEN Scenarios): `*15*BUTTON[#PHASE]*WHERE##`. WHAT is the button 00..31, WHERE the source (never the button). No phase = pressure, #1 = release after short press, #3 = extended pressure (repeats ~0.5 s), #2 = release after long press.
-   - `WHO=25` (CEN+ Scenarios / Dry Contacts): Interface WHERE. WHAT is `event#button` (21=short press, 22=start long, 24=release).
+   - `WHO=25` (CEN+ Scenarios / Dry Contacts): CEN+ `*25*WHAT#PUSHBUTTON*WHERE##`, pushbutton 0..31, WHERE = `2` + Object 0..2047. 21 = whole short press (no release frame), 22 = start of hold, 23 = repeat (~0.5 s, zero or more), 24 = release after hold, 25..28 = rotary. Dry contact: 31 = ON, 32 = OFF, `#1` event / `#0` state reply.
    - `WHO=16` (Sound System): Multi-room audio matrix (F441), sources, amplifiers.
    - `WHO=18` (Energy Management): Dim 1=Instantaneous active power (W), Dim 52=Active energy totalizer (Wh).
 
