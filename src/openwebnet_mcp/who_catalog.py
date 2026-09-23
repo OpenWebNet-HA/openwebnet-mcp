@@ -131,13 +131,20 @@ class WhoCatalog:
         ]
 
         whats = f.get("what_commands", {})
-        if whats:
+        # Magnitude-carrying WHATs (WHO=16 volume is 1000 + steps) are declared
+        # as ranges rather than listed one by one.
+        ranges = f.get("what_ranges", [])
+        if whats or ranges:
             lines.extend([
                 "| WHAT Code | Description / Action |",
                 "|:---|:---|",
             ])
             for code, desc in whats.items():
                 lines.append(f"| `{code}` | {desc} |")
+            for entry in ranges:
+                low, high = entry.get("from"), entry.get("to")
+                code = f"{low}" if low == high else f"{low}..{high}"
+                lines.append(f"| `{code}` | {entry.get('description', '')} |")
         else:
             lines.append("*(No standard WHAT commands; uses DIMENSIONS or diagnostic frames)*")
 

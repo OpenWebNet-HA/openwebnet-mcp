@@ -63,6 +63,25 @@ def test_format_family_details():
     assert "**Error**" in details_unknown
 
 
+def test_format_family_details_renders_what_ranges():
+    catalog = WhoCatalog()
+    details_16 = catalog.format_family_details(16)
+    assert "| `1001..1015` | Increase volume by 1-15 steps" in details_16
+    assert "| `1101..1115` | Decrease volume by 1-15 steps" in details_16
+
+
+def test_format_family_details_ranges_only(tmp_path):
+    custom_file = tmp_path / "ranges_only.json"
+    custom_file.write_text(
+        '{"families": [{"who": 98, "name": "Ranges Only", "what_commands": {},'
+        ' "what_ranges": [{"from": 10, "to": 19, "description": "Step by 0-9"}]}]}',
+        encoding="utf-8",
+    )
+    md = WhoCatalog(catalog_path=custom_file).format_family_details(98)
+    assert "| `10..19` | Step by 0-9 |" in md
+    assert "No standard WHAT commands" not in md
+
+
 def test_format_summary_markdown():
     catalog = WhoCatalog()
     summary = catalog.format_summary_markdown()
