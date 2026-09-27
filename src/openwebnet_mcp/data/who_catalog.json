@@ -150,7 +150,11 @@
         "F411U2",
         "F401",
         "LN4672M2",
-        "067557"
+        "067557",
+        "LN-4660M2 (centralized control)",
+        "H4660M2",
+        "AM5860M2",
+        "067558"
       ],
       "description": "Controls motorized shutters, blinds, rolling gates, and venetian louvres. Supports UP, DOWN, STOP, and advanced percentage positioning.",
       "addressing": "WHERE can be: General ('0'), Area ('A': 00, 1-9 or 100), Group ('#G', 1-255), Point-to-Point ('A*PL'), or Bus routed ('where#4#bus'). The published table establishes the #4# form for Point-to-Point only.",
@@ -177,8 +181,11 @@
         "1": "UP (Open shutter)",
         "2": "DOWN (Close shutter)",
         "10": "Advanced STOP (StopAdvanced: optional priority)",
-        "11": "Advanced UP (UpAdvanced: optional step 1-99, optional priority)",
-        "12": "Advanced DOWN (DownAdvanced: optional step 1-99, optional priority)"
+        "11": "Advanced UP (UpAdvanced: optional step 1-99 or 100, optional priority)",
+        "12": "Advanced DOWN (DownAdvanced: optional step 1-99 or 100, optional priority)",
+        "10#<priority>#<selector>": "Advanced STOP with priority (e.g. *2*10#001#1*0##)",
+        "11#<step>#<priority>#<selector>": "Advanced UP with step, priority, and set/clear selector (e.g. *2*11#100#001#1*0##)",
+        "12#<step>#<priority>#<selector>": "Advanced DOWN with step, priority, and set/clear selector (e.g. *2*12#100#001#1*0##)"
       },
       "dimensions": {
         "10": {
@@ -210,6 +217,18 @@
         {
           "frame": "*#2*21*#10*75##",
           "description": "Move cover 21 to 75% position"
+        },
+        {
+          "frame": "*2*11#100#001#1*0##",
+          "description": "Centralized Advanced UP: Move all covers (General '0') UP to 100% endpoint with priority 001"
+        },
+        {
+          "frame": "*2*12#100#001#1*0##",
+          "description": "Centralized Advanced DOWN: Move all covers (General '0') DOWN to endpoint with priority 001"
+        },
+        {
+          "frame": "*2*10#001#1*0##",
+          "description": "Centralized Advanced STOP: Stop all covers (General '0') with priority 001"
         }
       ]
     },
