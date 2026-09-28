@@ -28,16 +28,6 @@ logger = logging.getLogger("openwebnet_mcp.kb")
 
 SUPPORTED_SCHEMA = (0, 1)  # (major, minor) of manifest.schema_compatibility_version
 
-_REFERENCE_FILES = (
-    "cautions",
-    "entities",
-    "glossary",
-    "namespaces",
-    "questions",
-    "relationships",
-    "sources",
-)
-
 # Statuses that are preserved history or open knowledge, not established guidance.
 NON_ESTABLISHED = {
     "unresolved": "an open question, not an established fact",
@@ -50,7 +40,7 @@ NON_ESTABLISHED = {
 
 # Known 0.1.0 defect (Encyclopedia#37): claim statements can embed a Python dict repr of
 # the markdown parser's table cells. The retrieval chunk for the same section is intact.
-_LEAK_MARKER = "{'text': '"
+_LEAK_MARKERS = ("{'text': '", '{"text": "', '{"text":"')
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _BM25_K1 = 1.4
@@ -85,9 +75,10 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def clean_statement(statement: str) -> tuple[str, bool]:
     """Return ``(statement, degraded)``, cutting off a leaked parser representation."""
-    idx = statement.find(_LEAK_MARKER)
-    if idx == -1:
+    hits = [i for i in (statement.find(m) for m in _LEAK_MARKERS) if i != -1]
+    if not hits:
         return statement, False
+    idx = min(hits)
     return statement[:idx].rstrip(" :;|") + " […]", True
 
 
@@ -109,6 +100,8 @@ class MachineKB:
         self.chunks: dict[str, dict[str, Any]] = {}
         self.claims: dict[str, dict[str, Any]] = {}
         self.registry: dict[str, dict[str, Any]] = {}
+        self.aliases: dict[str, dict[str, Any]] = {}  # alias id -> id-registry alias entry
+        self.lifecycle: dict[str, dict[str, Any]] = {}  # id -> id-registry entry (deprecated/retired only)
         self._chunk_by_section: dict[str, str] = {}
         self._docs: list[tuple[str, str]] = []  # (kind, id)
         self._tf: list[Counter[str]] = []
@@ -118,8 +111,17 @@ class MachineKB:
 
     # ── loading ──────────────────────────────────────────────────────
     def load(self) -> bool:
-        """Load and index the KB. Returns False (with ``load_error`` set) when unavailable."""
-        self._reset()
+        """Load and index the KB. Returns False (with ``load_error`` set) when unavailable.
+
+        The new index is built off to the side and swapped in only when complete, so a concurrent
+        search never observes a half-built or empty KB.
+        """
+        fresh = MachineKB(self._explicit_dir, strict=self.strict)
+        ok = fresh._load()
+        self.__dict__.update(fresh.__dict__)
+        return ok
+
+    def _load(self) -> bool:
         kb_dir = self._explicit_dir or get_kb_dir()
         if kb_dir is None:
             self.load_error = (
@@ -151,17 +153,19 @@ class MachineKB:
             raise KBError("manifest.json is missing")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self._check_compatibility(manifest)
-        artifacts = {a["kind"] + ":" + a["path"]: a for a in manifest.get("artifacts", [])}
-
-        for art in artifacts.values():
+        by_kind: dict[str, list[Path]] = defaultdict(list)
+        for art in manifest.get("artifacts", []):
             if art["kind"] == "schema":
                 continue  # schemas are for strict validation; this consumer does not use them
-            # Manifest paths are repo-relative ('knowledge/claims/claims.jsonl').
-            local = kb_dir / Path(art["path"]).relative_to("knowledge")
+            local = self._local_path(kb_dir, art["path"])
             if not local.is_file():
                 raise KBError(f"manifest artifact missing on disk: {art['path']}")
             if _sha256(local) != art["sha256"]:
                 self.hash_mismatches.append(art["path"])
+            by_kind[art["kind"]].append(local)
+        for required in ("retrieval_chunks", "claim_records"):
+            if not by_kind.get(required):
+                raise KBError(f"manifest lists no {required} artifact")
         self.hashes_verified = not self.hash_mismatches
         if self.hash_mismatches:
             msg = "SHA-256 mismatch for: " + ", ".join(self.hash_mismatches)
@@ -171,15 +175,38 @@ class MachineKB:
 
         self.kb_dir = kb_dir
         self.manifest = manifest
-        for chunk in _read_jsonl(kb_dir / "retrieval" / "chunks.jsonl"):
-            self.chunks[chunk["id"]] = chunk
-            self._chunk_by_section[chunk["section_id"]] = chunk["id"]
-        for claim in _read_jsonl(kb_dir / "claims" / "claims.jsonl"):
-            self.claims[claim["id"]] = claim
-        for name in _REFERENCE_FILES:
-            for rec in _read_jsonl(kb_dir / "reference" / f"{name}.jsonl"):
+        for path in by_kind["retrieval_chunks"]:
+            for chunk in _read_jsonl(path):
+                self.chunks[chunk["id"]] = chunk
+                self._chunk_by_section[chunk["section_id"]] = chunk["id"]
+        for path in by_kind["claim_records"]:
+            for claim in _read_jsonl(path):
+                self.claims[claim["id"]] = claim
+        for path in by_kind["reference_registry"]:
+            for rec in _read_jsonl(path):
                 self.registry[rec["id"]] = rec
+        for path in by_kind["id_registry"]:
+            self._load_id_registry(path)
         self._build_index()
+
+    @staticmethod
+    def _local_path(kb_dir: Path, manifest_path: str) -> Path:
+        """Map a repo-relative manifest path ('knowledge/x/y') into ``kb_dir``, refusing escapes."""
+        parts = Path(manifest_path).parts
+        if not parts or parts[0] != "knowledge":
+            raise KBError(f"manifest path outside knowledge/: {manifest_path}")
+        local = kb_dir.joinpath(*parts[1:]).resolve()
+        if not local.is_relative_to(kb_dir.resolve()):
+            raise KBError(f"manifest path escapes the KB directory: {manifest_path}")
+        return local
+
+    def _load_id_registry(self, path: Path) -> None:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for alias in data.get("aliases", []):
+            self.aliases[alias["alias"]] = alias
+        for entry in data.get("ids", []):
+            if entry.get("lifecycle", "live") != "live":
+                self.lifecycle[entry["id"]] = entry
 
     def _check_compatibility(self, manifest: dict[str, Any]) -> None:
         version = str(manifest.get("schema_compatibility_version", ""))
@@ -263,6 +290,32 @@ class MachineKB:
     # ── lookup ───────────────────────────────────────────────────────
     def get(self, rec_id: str) -> dict[str, Any] | None:
         """Return any record by stable ID (chunk, claim or reference record)."""
+        return self.lookup(rec_id)[0]
+
+    def lookup(self, rec_id: str) -> tuple[dict[str, Any] | None, str | None]:
+        """Resolve ``rec_id`` honouring id-registry aliases, deprecations and retirements.
+
+        Returns ``(record, note)``; ``note`` explains any redirect or lifecycle state and must be shown.
+        """
+        note = None
+        alias = self.aliases.get(rec_id)
+        if alias:
+            note = f"`{rec_id}` is an alias of `{alias['canonical_id']}` ({alias['reason']})."
+            rec_id = alias["canonical_id"]
+        rec = self._direct(rec_id)
+        entry = self.lifecycle.get(rec_id)
+        if entry:
+            state = f"`{rec_id}` is {entry['lifecycle']}: {entry.get('reason', 'no reason given')}."
+            note = f"{note} {state}" if note else state
+            if rec is None:
+                for successor in entry.get("replaced_by", []):
+                    rec = self._direct(successor)
+                    if rec:
+                        note += f" Showing its replacement `{successor}`."
+                        break
+        return rec, note
+
+    def _direct(self, rec_id: str) -> dict[str, Any] | None:
         return self.chunks.get(rec_id) or self.claims.get(rec_id) or self.registry.get(rec_id)
 
     def chunk_for_claim(self, claim: dict[str, Any]) -> dict[str, Any] | None:

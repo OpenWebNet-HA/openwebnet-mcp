@@ -226,9 +226,105 @@ def test_cache_prefers_newest_release(tmp_path, monkeypatch):
         d.mkdir(parents=True)
         (d / "manifest.json").write_text("{}")
     assert get_kb_dir().parent.name == "machine-kb-v0.10.0"
+    sibling = tmp_path / "repo" / "OpenWebNet-Encyclopedia" / "knowledge"
+    sibling.mkdir(parents=True)
+    (sibling / "manifest.json").write_text("{}")
+    assert get_kb_dir().parent.name == "machine-kb-v0.10.0"  # verified cache beats an unverified checkout
+    monkeypatch.setattr(paths_mod, "get_cache_dir", lambda: tmp_path / "empty-cache")
+    assert get_kb_dir() == sibling
 
 
 def test_known_gap_only_for_matching_release(kb_dir):
     kb = MachineKB(kb_dir)
     kb.load()
     assert "Not covered" not in format_status(kb.status())
+    status = kb.status()
+    status["input_content_sha256"] = "4b652103102613bf8d1c83deabf174364e311e35f88feda453e19845a171aa2c"
+    assert "DALI / WHO 24" in format_status(status)
+
+
+def test_second_leak_shape_is_truncated():
+    assert clean_statement('Table: {"text": "Scope"} | more')[1] is True
+
+
+def test_id_registry_aliases_and_lifecycle(kb_dir):
+    registry = {
+        "aliases": [{"alias": "ownkb:claim:old", "canonical_id": "ownkb:claim:c000001", "reason": "merged", "first_release": "0.2.0"}],
+        "ids": [
+            {"id": "ownkb:claim:c000002", "lifecycle": "deprecated", "reason": "superseded wording", "first_release": "0.1.0"},
+            {"id": "ownkb:claim:gone", "lifecycle": "retired", "reason": "split", "first_release": "0.1.0",
+             "last_release": "0.1.0", "replaced_by": ["ownkb:claim:c000001"]},
+        ],
+    }
+    data = json.dumps(registry).encode()
+    (kb_dir / "id-registry.json").write_bytes(data)
+    manifest = json.loads((kb_dir / "manifest.json").read_text())
+    manifest["artifacts"].append(
+        {"kind": "id_registry", "path": "knowledge/id-registry.json", "sha256": hashlib.sha256(data).hexdigest()}
+    )
+    (kb_dir / "manifest.json").write_text(json.dumps(manifest))
+    kb = MachineKB(kb_dir)
+    assert kb.load() and kb.hashes_verified
+    rec, note = kb.lookup("ownkb:claim:old")
+    assert rec["id"] == "ownkb:claim:c000001" and "alias" in note
+    rec, note = kb.lookup("ownkb:claim:c000002")
+    assert rec["id"] == "ownkb:claim:c000002" and "deprecated" in note
+    rec, note = kb.lookup("ownkb:claim:gone")
+    assert rec["id"] == "ownkb:claim:c000001" and "retired" in note and "replacement" in note
+    assert kb.lookup("ownkb:claim:c000001") == (kb.claims["ownkb:claim:c000001"], None)
+    assert kb.lookup("ownkb:claim:nope") == (None, None)
+
+
+def _set_artifact(kb_dir, kind, path=None):
+    manifest = json.loads((kb_dir / "manifest.json").read_text())
+    if path is None:
+        manifest["artifacts"] = [a for a in manifest["artifacts"] if a["kind"] != kind]
+    else:
+        for art in manifest["artifacts"]:
+            if art["kind"] == kind:
+                art["path"] = path
+    (kb_dir / "manifest.json").write_text(json.dumps(manifest))
+
+
+def test_manifest_paths_are_contained_and_required(kb_dir):
+    _set_artifact(kb_dir, "claim_records", "knowledge/../../evil.jsonl")
+    kb = MachineKB(kb_dir)
+    assert not kb.load() and "escapes" in kb.load_error
+    _set_artifact(kb_dir, "claim_records", "elsewhere/claims.jsonl")
+    assert "outside knowledge/" in _load_error(kb_dir)
+    _set_artifact(kb_dir, "claim_records")
+    assert "no claim_records" in _load_error(kb_dir)
+
+
+def _load_error(kb_dir):
+    kb = MachineKB(kb_dir)
+    assert not kb.load()
+    return kb.load_error
+
+
+def test_manifest_path_is_followed_when_layout_moves(kb_dir):
+    (kb_dir / "moved").mkdir()
+    (kb_dir / "claims" / "claims.jsonl").rename(kb_dir / "moved" / "c.jsonl")
+    _set_artifact(kb_dir, "claim_records", "knowledge/moved/c.jsonl")
+    assert MachineKB(kb_dir).load()
+
+
+def test_kb_fetch_rejects_bad_tag_and_paths(kb_dir, tmp_path, monkeypatch):
+    monkeypatch.setattr(kb_fetch, "get_cache_dir", lambda: tmp_path / "cache")
+    for tag in ("../x", "a/b", ""):
+        with pytest.raises(ValueError, match="invalid tag"):
+            kb_fetch.fetch(tag)
+    bad = {"artifacts": [{"kind": "claim_records", "path": "knowledge/../../x", "sha256": "0"}]}
+    monkeypatch.setattr(kb_fetch, "_download", lambda tag, path: json.dumps(bad).encode())
+    with pytest.raises(ValueError, match="unsafe manifest path"):
+        kb_fetch.fetch("t3")
+    assert not (tmp_path / "cache" / "machine-kb" / "t3").exists()
+
+
+@pytest.mark.asyncio
+async def test_failed_first_load_is_retried(kb_dir, monkeypatch):
+    monkeypatch.setattr("openwebnet_mcp.kb.get_kb_dir", lambda: None)
+    assert "**Error**" in await server.search_knowledge("shutter")
+    monkeypatch.setattr("openwebnet_mcp.kb.get_kb_dir", lambda: kb_dir)
+    server._kb_cache.clear()
+    assert "ownkb:chunk:r000001" in await server.search_knowledge("shutter")

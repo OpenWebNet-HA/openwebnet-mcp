@@ -120,14 +120,13 @@ def get_kb_dir() -> Path | None:
 
     Resolution order:
     1. OPENWEBNET_KB_PATH environment variable (the knowledge dir, or an Encyclopedia checkout)
-    2. A sibling ``OpenWebNet-Encyclopedia/knowledge`` checkout
-    3. The download cache filled by ``python -m openwebnet_mcp.kb_fetch``
+    2. The hash-verified download cache filled by ``python -m openwebnet_mcp.kb_fetch`` (newest release)
+    3. A sibling ``OpenWebNet-Encyclopedia/knowledge`` checkout (an unverified working tree)
     """
     candidates: list[Path] = []
     env_kb = os.environ.get("OPENWEBNET_KB_PATH")
     if env_kb:
         candidates += [Path(env_kb), Path(env_kb) / "knowledge"]
-    candidates.append(get_project_root().parent / "OpenWebNet-Encyclopedia" / "knowledge")
     cache_root = get_cache_dir() / "machine-kb"
     if cache_root.is_dir():
         # Newest release first; compare numerically so v0.10.0 sorts above v0.9.0.
@@ -136,6 +135,7 @@ def get_kb_dir() -> Path | None:
             key=lambda p: [int(n) for n in re.findall(r"\d+", p.parent.name)],
             reverse=True,
         )
+    candidates.append(get_project_root().parent / "OpenWebNet-Encyclopedia" / "knowledge")
     for cand in candidates:
         if (cand / "manifest.json").is_file():
             return cand

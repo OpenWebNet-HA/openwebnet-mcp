@@ -180,7 +180,8 @@ def _get_kb() -> MachineKB:
     global _kb
     if _kb is None:
         _kb = MachineKB()
-        _kb.load()
+    if not _kb.loaded:
+        _kb.load()  # retry: kb_fetch may have run, or OPENWEBNET_KB_PATH been set, since the last miss
     return _kb
 
 
@@ -683,10 +684,10 @@ async def get_knowledge_record(record_id: str) -> str:
         kb = _get_kb()
         if not kb.loaded:
             return f"**Error**: {kb.load_error}"
-        rec = kb.get(rid)
+        rec, note = kb.lookup(rid)
         if rec is None:
-            return f"**Error**: no Machine KB record with id '{rid}'."
-        return format_record(rec, kb)
+            return f"**Error**: no Machine KB record with id '{rid}'." + (f" {note}" if note else "")
+        return (f"> **ID note**: {note}\n\n" if note else "") + format_record(rec, kb)
 
     try:
         return await _kb_cache.get_or_set(f"id::{rid}", _impl)
@@ -797,6 +798,7 @@ Current requested context focus: **{topic}**
 3. Use `parse_and_validate_frame(frame)` to verify frame syntax, parameter definitions, and semantic meanings.
 4. Use `draft_own_frame(...)` and `draft_ha_config(...)` to build copy-pasteable frames and Home Assistant configurations.
 5. Use `get_code_signature(symbol)` to inspect Python classes and methods in `custom_components/myhome` or `OWNd`.
+6. Use `search_knowledge(query)` / `get_knowledge_record(id)` for evidence-qualified answers (epistemic status, applicability, cautions, open questions); treat `unresolved`, `inferred`, `rejected` and `superseded` records as not established, and absence of a record as not a negative assertion.
 """
 
 

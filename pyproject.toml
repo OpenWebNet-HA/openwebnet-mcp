@@ -49,6 +49,7 @@ dev = [
 
 [project.scripts]
 openwebnet-mcp = "openwebnet_mcp.server:main"
+openwebnet-mcp-kb-fetch = "openwebnet_mcp.kb_fetch:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openwebnet_mcp"]

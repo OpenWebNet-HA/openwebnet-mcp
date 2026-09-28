@@ -130,11 +130,13 @@ The server primes the LLM with strict frame grammar rules, hardware capabilities
 SHA-256 verification, stable-ID maps, and every qualification returned with the text.
 
 The KB is located, in order, from `OPENWEBNET_KB_PATH` (the `knowledge` directory or an Encyclopedia checkout),
-a sibling `OpenWebNet-Encyclopedia/knowledge` checkout, or the download cache. To fill the cache with a
-hash-verified release (no checkout needed):
+the hash-verified download cache, or a sibling `OpenWebNet-Encyclopedia/knowledge` checkout (an unverified working tree).
+**The default `uvx` install ships without the corpus.** Fill the cache with a hash-verified release (no checkout needed);
+the tools pick it up on the next call, no restart required:
 
 ```bash
-python -m openwebnet_mcp.kb_fetch machine-kb-v0.1.0
+uvx --from git+https://github.com/OpenWebNet-HA/openwebnet-mcp.git openwebnet-mcp-kb-fetch machine-kb-v0.1.0
+# or, from a clone:  python -m openwebnet_mcp.kb_fetch machine-kb-v0.1.0
 ```
 
 Hash mismatches (for example a checkout of a branch newer than the tag) are reported by `get_knowledge_status`
