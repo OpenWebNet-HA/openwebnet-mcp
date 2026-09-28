@@ -1,8 +1,9 @@
 """
 OpenWebNet-MCP Server — FastMCP Gateway.
 
-Exposes 10 tools and 4 resources for browsing OpenWebNet protocol documentation,
-WHO specifications, frame validation, and Home Assistant MyHOME integration knowledge.
+Exposes 14 tools and 5 resources for browsing OpenWebNet protocol documentation,
+WHO specifications, frame validation, Home Assistant MyHOME integration knowledge,
+and the Encyclopedia's Machine KB (evidence-qualified claims and retrieval chunks).
 
 Strict stdio fd redirection ensures that stray print() / warnings
 never corrupt the JSON-RPC pipeline.
@@ -33,6 +34,8 @@ from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
 from openwebnet_mcp.frame_generator import FrameGenerator
 from openwebnet_mcp.frame_parser import FrameParser
+from openwebnet_mcp.kb import MachineKB
+from openwebnet_mcp.kb_format import format_record, format_search, format_status
 from openwebnet_mcp.rescan_manager import RescanManager
 from openwebnet_mcp.who_catalog import WhoCatalog
 
@@ -122,6 +125,7 @@ _generator: FrameGenerator | None = None
 _doc_indexer: DocIndexer | None = None
 _ast_indexer: AstIndexer | None = None
 _rescan_manager: RescanManager | None = None
+_kb: MachineKB | None = None
 
 _catalog_lock = asyncio.Lock()
 _doc_lock = asyncio.Lock()
@@ -133,6 +137,7 @@ _who_spec_cache = AsyncTTLCache("who_spec", ttl_seconds=600)
 _guide_cache = AsyncTTLCache("guide", ttl_seconds=600)
 _frame_syntax_cache = AsyncTTLCache("frame_syntax", ttl_seconds=600)
 _ast_cache = AsyncTTLCache("ast_symbol", ttl_seconds=600)
+_kb_cache = AsyncTTLCache("kb", ttl_seconds=600)
 
 
 def _get_catalog() -> WhoCatalog:
@@ -170,6 +175,16 @@ def _get_ast_indexer() -> AstIndexer:
     return _ast_indexer
 
 
+def _get_kb() -> MachineKB:
+    """Return the Machine KB, loading it on first use (a missing KB is reported, not raised)."""
+    global _kb
+    if _kb is None:
+        _kb = MachineKB()
+    if not _kb.loaded:
+        _kb.load()  # retry: kb_fetch may have run, or OPENWEBNET_KB_PATH been set, since the last miss
+    return _kb
+
+
 def _get_rescan_manager() -> RescanManager:
     global _rescan_manager
     if _rescan_manager is None:
@@ -177,6 +192,7 @@ def _get_rescan_manager() -> RescanManager:
             who_catalog=_get_catalog(),
             doc_indexer=_get_doc_indexer(),
             ast_indexer=_get_ast_indexer(),
+            kb=_get_kb(),
         )
     return _rescan_manager
 
@@ -589,6 +605,7 @@ async def rescan_documentation() -> str:
         _guide_cache.clear()
         _frame_syntax_cache.clear()
         _ast_cache.clear()
+        _kb_cache.clear()
 
         mgr = _get_rescan_manager()
         summary = mgr.rescan()
@@ -599,11 +616,94 @@ async def rescan_documentation() -> str:
             f"- **WHO Families Loaded**: `{summary['who_families_loaded']}`",
             f"- **Documentation Sections**: `{summary['doc_sections']['after']}` (delta: `{summary['doc_sections']['delta']}`)",
             f"- **AST Symbols**: `{summary['ast_symbols']['after']}` (delta: `{summary['ast_symbols']['delta']}`)",
+            f"- **Machine KB**: `{'loaded' if summary['kb']['loaded'] else 'unavailable'}` "
+            f"(chunks: `{summary['kb']['chunks']}`, claims: `{summary['kb']['claims']}`)",
             f"- **Status**: `{summary['status']}`",
         ]
         return "\n".join(lines)
     except Exception as err:
         logger.error("rescan_documentation failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
+# ── 11. Machine KB: search ───────────────────────────────────────────
+@mcp.tool()
+async def search_knowledge(
+    query: str,
+    kind: str = "all",
+    area: str | None = None,
+    epistemic_status: str | None = None,
+    limit: int = 6,
+) -> str:
+    """Search the Encyclopedia's Machine KB: atomic claims and retrieval chunks with their qualifications.
+
+    Every hit carries its epistemic status, confidence, applicability, provenance, cautions and open
+    questions. Lexical rank is not evidence strength: `unresolved`, `inferred`, `rejected` and
+    `superseded` records are not established facts, and absence of a record is not a negative assertion.
+
+    Args:
+        query: Keywords or question (e.g. 'shutter position 255', 'WHO 4 115# program').
+        kind: 'all' (default), 'claim' (assertion-level) or 'chunk' (whole documentation section).
+        area: Optional top-level Encyclopedia area filter (e.g. 'functional', 'diagnostics', 'protocol').
+        epistemic_status: Optional claim filter (e.g. 'specified', 'observed', 'unresolved', 'rejected').
+        limit: Maximum results (1-20).
+    """
+    limit = max(1, min(int(limit), 20))
+    key = f"{query.strip().lower()}::{kind}::{area}::{epistemic_status}::{limit}"
+
+    async def _impl():
+        kb = _get_kb()
+        if not kb.loaded:
+            return f"**Error**: {kb.load_error}"
+        if kind not in ("all", "claim", "chunk"):
+            return f"**Error**: kind must be 'all', 'claim' or 'chunk', not '{kind}'."
+        hits = kb.search(query, kind=kind, area=area, epistemic_status=epistemic_status, limit=limit)
+        if not hits:
+            return f"No Machine KB records matched query: '{query}' (absence of a record is not a negative assertion)."
+        return format_search(query, hits, kb)
+
+    try:
+        return await _kb_cache.get_or_set(key, _impl)
+    except Exception as err:
+        logger.error("search_knowledge failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
+# ── 12. Machine KB: resolve a stable ID ──────────────────────────────
+@mcp.tool()
+async def get_knowledge_record(record_id: str) -> str:
+    """Resolve a Machine KB stable ID (`ownkb:claim:…`, `ownkb:chunk:…`, `ownkb:caution:…`, `ownkb:question:…`,
+    `ownkb:source:…`, `ownkb:entity:…`, …) to its full record with cautions and open questions hydrated.
+
+    Args:
+        record_id: The stable ID exactly as returned by search_knowledge.
+    """
+    rid = record_id.strip()
+
+    async def _impl():
+        kb = _get_kb()
+        if not kb.loaded:
+            return f"**Error**: {kb.load_error}"
+        rec, note = kb.lookup(rid)
+        if rec is None:
+            return f"**Error**: no Machine KB record with id '{rid}'." + (f" {note}" if note else "")
+        return (f"> **ID note**: {note}\n\n" if note else "") + format_record(rec, kb)
+
+    try:
+        return await _kb_cache.get_or_set(f"id::{rid}", _impl)
+    except Exception as err:
+        logger.error("get_knowledge_record failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
+# ── 13. Machine KB: identity and integrity ───────────────────────────
+@mcp.tool()
+async def get_knowledge_status() -> str:
+    """Report which Machine KB snapshot backs the answers: location, versions, hash verification and counts."""
+    try:
+        return format_status(_get_kb().status())
+    except Exception as err:
+        logger.error("get_knowledge_status failed: %s", err, exc_info=True)
         return f"**Error**: {err}"
 
 
@@ -622,6 +722,15 @@ async def resource_protocol_grammar() -> str:
     if grammar_path.exists():
         return grammar_path.read_text(encoding="utf-8")
     return json.dumps({"error": "Grammar file not found"})
+
+
+@mcp.resource("kb://manifest")
+async def resource_kb_manifest() -> str:
+    """Read-only Machine KB manifest: exact dataset, compatibility versions and artifact hashes."""
+    kb = _get_kb()
+    if not kb.loaded:
+        return json.dumps({"error": kb.load_error})
+    return json.dumps(kb.manifest, indent=2, sort_keys=True)
 
 
 @mcp.resource("docs://toc")
@@ -689,6 +798,7 @@ Current requested context focus: **{topic}**
 3. Use `parse_and_validate_frame(frame)` to verify frame syntax, parameter definitions, and semantic meanings.
 4. Use `draft_own_frame(...)` and `draft_ha_config(...)` to build copy-pasteable frames and Home Assistant configurations.
 5. Use `get_code_signature(symbol)` to inspect Python classes and methods in `custom_components/myhome` or `OWNd`.
+6. Use `search_knowledge(query)` / `get_knowledge_record(id)` for evidence-qualified answers (epistemic status, applicability, cautions, open questions); treat `unresolved`, `inferred`, `rejected` and `superseded` records as not established, and absence of a record as not a negative assertion.
 """
 
 

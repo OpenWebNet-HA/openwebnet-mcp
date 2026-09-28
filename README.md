@@ -78,7 +78,7 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 
 ## 🛠️ Tools & Resources Reference
 
-### MCP Tools (10)
+### MCP Tools (14)
 
 | Tool | Description |
 |---|---|
@@ -92,9 +92,12 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `draft_sound_source_selection` | Build the WHO=16 frame pair that switches a room's audio source, including which amplifiers the change reaches and how far the evidence for it goes. |
 | `draft_ha_config` | Generate production-ready Home Assistant configuration YAML for MyHOME entities. |
 | `get_code_signature` | Inspect Python AST signatures and docstrings from `custom_components/myhome` or `OWNd`. |
-| `rescan_documentation` | Flush caches and reload all OpenWebNet specifications, documents, and AST models. |
+| `search_knowledge` | Ranked search over the Encyclopedia's Machine KB (atomic claims and retrieval chunks). Every hit keeps its epistemic status, applicability, provenance, cautions and open questions. |
+| `get_knowledge_record` | Resolve any Machine KB stable ID (`ownkb:claim:…`, `ownkb:chunk:…`, `ownkb:caution:…`, …) with cautions and questions hydrated. |
+| `get_knowledge_status` | Which Machine KB snapshot backs the answers: versions, artifact-hash verification, counts. |
+| `rescan_documentation` | Flush caches and reload all OpenWebNet specifications, documents, and AST models, and the Machine KB. |
 
-### MCP Resources (4)
+### MCP Resources (5)
 
 | URI | Description |
 |---|---|
@@ -102,6 +105,7 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `spec://protocol-grammar` | Read-only formal OpenWebNet grammar, regex patterns, and session specs. |
 | `docs://toc` | Master Table of Contents for all indexed OpenWebNet & MyHOME documentation. |
 | `docs://guide/{topic}` | Read-only full text of a specific documentation guide. |
+| `kb://manifest` | Read-only Machine KB manifest: exact dataset, compatibility versions and artifact hashes. |
 
 ### MCP Prompts (1)
 
@@ -117,6 +121,34 @@ In Claude Desktop, Cursor, or Antigravity, trigger the prompt by typing `/boost`
 The server primes the LLM with strict frame grammar rules, hardware capabilities, and modern Home Assistant configuration standards, eliminating hallucinated syntax.
 
 ---
+
+## 🧠 Machine KB (Encyclopedia knowledge base)
+
+`search_knowledge`, `get_knowledge_record` and `get_knowledge_status` read the
+[OpenWebNet Encyclopedia Machine KB](https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/tree/main/knowledge)
+(release `machine-kb-v0.1.0`), following its consumer guide: manifest first, schema-version check,
+SHA-256 verification, stable-ID maps, and every qualification returned with the text.
+
+The KB is located, in order, from `OPENWEBNET_KB_PATH` (the `knowledge` directory or an Encyclopedia checkout),
+the hash-verified download cache, or a sibling `OpenWebNet-Encyclopedia/knowledge` checkout (an unverified working tree).
+**The default `uvx` install ships without the corpus.** Fill the cache with a hash-verified release (no checkout needed);
+the tools pick it up on the next call, no restart required:
+
+```bash
+uvx --from git+https://github.com/OpenWebNet-HA/openwebnet-mcp.git openwebnet-mcp-kb-fetch machine-kb-v0.1.0
+# or, from a clone:  python -m openwebnet_mcp.kb_fetch machine-kb-v0.1.0
+```
+
+Hash mismatches (for example a checkout of a branch newer than the tag) are reported by `get_knowledge_status`
+and logged; set `OPENWEBNET_KB_STRICT=1` to refuse to load instead. Without a KB the three tools return a clear
+error and the rest of the server is unaffected.
+
+Known 0.1.0 limits, surfaced rather than hidden: 1,120 claim statements are truncated by an upstream rendering
+defect ([Encyclopedia#37](https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/issues/37)) and point to their
+intact source chunk; DALI / WHO 24 is not in the corpus yet. Ranking is lexical (BM25) and is not evidence strength; exact
+`WHO n` / `WHAT n` / `DIMENSION n` references in a query get a flat bonus so they outrank documents that merely contain the number.
+
+A live test of `kb_fetch` against the real release is opt-in: `OPENWEBNET_LIVE_TESTS=1 pytest -m network`.
 
 ## 📚 Master WHO Family Inventory
 

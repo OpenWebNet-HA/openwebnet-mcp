@@ -7,6 +7,7 @@ from typing import Any
 
 from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
+from openwebnet_mcp.kb import MachineKB
 from openwebnet_mcp.who_catalog import WhoCatalog
 
 logger = logging.getLogger("openwebnet_mcp.rescan_manager")
@@ -20,10 +21,12 @@ class RescanManager:
         who_catalog: WhoCatalog,
         doc_indexer: DocIndexer,
         ast_indexer: AstIndexer,
+        kb: MachineKB | None = None,
     ) -> None:
         self.who_catalog = who_catalog
         self.doc_indexer = doc_indexer
         self.ast_indexer = ast_indexer
+        self.kb = kb
 
     def rescan(self) -> dict[str, Any]:
         """Perform a complete rescan and return status statistics."""
@@ -37,6 +40,7 @@ class RescanManager:
         self.who_catalog._load_catalog()
         doc_sections_after = self.doc_indexer.reindex()
         ast_symbols_after = self.ast_indexer.reindex()
+        kb_loaded = self.kb.load() if self.kb is not None else False
 
         summary = {
             "who_families_loaded": len(self.who_catalog._families),
@@ -49,6 +53,11 @@ class RescanManager:
                 "before": ast_symbols_before,
                 "after": ast_symbols_after,
                 "delta": ast_symbols_after - ast_symbols_before,
+            },
+            "kb": {
+                "loaded": kb_loaded,
+                "chunks": len(self.kb.chunks) if self.kb is not None else 0,
+                "claims": len(self.kb.claims) if self.kb is not None else 0,
             },
             "status": "success",
         }
