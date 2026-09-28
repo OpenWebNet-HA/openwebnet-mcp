@@ -1,0 +1,130 @@
+{
+  "_comment": "Ground truth for Machine KB retrieval. Answers come from the Encyclopedia pages cited in OpenWebNet-Encyclopedia#32, not from the retriever. A hit is correct when its source path ends with `path` and its text (chunk text or claim statement) matches `text` (regex, case-insensitive).",
+  "release": "machine-kb-v0.1.0",
+  "cases": [
+    {
+      "id": "who2-255-terse",
+      "issue": "32#1.1",
+      "query": "WHO 2 DIMENSION 10 shutter position 255",
+      "path": "who-2-automation/dimensions.md",
+      "text": "255"
+    },
+    {
+      "id": "who2-255-natural",
+      "issue": "32#1.1",
+      "query": "what does shutter level 255 mean, is it a real position",
+      "path": "who-2-automation/dimensions.md",
+      "text": "255"
+    },
+    {
+      "id": "who16-volume-terse",
+      "issue": "32#1.2",
+      "query": "WHO 16 volume down WHAT",
+      "path": "who-16-sound-system/README.md",
+      "text": "1101",
+      "known_miss": "correct record ranks below 5 in machine-kb-v0.1.0"
+    },
+    {
+      "id": "who16-volume-natural",
+      "issue": "32#1.2",
+      "query": "which WHAT lowers the amplifier volume by one step",
+      "path": "who-16-sound-system/README.md",
+      "text": "1101",
+      "known_miss": "correct record ranks below 5 in machine-kb-v0.1.0"
+    },
+    {
+      "id": "who4-x10-terse",
+      "issue": "32#1.3",
+      "query": "WHO 4 WHAT 310 manual programmed",
+      "path": "who-4-temperature-control/what.md",
+      "text": "manual adjustment"
+    },
+    {
+      "id": "who4-x10-natural",
+      "issue": "32#1.3",
+      "query": "temperature control x10 and x11 what is the difference between manual and programmed",
+      "path": "who-4-temperature-control/what.md",
+      "text": "manual adjustment"
+    },
+    {
+      "id": "who4-115-program",
+      "issue": "32#1.4",
+      "query": "WHO 4 WHAT 115# parameter is a weekly program not a temperature",
+      "path": "who-4-temperature-control/what.md",
+      "text": "program"
+    },
+    {
+      "id": "who4-central-unit",
+      "issue": "32#1.5",
+      "query": "WHO 4 central unit scenario WHAT 3201 vacation",
+      "path": "who-4-temperature-control/what.md",
+      "text": "3201|3200|3000"
+    },
+    {
+      "id": "who1-dim4",
+      "issue": "32#1.6",
+      "query": "WHO 1 DIMENSION 4 payload",
+      "path": "who-1-lighting/dimensions.md",
+      "text": "DIMENSION 4"
+    },
+    {
+      "id": "who1-what17",
+      "issue": "32#1.6",
+      "query": "WHO 1 WHAT 17 timer duration",
+      "path": "who-1-lighting/what.md",
+      "text": "17"
+    },
+    {
+      "id": "who15-pressure",
+      "issue": "32#1.7",
+      "query": "WHO 15 CEN first frame pressure short or long press",
+      "path": "who-15-cen/README.md",
+      "text": "pressure"
+    },
+    {
+      "id": "who15-repeat",
+      "issue": "32#1.7",
+      "query": "CEN repeated #3 frames continued pressure",
+      "path": "who-15-cen/README.md",
+      "text": "continued pressure"
+    },
+    {
+      "id": "who15-rotary",
+      "issue": "32#1.7",
+      "query": "are rotary events defined for CEN",
+      "path": "who-25-transversal/cen-plus.md",
+      "text": "not defined"
+    },
+    {
+      "id": "who5-states",
+      "issue": "32#1.8",
+      "query": "WHO 5 alarm WHAT 1 2 arm disarm state values as commands",
+      "path": "who-5-alarm/protocol.md",
+      "text": "must not be interpreted",
+      "known_miss": "correct record ranks below 5 in machine-kb-v0.1.0"
+    }
+  ],
+  "absent": [
+    {
+      "id": "dali-who24",
+      "query": "WHO 24 DALI lighting management commands",
+      "must_not": "DALI"
+    },
+    {
+      "id": "dali-natural",
+      "query": "how do I address a DALI ballast",
+      "must_not": "DALI"
+    },
+    {
+      "id": "who60",
+      "query": "WHO 60 WHAT 1 command",
+      "must_not": "WHO 60"
+    }
+  ],
+  "thresholds": {
+    "recall_at_5": 0.9,
+    "recall_at_1": 0.6,
+    "fidelity": 1.0,
+    "abstain": 1.0
+  }
+}
