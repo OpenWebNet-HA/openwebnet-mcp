@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -112,6 +113,33 @@ def get_external_docs_paths() -> list[Path]:
         _add(parent_dir / "who16_doc.txt")
 
     return candidates
+
+
+def get_kb_dir() -> Path | None:
+    """Return the Machine KB ``knowledge`` directory (the one holding manifest.json), if available.
+
+    Resolution order:
+    1. OPENWEBNET_KB_PATH environment variable (the knowledge dir, or an Encyclopedia checkout)
+    2. A sibling ``OpenWebNet-Encyclopedia/knowledge`` checkout
+    3. The download cache filled by ``python -m openwebnet_mcp.kb_fetch``
+    """
+    candidates: list[Path] = []
+    env_kb = os.environ.get("OPENWEBNET_KB_PATH")
+    if env_kb:
+        candidates += [Path(env_kb), Path(env_kb) / "knowledge"]
+    candidates.append(get_project_root().parent / "OpenWebNet-Encyclopedia" / "knowledge")
+    cache_root = get_cache_dir() / "machine-kb"
+    if cache_root.is_dir():
+        # Newest release first; compare numerically so v0.10.0 sorts above v0.9.0.
+        candidates += sorted(
+            cache_root.glob("*/knowledge"),
+            key=lambda p: [int(n) for n in re.findall(r"\d+", p.parent.name)],
+            reverse=True,
+        )
+    for cand in candidates:
+        if (cand / "manifest.json").is_file():
+            return cand
+    return None
 
 
 def get_myhome_repo_path() -> Path | None:

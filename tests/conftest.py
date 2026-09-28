@@ -16,9 +16,11 @@ def reset_server_state():
     server._doc_indexer = None
     server._ast_indexer = None
     server._rescan_manager = None
+    server._kb = None
 
     server._doc_search_cache.clear()
     server._who_spec_cache.clear()
     server._guide_cache.clear()
     server._frame_syntax_cache.clear()
     server._ast_cache.clear()
+    server._kb_cache.clear()
