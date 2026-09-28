@@ -145,7 +145,10 @@ error and the rest of the server is unaffected.
 
 Known 0.1.0 limits, surfaced rather than hidden: 1,120 claim statements are truncated by an upstream rendering
 defect ([Encyclopedia#37](https://github.com/OpenWebNet-HA/OpenWebNet-Encyclopedia/issues/37)) and point to their
-intact source chunk; DALI / WHO 24 is not in the corpus yet. Ranking is lexical (BM25) and is not evidence strength.
+intact source chunk; DALI / WHO 24 is not in the corpus yet. Ranking is lexical (BM25) and is not evidence strength; exact
+`WHO n` / `WHAT n` / `DIMENSION n` references in a query get a flat bonus so they outrank documents that merely contain the number.
+
+A live test of `kb_fetch` against the real release is opt-in: `OPENWEBNET_LIVE_TESTS=1 pytest -m network`.
 
 ## 📚 Master WHO Family Inventory
 

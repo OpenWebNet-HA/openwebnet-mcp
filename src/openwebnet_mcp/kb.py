@@ -45,6 +45,15 @@ _LEAK_MARKERS = ("{'text': '", '{"text": "', '{"text":"')
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _BM25_K1 = 1.4
 _BM25_B = 0.75
+# Exact "WHAT 19" / "DIMENSION 4" / "WHO 2" references: the tokenizer splits numbers off their label, so plain
+# BM25 cannot tell "WHAT 19" from any document that merely contains a 19. A matching pair earns a flat bonus.
+_REF_RE = re.compile(r"\b(who|what|dimension|dim)\W{0,3}(\d+)\b")
+_REF_ALIAS = {"dim": "dimension"}
+_REF_BOOST = 4.0
+
+
+def _references(text: str) -> set[tuple[str, str]]:
+    return {(_REF_ALIAS.get(kind, kind), num) for kind, num in _REF_RE.findall(text.lower())}
 
 
 class KBError(Exception):
@@ -106,6 +115,7 @@ class MachineKB:
         self._docs: list[tuple[str, str]] = []  # (kind, id)
         self._tf: list[Counter[str]] = []
         self._doc_len: list[int] = []
+        self._refs: list[set[tuple[str, str]]] = []
         self._df: Counter[str] = Counter()
         self._avg_len = 0.0
 
@@ -224,15 +234,20 @@ class MachineKB:
     def _build_index(self) -> None:
         for cid, chunk in self.chunks.items():
             head = " ".join(chunk.get("section_path", [])) + " " + chunk.get("label", "")
-            self._add_doc("chunk", cid, _tokenize(head) * 2 + _tokenize(chunk.get("text", "")))
+            refs = _references(head + " " + chunk.get("text", ""))
+            who = re.search(r"who-(\d+)-", chunk.get("source_path", ""))
+            if who:
+                refs.add(("who", who.group(1)))
+            self._add_doc("chunk", cid, _tokenize(head) * 2 + _tokenize(chunk.get("text", "")), refs)
         for cid, claim in self.claims.items():
             statement, _ = clean_statement(claim.get("statement", ""))
             head = claim.get("label", "") + " " + claim.get("context", {}).get("description", "")
-            self._add_doc("claim", cid, _tokenize(head) * 2 + _tokenize(statement))
+            self._add_doc("claim", cid, _tokenize(head) * 2 + _tokenize(statement), _references(head + " " + statement))
         self._avg_len = sum(self._doc_len) / max(len(self._doc_len), 1)
 
-    def _add_doc(self, kind: str, rec_id: str, tokens: list[str]) -> None:
+    def _add_doc(self, kind: str, rec_id: str, tokens: list[str], refs: set[tuple[str, str]]) -> None:
         tf = Counter(tokens)
+        self._refs.append(refs)
         self._docs.append((kind, rec_id))
         self._tf.append(tf)
         self._doc_len.append(len(tokens))
@@ -250,6 +265,7 @@ class MachineKB:
     ) -> list[dict[str, Any]]:
         """Rank chunks and claims for ``query``. Filters are exact-match; ``area`` is the top-level doc area."""
         terms = _tokenize(query)
+        wanted = _references(query)
         if not terms or not self._docs:
             return []
         n_docs = len(self._docs)
@@ -273,6 +289,7 @@ class MachineKB:
                 norm = f + _BM25_K1 * (1 - _BM25_B + _BM25_B * self._doc_len[i] / self._avg_len)
                 score += idf * f * (_BM25_K1 + 1) / norm
             if score > 0:
+                score += _REF_BOOST * len(wanted & self._refs[i])
                 scored.append((score, dkind, rec_id))
         scored.sort(key=lambda t: (-t[0], t[2]))
         return [

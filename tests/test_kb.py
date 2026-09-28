@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -328,3 +329,47 @@ async def test_failed_first_load_is_retried(kb_dir, monkeypatch):
     monkeypatch.setattr("openwebnet_mcp.kb.get_kb_dir", lambda: kb_dir)
     server._kb_cache.clear()
     assert "ownkb:chunk:r000001" in await server.search_knowledge("shutter")
+
+
+def test_exact_what_and_dimension_references_are_boosted():
+    kb = MachineKB()
+    kb.claims = {
+        # Plenty of bare 19s, but not the reference being asked for.
+        "ownkb:claim:noise": _rec("claim", "ownkb:claim:noise", label="Counter 19 19 19",
+                                  statement="channel 19 counts 19 events; what happens at 19 is logged; who cares"),
+        "ownkb:claim:hit": _rec("claim", "ownkb:claim:hit", label="Fault", statement="WHAT 19 signals a fault."),
+        "ownkb:claim:dim": _rec("claim", "ownkb:claim:dim", label="Setpoint", statement="`DIMENSION 14` writes the setpoint."),
+        "ownkb:claim:who14": _rec("claim", "ownkb:claim:who14", label="Lock", statement="WHO 14 setpoint setpoint lock."),
+    }
+    kb.chunks = {
+        "ownkb:chunk:c4": {"id": "ownkb:chunk:c4", "kind": "retrieval_chunk", "label": "Overview", "section_id": "s",
+                           "section_path": ["Overview"], "source_path": "functional/who-4-temperature-control/x.md",
+                           "text": "Thermoregulation overview."},
+    }
+    kb._build_index()
+    assert kb.search("WHAT 19")[0]["id"] == "ownkb:claim:hit"
+    assert kb.search("dim 14 setpoint")[0]["id"] == "ownkb:claim:dim"
+    assert kb.search("WHO 4 overview")[0]["id"] == "ownkb:chunk:c4"  # WHO taken from the source path
+    assert kb.search("WHAT-19")[0]["id"] == "ownkb:claim:hit"
+
+
+def test_catalog_who1_timed_and_blink_commands():
+    who1 = next(f for f in json.loads(
+        (Path(paths_mod.__file__).parent / "data" / "who_catalog.json").read_text(encoding="utf-8")
+    )["families"] if f["who"] == 1)
+    what = who1["what_commands"]
+    assert what["11"] == "Timed ON for 1 minute" and what["15"] == "Timed ON for 5 minutes"
+    assert "unresolved" in what["17"] and what["30"].startswith("Increase") and what["31"].startswith("Decrease")
+    assert "Dim UP" not in json.dumps(what) and "Toggle" not in json.dumps(what)
+
+
+@pytest.mark.network
+@pytest.mark.skipif(os.environ.get("OPENWEBNET_LIVE_TESTS") != "1", reason="set OPENWEBNET_LIVE_TESTS=1 to hit GitHub")
+def test_kb_fetch_live_release(tmp_path, monkeypatch):
+    monkeypatch.setattr(kb_fetch, "get_cache_dir", lambda: tmp_path)
+    out = kb_fetch.fetch()  # machine-kb-v0.1.0 from raw.githubusercontent.com, every artifact hash-verified
+    kb = MachineKB(out, strict=True)
+    assert kb.load() and kb.hashes_verified
+    assert (len(kb.chunks), len(kb.claims)) == (1173, 7449)
+    top = kb.search("WHO 1 WHAT 17", kind="claim", limit=2)
+    assert "WHAT 17" in kb.claims[top[0]["id"]]["label"]

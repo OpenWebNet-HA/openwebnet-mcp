@@ -58,3 +58,4 @@ packages = ["src/openwebnet_mcp"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = "--cov=src/openwebnet_mcp --cov-report=term-missing"
+markers = ["network: hits the live network; runs only when OPENWEBNET_LIVE_TESTS=1"]
