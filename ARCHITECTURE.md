@@ -52,7 +52,7 @@ openwebnet-mcp/
 │   └── workflows/
 │       └── ci.yml               # Multi-OS (Ubuntu, macOS, Windows) & Python (3.11-3.14) CI
 ├── .gitignore
-├── LICENSE                      # MIT License
+├── LICENSE                      # Apache License 2.0
 ├── README.md                    # Quick start, agentic examples, tools reference
 ├── ARCHITECTURE.md              # Detailed technical design
 ├── pyproject.toml               # Hatchling build metadata & dependencies
