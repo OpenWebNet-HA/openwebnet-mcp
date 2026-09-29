@@ -3,7 +3,7 @@
 [![CI Pipeline](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml)
 [![Platform Validation](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-success?logo=githubactions)](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml)
 [![Python Support](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue?logo=python)](https://github.com/OpenWebNet-HA/openwebnet-mcp/actions/workflows/ci.yml)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 
 > **Developer MCP Tool for OpenWebNet Protocol Validation, WHO Specifications, and Home Assistant Integration Knowledge.**
 > Deterministic syntax checking, formal WHO catalog reference, and AST signature introspection for AI coding assistants.
@@ -191,4 +191,4 @@ pytest --cov=src/openwebnet_mcp --cov-report=term-missing
 
 ## 📄 License
 
-MIT License. Copyright (c) 2026 OpenWebNet-HA Community.
+Apache License 2.0, the same license as Home Assistant Core. See [LICENSE](LICENSE). Copyright (c) 2026 OpenWebNet-HA Community.
