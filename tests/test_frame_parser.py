@@ -456,3 +456,25 @@ def test_who2_advanced_what_is_10_11_12():
     assert whats["12"].startswith("Advanced DOWN")
     assert not {"30", "31", "32"} & set(whats)
     assert "Advanced UP" in FrameParser().parse("*2*11*21##").explanation
+
+
+
+@pytest.mark.parametrize(
+    "frame, expected",
+    [
+        ("*5*1*0##", "Burglar Alarm: Activation (central unit active"),
+        ("*5*1*0##", "at Central unit"),
+        ("*5*8*0##", "Burglar Alarm: Engage: system engaged, i.e. armed (report) at Central unit"),
+        ("*5*9*0##", "Disengage"),
+        ("*5*11*#1##", "Active zone: zone engaged (report, WHERE #N) at Zone 1"),
+        ("*5*18*#8##", "at Zone 8"),
+        ("*5*15*#3##", "Intrusion alarm (event) at Zone 3"),
+        ("*5*15*12##", "at Zone 1 sensor 2"),
+        ("*#5*#1##", "Query status of Burglar Alarm at Zone 1"),
+    ],
+)
+def test_who5_alarm_frames(frame, expected):
+    parsed = FrameParser().parse(frame)
+    assert parsed.is_valid is True
+    assert not parsed.warnings, parsed.warnings
+    assert expected in parsed.explanation, parsed.explanation

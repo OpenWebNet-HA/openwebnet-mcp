@@ -522,6 +522,15 @@ class FrameParser:
         """Provide a readable description for the WHERE address."""
         if where is None:
             return "system-wide"
+
+        # Declared forms come first: WHERE 0 is not "general" in every family
+        # (WHO=5 uses it for the alarm central unit).
+        family = self.catalog.get_family(who) if who is not None else None
+        if isinstance(family, dict):
+            declared = self._describe_where_form(family, where, where_params)
+            if declared:
+                return declared
+
         if where == "0":
             return "General (all devices)"
 
@@ -533,11 +542,5 @@ class FrameParser:
             if extra:
                 desc += f" (duration {extra[0]} min)"
             return desc
-
-        family = self.catalog.get_family(who) if who is not None else None
-        if isinstance(family, dict):
-            declared = self._describe_where_form(family, where, where_params)
-            if declared:
-                return declared
 
         return f"address '{where}'" + self._describe_routing(where_params)

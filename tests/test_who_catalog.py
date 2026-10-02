@@ -114,3 +114,36 @@ def test_format_family_details_empty_sections(tmp_path):
     assert "No standard WHAT commands" in md
     assert "No dimension parameters defined" in md
     assert "No examples provided" in md
+
+
+def test_who5_alarm_vocabulary_is_activation_and_engage_not_arm():
+    """WHO_5.pdf / Encyclopedia who-5-alarm: WHAT 1 is "activation", WHAT 8 "engage".
+
+    Regression: the catalog once read 1 = "Arm system (Total)" and 0 = "Disarm".
+    Field captures show arming as *5*1*0## then *5*8*0## and disarming as
+    *5*2*0##, *5*1*0##, *5*9*0##, so WHAT 1 is not the armed state.
+    """
+    catalog = WhoCatalog()
+    who_5 = catalog.get_family(5)
+    whats = who_5["what_commands"]
+
+    assert whats["1"].startswith("Activation")
+    assert whats["8"].startswith("Engage")
+    assert whats["0"].startswith("Maintenance")
+    assert whats["9"].startswith("Disengage")
+    assert whats["15"].startswith("Intrusion alarm")
+    assert set(whats) == {str(n) for n in [*range(19), 26, 27, 31]}
+    assert "arm system" not in whats["1"].lower()
+
+    # Examples must not present report values as arm/disarm commands.
+    frames = {ex["frame"] for ex in who_5["examples"]}
+    assert "*5*0*0##" not in frames
+    assert all("Arm the" not in ex["description"] for ex in who_5["examples"])
+
+    # Zones are #-prefixed selectors, not '1'..'8'.
+    assert "`#1`..`#8`" in who_5["addressing"]
+
+    spec = catalog.format_family_details(5)
+    assert "| `1` | Activation" in spec
+    assert "| `8` | Engage" in spec
+    assert "## Notes" in spec and "not that it is armed" in spec
