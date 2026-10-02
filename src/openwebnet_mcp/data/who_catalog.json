@@ -400,30 +400,91 @@
         "L4600",
         "3481"
       ],
-      "description": "Central unit intrusion alarm status, arming, disarming, partition monitoring, and technical alarms (gas/water).",
-      "addressing": "WHERE can be: Central unit ('0'), Zone/Partition ('1' to '8'), or Auxiliary detector.",
+      "description": "Monitoring interface of the burglar-alarm central unit: maintenance/activation and engaged/disengaged state, battery and mains conditions, zone engagement, and intrusion, tampering, anti-panic, technical and silent alarms. The published values are established as reported states and events, not as control commands.",
+      "addressing": "WHERE `0` = central unit (published table also lists `1` = control panel); `#N` = zone N (`#1`..`#8`; `#0` = zone 0, the inputs and internal sirens; `#12` = zone C, `#15` = zone F); two-digit `ZN` = sensor N of zone Z (`11`..`1n` zone 1 sensors, `81`..`8n` zone 8 sensors, `01`..`0n` input-zone devices). Zones are `#`-prefixed selectors, not numeric points, and WHO 5 addressing is unrelated to Lighting/Automation A/PL.",
+      "where_forms": [
+        {
+          "pattern": "^0$",
+          "description": "Central unit"
+        },
+        {
+          "pattern": "^1$",
+          "description": "Control panel"
+        },
+        {
+          "pattern": "^#0$",
+          "description": "Zone 0 (inputs and internal sirens)"
+        },
+        {
+          "pattern": "^#([1-8])$",
+          "description": "Zone {1}"
+        },
+        {
+          "pattern": "^#12$",
+          "description": "Zone C / AUX C"
+        },
+        {
+          "pattern": "^#15$",
+          "description": "Zone F / AUX F"
+        },
+        {
+          "pattern": "^0([1-9])$",
+          "description": "Input-zone device {1}"
+        },
+        {
+          "pattern": "^([1-8])([1-9])$",
+          "description": "Zone {1} sensor {2}"
+        }
+      ],
       "what_commands": {
-        "0": "Disarm / Alarm idle",
-        "1": "Arm system (Total)",
-        "2": "Arm partition / Partial",
-        "3": "Intrusion alarm active",
-        "4": "Technical alarm active (Gas/Water leak)"
+        "0": "Maintenance (central unit in maintenance; report)",
+        "1": "Activation (central unit active, out of maintenance; report. Not the armed state, see WHAT 8)",
+        "2": "Disactivation (report)",
+        "3": "Delay end (event)",
+        "4": "System battery fault (report)",
+        "5": "Battery OK (report)",
+        "6": "No network / mains absent (report)",
+        "7": "Network / mains present (report)",
+        "8": "Engage: system engaged, i.e. armed (report)",
+        "9": "Disengage: system disengaged, i.e. disarmed (report)",
+        "10": "Battery unloads (battery discharged; report)",
+        "11": "Active zone: zone engaged (report, WHERE #N)",
+        "12": "Technical alarm (event)",
+        "13": "Reset technical alarm (event)",
+        "14": "No reception / ACK peripheral device (report)",
+        "15": "Intrusion alarm (event)",
+        "16": "24-hour alarm / tampering (event)",
+        "17": "Anti-panic alarm (event)",
+        "18": "Non-active zone: zone divided (report, WHERE #N)",
+        "26": "Start programming",
+        "27": "Stop programming",
+        "31": "Silent alarm (event)"
       },
       "dimensions": {},
       "examples": [
         {
-          "frame": "*5*1*0##",
-          "description": "Arm the burglar alarm system"
+          "frame": "*#5##",
+          "description": "Request central-unit status; the reply is several WHO 5 frames (one per state axis, plus zone states) before *#*1##"
         },
         {
-          "frame": "*5*0*0##",
-          "description": "Disarm the burglar alarm system"
+          "frame": "*#5*#1##",
+          "description": "Request zone 1 status; replies *5*11*#1## (engaged) or *5*18*#1## (divided)"
         },
         {
-          "frame": "*#5*0##",
-          "description": "Request alarm central unit status"
+          "frame": "*5*8*0##",
+          "description": "Report: central unit engaged (armed). Arming is reported as *5*1*0## then *5*8*0##"
+        },
+        {
+          "frame": "*5*9*0##",
+          "description": "Report: central unit disengaged (disarmed). Disarming is reported as *5*2*0##, *5*1*0##, *5*9*0##"
+        },
+        {
+          "frame": "*5*15*#3##",
+          "description": "Report: intrusion alarm in zone 3"
         }
-      ]
+      ],
+      "notes": "WHO 5 is a monitoring interface. Every WHAT above is established only as a reported state or event; no arm/disarm command is established, so do not transmit these values as controls. WHAT 0/1 (maintenance/activation), 8/9 (engaged/disengaged), 4/5/10 (battery) and 6/7 (mains) are independent axes rather than one enumeration: WHAT 1 means the central unit is active, not that it is armed. A central-unit status request must be read to its terminating ACK, because each axis arrives as its own frame. Interpret events by the (WHAT, WHERE) pair: 11/18 describe a zone, 15/16/17 an alarm at the zone or sensor in WHERE.",
+      "evidence": "WHAT and WHERE vocabulary from WHO_5.pdf and the OpenWebNet Encyclopedia page functional/who-5-alarm. The arming (*5*1*0## then *5*8*0##) and disarming (*5*2*0##, *5*1*0##, *5*9*0##) sequences and the zone states *5*11*#N## / *5*18*#N## are corroborated by a captured MyHOME plant with an F454 gateway (MyHOME tests/fixtures/plants/issue_311_f454)."
     },
     {
       "who": 6,

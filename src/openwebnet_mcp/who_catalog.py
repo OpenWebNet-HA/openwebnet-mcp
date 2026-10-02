@@ -148,6 +148,11 @@ class WhoCatalog:
         else:
             lines.append("*(No standard WHAT commands; uses DIMENSIONS or diagnostic frames)*")
 
+        # Caveats that change how the table above may be used (e.g. WHO=5
+        # values are reports, not commands) belong next to it.
+        if f.get("notes"):
+            lines.extend(["", "## Notes", f["notes"]])
+
         lines.extend(["", "## DIMENSIONS"])
         dims = f.get("dimensions", {})
         if dims:
@@ -169,5 +174,8 @@ class WhoCatalog:
                 lines.append(f"- `{ex.get('frame')}`: {ex.get('description')}")
         else:
             lines.append("*(No examples provided)*")
+
+        if f.get("evidence"):
+            lines.extend(["", "## Evidence", f["evidence"]])
 
         return "\n".join(lines)
