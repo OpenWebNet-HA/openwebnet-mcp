@@ -168,3 +168,28 @@ def get_ownd_repo_path() -> Path | None:
     if cand.exists():
         return cand
     return None
+
+
+def get_oracle_index_path() -> Path | None:
+    """Return path to own-firmware-oracle mcp_index.json if available.
+
+    Resolution order:
+    1. OPENWEBNET_ORACLE_INDEX environment variable (explicit file path)
+    2. Sibling own-firmware-oracle checkout: <parent>/own-firmware-oracle/results/mcp_index.json
+    3. Bundled internal data fallback if present: get_data_dir() / "oracle_index.json"
+    """
+    env_path = os.environ.get("OPENWEBNET_ORACLE_INDEX")
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return p
+
+    sibling_index = get_project_root().parent / "own-firmware-oracle" / "results" / "mcp_index.json"
+    if sibling_index.is_file():
+        return sibling_index
+
+    bundled = get_data_dir() / "oracle_index.json"
+    if bundled.is_file():
+        return bundled
+
+    return None

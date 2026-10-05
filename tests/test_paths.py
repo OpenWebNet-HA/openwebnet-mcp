@@ -105,3 +105,42 @@ def test_ownd_repo_path(monkeypatch, tmp_path):
         m.setattr(_paths, "get_project_root", lambda: tmp_path / "dummy" / "dummy")
         assert _paths.get_ownd_repo_path() is None
 
+
+def test_oracle_index_path(monkeypatch, tmp_path):
+    fake_index = tmp_path / "custom_oracle.json"
+    fake_index.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("OPENWEBNET_ORACLE_INDEX", str(fake_index))
+
+    p = _paths.get_oracle_index_path()
+    assert p == fake_index
+
+    # Non-existent env path falls through
+    monkeypatch.setenv("OPENWEBNET_ORACLE_INDEX", str(tmp_path / "does_not_exist.json"))
+
+    # Sibling checkout
+    sibling_results = tmp_path / "own-firmware-oracle" / "results"
+    sibling_results.mkdir(parents=True)
+    sibling_file = sibling_results / "mcp_index.json"
+    sibling_file.write_text("{}", encoding="utf-8")
+
+    with monkeypatch.context() as m:
+        m.setattr(_paths, "get_project_root", lambda: tmp_path / "openwebnet-mcp")
+        assert _paths.get_oracle_index_path() == sibling_file
+
+    # Bundled fallback when sibling does not exist
+    bundled_dir = tmp_path / "data"
+    bundled_dir.mkdir(parents=True)
+    bundled_file = bundled_dir / "oracle_index.json"
+    bundled_file.write_text("{}", encoding="utf-8")
+
+    with monkeypatch.context() as m:
+        m.setattr(_paths, "get_project_root", lambda: tmp_path / "empty" / "repo")
+        m.setattr(_paths, "get_data_dir", lambda: bundled_dir)
+        assert _paths.get_oracle_index_path() == bundled_file
+
+    # Neither exists -> returns None
+    with monkeypatch.context() as m:
+        m.setattr(_paths, "get_project_root", lambda: tmp_path / "empty" / "repo")
+        m.setattr(_paths, "get_data_dir", lambda: tmp_path / "no_data")
+        assert _paths.get_oracle_index_path() is None
+

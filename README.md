@@ -78,7 +78,7 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 
 ## 🛠️ Tools & Resources Reference
 
-### MCP Tools (14)
+### MCP Tools (15)
 
 | Tool | Description |
 |---|---|
@@ -87,7 +87,8 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `list_who_catalog` | Summary inventory table of all 20+ OpenWebNet WHO families with archive status. |
 | `get_ha_guide` | Full markdown guide for configuring and troubleshooting Home Assistant MyHOME platforms. |
 | `lookup_frame_syntax` | Grammar, regex templates, and parameter formats for OpenWebNet message types. |
-| `parse_and_validate_frame` | Deep syntax and semantic validation of any raw OpenWebNet frame string. |
+| `parse_and_validate_frame` | Deep syntax and semantic validation of any raw OpenWebNet frame string, enriched with empirical firmware oracle verification. |
+| `lookup_firmware_verdict` | Direct lookup of empirical gateway firmware behavior (MH200N, MyHomeServer1) from live QEMU execution (ACK/NACK, bus telegrams, SHA-256 provenance). |
 | `draft_own_frame` | Construct and validate a syntactically correct OpenWebNet frame string. |
 | `draft_sound_source_selection` | Build the WHO=16 frame pair that switches a room's audio source, including which amplifiers the change reaches and how far the evidence for it goes. |
 | `draft_ha_config` | Generate production-ready Home Assistant configuration YAML for MyHOME entities. |
@@ -95,14 +96,15 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 | `search_knowledge` | Ranked search over the Encyclopedia's Machine KB (atomic claims and retrieval chunks). Every hit keeps its epistemic status, applicability, provenance, cautions and open questions. |
 | `get_knowledge_record` | Resolve any Machine KB stable ID (`ownkb:claim:…`, `ownkb:chunk:…`, `ownkb:caution:…`, …) with cautions and questions hydrated. |
 | `get_knowledge_status` | Which Machine KB snapshot backs the answers: versions, artifact-hash verification, counts. |
-| `rescan_documentation` | Flush caches and reload all OpenWebNet specifications, documents, and AST models, and the Machine KB. |
+| `rescan_documentation` | Flush caches and reload all OpenWebNet specifications, documents, AST models, Machine KB, and Firmware Oracle verdicts. |
 
-### MCP Resources (5)
+### MCP Resources (6)
 
 | URI | Description |
 |---|---|
 | `spec://who-catalog` | Read-only catalog of all OpenWebNet WHO families. |
 | `spec://protocol-grammar` | Read-only formal OpenWebNet grammar, regex patterns, and session specs. |
+| `oracle://index` | Read-only diagnostic summary of the empirical firmware oracle index (gateway platforms, versions, total inputs). |
 | `docs://toc` | Master Table of Contents for all indexed OpenWebNet & MyHOME documentation. |
 | `docs://guide/{topic}` | Read-only full text of a specific documentation guide. |
 | `kb://manifest` | Read-only Machine KB manifest: exact dataset, compatibility versions and artifact hashes. |
@@ -111,7 +113,7 @@ Once connected, your AI coding assistant can browse documentation, interpret fra
 
 | Prompt / Slash Command | Description |
 |---|---|
-| `/boost [topic]` | Injects authoritative OpenWebNet protocol architecture, WHO subsystem mappings, frame delimiters, and modern Home Assistant `/config/myhome.yaml` standards directly into the AI agent context window. |
+| `/boost [topic]` | Injects authoritative OpenWebNet protocol architecture, WHO subsystem mappings, frame delimiters, modern Home Assistant `/config/myhome.yaml` standards, and firmware verdict guidance directly into the AI agent context window. |
 
 #### Using `/boost` in MCP Clients
 In Claude Desktop, Cursor, or Antigravity, trigger the prompt by typing `/boost` or selecting it from the prompt menu:
@@ -149,6 +151,25 @@ intact source chunk; DALI / WHO 24 is not in the corpus yet. Ranking is lexical 
 `WHO n` / `WHAT n` / `DIMENSION n` references in a query get a flat bonus so they outrank documents that merely contain the number.
 
 A live test of `kb_fetch` against the real release is opt-in: `OPENWEBNET_LIVE_TESTS=1 pytest -m network`.
+
+---
+
+## 🛡️ Empirical Firmware Oracle
+
+The `lookup_firmware_verdict` tool and `parse_and_validate_frame` integration provide instant, low-latency inspection of real gateway firmware behavior captured by the [own-firmware-oracle](https://github.com/OpenWebNet-HA/own-firmware-oracle) project.
+
+- **Execution Environment**: Verdicts reflect live OpenWebNet commands executed inside instrumented QEMU emulators running binary firmware images for BTicino MH200N (`010108`) and MyHomeServer1 (`2.60.26`).
+- **Ground Truth Grounding**: Each verdict captures:
+  - Exact client session reply: `ACK (*#*1##)`, `NACK (*#*0##)`, or `SILENT`.
+  - Dispatched SCS bus telegrams (hex bytes) or confirmation that no bus frames were emitted.
+  - Secondary session notifications and status events (`emitted_own`).
+  - Cryptographic provenance: SHA-256 target frame hashes and source test suite identifiers.
+- **Resolution Order**:
+  1. `OPENWEBNET_ORACLE_INDEX` environment variable (explicit path to `mcp_index.json`).
+  2. Sibling checkout: `../own-firmware-oracle/results/mcp_index.json`.
+  3. Bundled index snapshot: `openwebnet_mcp/data/oracle_index.json`.
+
+---
 
 ## 📚 Master WHO Family Inventory
 
