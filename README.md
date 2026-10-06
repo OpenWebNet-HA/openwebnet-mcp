@@ -158,12 +158,13 @@ A live test of `kb_fetch` against the real release is opt-in: `OPENWEBNET_LIVE_T
 
 The `lookup_firmware_verdict` tool and `parse_and_validate_frame` integration provide instant, low-latency inspection of real gateway firmware behavior captured by the [own-firmware-oracle](https://github.com/OpenWebNet-HA/own-firmware-oracle) project.
 
-- **Execution Environment**: Verdicts reflect live OpenWebNet commands executed inside instrumented QEMU emulators running binary firmware images for BTicino MH200N (`010108`) and MyHomeServer1 (`2.60.26`).
+- **Execution Environment**: Verdicts reflect live OpenWebNet commands executed inside instrumented QEMU emulators running binary firmware images for BTicino MH200N (`010108`) and MyHomeServer1 (`028206`).
 - **Ground Truth Grounding**: Each verdict captures:
-  - Exact client session reply: `ACK (*#*1##)`, `NACK (*#*0##)`, or `SILENT`.
+  - Exact client session reply: `ACK (*#*1##)`, `NACK (*#*0##)`, `SILENT`, or `*No client reply*`.
   - Dispatched SCS bus telegrams (hex bytes) or confirmation that no bus frames were emitted.
+  - Verdict classification: `OUT (Bus)` (physically dispatched to the bus) vs `SILENT (Drop)` (consumed/dropped internally).
   - Secondary session notifications and status events (`emitted_own`).
-  - Cryptographic provenance: SHA-256 target frame hashes and source test suite identifiers.
+  - Cryptographic provenance: canonical JSON SHA-256 integrity verification and per-target SHA-256 hashes.
 - **Resolution Order**:
   1. `OPENWEBNET_ORACLE_INDEX` environment variable (explicit path to `mcp_index.json`).
   2. Sibling checkout: `../own-firmware-oracle/results/mcp_index.json`.

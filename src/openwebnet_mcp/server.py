@@ -29,7 +29,7 @@ except ImportError:
     except ImportError:
         from mcp.server.mcpserver import MCPServer as FastMCP
 
-from openwebnet_mcp._paths import get_log_dir, get_oracle_index_path, get_protocol_grammar_path
+from openwebnet_mcp._paths import get_log_dir, get_protocol_grammar_path
 from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
 from openwebnet_mcp.firmware_oracle import FirmwareOracle
@@ -417,9 +417,17 @@ async def parse_and_validate_frame(frame: str) -> str:
                 lines.append(f"- {w}")
 
         # Empirical Firmware Oracle Verification
-        oracle = _get_oracle()
-        verdicts = oracle.lookup(frame)
-        lines.extend(["", oracle.format_verdict_markdown(frame, verdicts)])
+        try:
+            oracle = _get_oracle()
+            verdicts = oracle.lookup(frame)
+            lines.extend(["", oracle.format_verdict_markdown(frame, verdicts)])
+        except Exception as oracle_err:
+            logger.warning("Empirical oracle lookup failed for frame '%s': %s", frame, oracle_err)
+            lines.extend([
+                "",
+                "## 🛡️ Empirical Firmware Oracle Verification",
+                f"*⚠️ Empirical oracle lookup error: {oracle_err}*",
+            ])
 
         return "\n".join(lines)
     except Exception as err:
@@ -430,7 +438,7 @@ async def parse_and_validate_frame(frame: str) -> str:
 # ── 6b. Lookup Firmware Verdict ──────────────────────────────────────
 @mcp.tool()
 async def lookup_firmware_verdict(frame: str) -> str:
-    """Look up empirical gateway firmware behavior (MH200N, MyHomeServer1) for an OpenWebNet frame.
+    """Look up empirical gateway firmware behavior (MH200N 010108, MyHomeServer1 028206) for an OpenWebNet frame.
 
     Queries the hash-pinned oracle database from live QEMU firmware execution to return
     exact gateway session responses (ACK/NACK), bus hex telegrams emitted, and SHA-256 provenance.
@@ -650,6 +658,7 @@ async def rescan_documentation() -> str:
         _frame_syntax_cache.clear()
         _ast_cache.clear()
         _kb_cache.clear()
+        _oracle_cache.clear()
 
         mgr = _get_rescan_manager()
         summary = mgr.rescan()

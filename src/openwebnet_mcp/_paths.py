@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import sys
 from pathlib import Path
 
+logger = logging.getLogger("openwebnet_mcp.paths")
+
 _APP_NAME = "openwebnet-mcp"
+
 
 
 def get_package_root() -> Path:
@@ -170,6 +174,29 @@ def get_ownd_repo_path() -> Path | None:
     return None
 
 
+def resolve_oracle_index() -> tuple[Path | None, str]:
+    """Resolve path to oracle index and its source tier ('env', 'sibling', 'bundled', or 'none')."""
+    env_path = os.environ.get("OPENWEBNET_ORACLE_INDEX")
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return p, "env"
+        logger.warning(
+            "OPENWEBNET_ORACLE_INDEX is set to '%s' but the file does not exist; falling back to sibling/bundled index.",
+            env_path,
+        )
+
+    sibling_index = get_project_root().parent / "own-firmware-oracle" / "results" / "mcp_index.json"
+    if sibling_index.is_file():
+        return sibling_index, "sibling"
+
+    bundled = get_data_dir() / "oracle_index.json"
+    if bundled.is_file():
+        return bundled, "bundled"
+
+    return None, "none"
+
+
 def get_oracle_index_path() -> Path | None:
     """Return path to own-firmware-oracle mcp_index.json if available.
 
@@ -178,18 +205,6 @@ def get_oracle_index_path() -> Path | None:
     2. Sibling own-firmware-oracle checkout: <parent>/own-firmware-oracle/results/mcp_index.json
     3. Bundled internal data fallback if present: get_data_dir() / "oracle_index.json"
     """
-    env_path = os.environ.get("OPENWEBNET_ORACLE_INDEX")
-    if env_path:
-        p = Path(env_path)
-        if p.is_file():
-            return p
+    path, _ = resolve_oracle_index()
+    return path
 
-    sibling_index = get_project_root().parent / "own-firmware-oracle" / "results" / "mcp_index.json"
-    if sibling_index.is_file():
-        return sibling_index
-
-    bundled = get_data_dir() / "oracle_index.json"
-    if bundled.is_file():
-        return bundled
-
-    return None

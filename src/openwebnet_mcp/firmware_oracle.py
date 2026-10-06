@@ -7,12 +7,13 @@ live QEMU firmware execution on BTicino MH200N and MyHomeServer1 gateways.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
 from typing import Any
 
-from openwebnet_mcp._paths import get_oracle_index_path
+from openwebnet_mcp._paths import resolve_oracle_index
 
 logger = logging.getLogger("openwebnet_mcp.firmware_oracle")
 
@@ -33,18 +34,29 @@ class FirmwareOracle:
     def __init__(self, index_path: Path | None = None) -> None:
         self.explicit_path = index_path
         self.path: Path | None = None
+        self.source_tier: str = "none"
         self.loaded: bool = False
         self.load_error: str | None = None
         self.generator: str | None = None
         self.format_version: str | None = None
         self.schema_version: str | None = None
         self.total_unique_inputs: int = 0
+        self.verdicts_sha256: str | None = None
+        self.computed_sha256: str | None = None
+        self.hash_verified: bool | None = None
         self.gateways: list[dict[str, Any]] = []
         self.verdicts: dict[str, list[dict[str, Any]]] = {}
 
     def load(self) -> bool:
         """Load or reload the oracle index from disk. Returns True on success."""
-        resolved = self.explicit_path or get_oracle_index_path()
+        if self.explicit_path:
+            resolved = self.explicit_path
+            tier = "explicit"
+        else:
+            resolved, tier = resolve_oracle_index()
+
+        self.source_tier = tier
+
         if not resolved or not resolved.is_file():
             self.loaded = False
             self.load_error = f"Oracle index not found (resolved: {resolved})"
@@ -59,16 +71,47 @@ class FirmwareOracle:
             self.generator = data.get("generator")
             self.format_version = data.get("format_version")
             self.schema_version = data.get("schema_version")
+            if self.format_version and not self.format_version.startswith("1."):
+                logger.warning(
+                    "Unexpected oracle index format_version '%s' at %s (expected 1.x)",
+                    self.format_version,
+                    resolved,
+                )
+
             self.total_unique_inputs = int(data.get("total_unique_inputs", 0))
             self.gateways = data.get("gateways", [])
             self.verdicts = data.get("verdicts", {})
+            self.verdicts_sha256 = data.get("verdicts_sha256")
+
+            # Cryptographic canonical hash verification
+            if self.verdicts_sha256 and self.verdicts:
+                canonical_json = json.dumps(
+                    self.verdicts, sort_keys=True, separators=(",", ":")
+                )
+                self.computed_sha256 = hashlib.sha256(
+                    canonical_json.encode("utf-8")
+                ).hexdigest()
+                self.hash_verified = self.computed_sha256 == self.verdicts_sha256
+                if not self.hash_verified:
+                    logger.warning(
+                        "Oracle index hash mismatch at %s (expected: %s, computed: %s)",
+                        resolved,
+                        self.verdicts_sha256,
+                        self.computed_sha256,
+                    )
+            else:
+                self.computed_sha256 = None
+                self.hash_verified = None
+
             self.loaded = True
             self.load_error = None
             logger.info(
-                "Loaded firmware oracle index from %s (%d inputs, %d gateways)",
+                "Loaded firmware oracle index from %s [tier: %s] (%d inputs, %d gateways, hash: %s)",
                 resolved,
+                self.source_tier,
                 len(self.verdicts),
                 len(self.gateways),
+                "verified" if self.hash_verified else ("mismatch" if self.hash_verified is False else "none"),
             )
             return True
         except Exception as err:
@@ -110,15 +153,27 @@ class FirmwareOracle:
     ) -> str:
         """Format empirical verdicts into a GitHub-flavored Markdown section."""
         norm = normalize_frame(frame)
+
+        if not self.loaded:
+            err_msg = self.load_error or "Oracle index could not be loaded"
+            return (
+                "## 🛡️ Empirical Firmware Oracle Verification\n"
+                f"*⚠️ Oracle index unavailable: {err_msg}.*"
+            )
+
         if not verdicts:
             return (
                 "## 🛡️ Empirical Firmware Oracle Verification\n"
                 f"*Frame `{norm}` has not yet been replayed against firmware test suites "
-                "(MyHomeServer1 / MH200N).*"
+                "(MyHomeServer1 `028206` / MH200N `010108`).*"
             )
 
+        normalized_note = ""
+        if frame.strip() != norm:
+            normalized_note = f" *(Matched normalized frame `{norm}`)*"
+
         lines = [
-            f"## 🛡️ Empirical Firmware Oracle Verification: `{norm}`",
+            f"## 🛡️ Empirical Firmware Oracle Verification: `{norm}`{normalized_note}",
             "",
             "| Gateway | Firmware | Reply | Verdict | Bus Frames Emitted | Emitted OWN | Suite | Target SHA |",
             "|---|---|---|---|---|---|---|---|",
@@ -127,17 +182,25 @@ class FirmwareOracle:
         for v in verdicts:
             gw = v.get("product", "Unknown")
             ver = v.get("version", "Unknown")
-            raw_reply = v.get("reply", "silent").lower()
+            raw_reply = str(v.get("reply", "silent")).strip().lower()
             if raw_reply == "ack":
                 reply = "`ACK (*#*1##)`"
             elif raw_reply == "nack":
                 reply = "`NACK (*#*0##)`"
             elif raw_reply == "silent":
                 reply = "`SILENT`"
+            elif raw_reply == "-":
+                reply = "*No client reply*"
             else:
                 reply = f"`{raw_reply}`"
 
-            verdict_badge = f"`{v.get('verdict', 'unknown')}`"
+            raw_verdict = str(v.get("verdict", "unknown")).lower()
+            if raw_verdict == "out":
+                verdict_badge = "`OUT (Bus)`"
+            elif raw_verdict == "silent":
+                verdict_badge = "`SILENT (Drop)`"
+            else:
+                verdict_badge = f"`{raw_verdict}`"
 
             bus = v.get("bus_frames") or []
             bus_str = f"`{', '.join(bus)}`" if bus else "*(none)*"
@@ -161,21 +224,32 @@ class FirmwareOracle:
         for v in verdicts:
             gw = v.get("product", "Unknown")
             ver = v.get("version", "Unknown")
-            reply = v.get("reply", "silent")
+            reply = str(v.get("reply", "silent")).strip().lower()
+            verdict = str(v.get("verdict", "unknown")).strip().lower()
             bus = v.get("bus_frames") or []
             emitted = v.get("emitted_own") or []
             suite = v.get("suite", "unknown")
             src = v.get("source_tsv", "")
 
             details = [f"- **{gw} ({ver})**:"]
-            if reply.lower() == "ack":
+            if reply == "ack":
                 details.append("Gateway acknowledged the command (`*#*1##`).")
-            elif reply.lower() == "nack":
+            elif reply == "nack":
                 details.append("Gateway refused/rejected the command (`*#*0##`).")
+            elif reply == "-":
+                details.append("Gateway recorded no client session reply.")
+            elif reply == "silent":
+                details.append("Gateway was silent on the client session.")
             else:
                 details.append(f"Gateway returned: `{reply}`.")
 
-            if bus:
+            if verdict == "out":
+                details.append(
+                    f"Dispatched {len(bus)} SCS bus telegram(s): `{', '.join(bus)}` (physical bus transmission confirmed)."
+                )
+            elif verdict == "silent":
+                details.append("Frame consumed or dropped internally; no SCS bus telegrams emitted.")
+            elif bus:
                 details.append(f"Dispatched {len(bus)} SCS bus telegram(s): `{', '.join(bus)}`.")
             else:
                 details.append("No SCS bus telegrams emitted.")
@@ -188,6 +262,18 @@ class FirmwareOracle:
 
             lines.append(" ".join(details))
 
+        # Integrity & provenance footer
+        hash_status_text = (
+            "verified"
+            if self.hash_verified is True
+            else ("MISMATCH" if self.hash_verified is False else "unverified")
+        )
+        source_name = self.path.name if self.path else "index.json"
+        lines.extend([
+            "",
+            f"*(Oracle provenance: {self.source_tier} index `{source_name}`, SHA-256: {hash_status_text})*",
+        ])
+
         return "\n".join(lines)
 
     def status(self) -> dict[str, Any]:
@@ -198,11 +284,15 @@ class FirmwareOracle:
         return {
             "loaded": self.loaded,
             "path": str(self.path) if self.path else None,
+            "source_tier": self.source_tier,
             "generator": self.generator,
             "format_version": self.format_version,
             "schema_version": self.schema_version,
             "total_unique_inputs": self.total_unique_inputs,
             "total_verdicts": len(self.verdicts),
+            "verdicts_sha256": self.verdicts_sha256,
+            "computed_sha256": self.computed_sha256,
+            "hash_verified": self.hash_verified,
             "gateways": [
                 {
                     "product": g.get("product"),

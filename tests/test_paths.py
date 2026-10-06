@@ -106,16 +106,19 @@ def test_ownd_repo_path(monkeypatch, tmp_path):
         assert _paths.get_ownd_repo_path() is None
 
 
-def test_oracle_index_path(monkeypatch, tmp_path):
+def test_oracle_index_path(monkeypatch, tmp_path, caplog):
     fake_index = tmp_path / "custom_oracle.json"
     fake_index.write_text("{}", encoding="utf-8")
     monkeypatch.setenv("OPENWEBNET_ORACLE_INDEX", str(fake_index))
 
-    p = _paths.get_oracle_index_path()
+    p, tier = _paths.resolve_oracle_index()
     assert p == fake_index
+    assert tier == "env"
+    assert _paths.get_oracle_index_path() == fake_index
 
-    # Non-existent env path falls through
-    monkeypatch.setenv("OPENWEBNET_ORACLE_INDEX", str(tmp_path / "does_not_exist.json"))
+    # Non-existent env path logs warning and falls through
+    bad_env = tmp_path / "does_not_exist.json"
+    monkeypatch.setenv("OPENWEBNET_ORACLE_INDEX", str(bad_env))
 
     # Sibling checkout
     sibling_results = tmp_path / "own-firmware-oracle" / "results"
@@ -125,7 +128,11 @@ def test_oracle_index_path(monkeypatch, tmp_path):
 
     with monkeypatch.context() as m:
         m.setattr(_paths, "get_project_root", lambda: tmp_path / "openwebnet-mcp")
+        p_sib, tier_sib = _paths.resolve_oracle_index()
+        assert p_sib == sibling_file
+        assert tier_sib == "sibling"
         assert _paths.get_oracle_index_path() == sibling_file
+        assert "OPENWEBNET_ORACLE_INDEX is set to" in caplog.text
 
     # Bundled fallback when sibling does not exist
     bundled_dir = tmp_path / "data"
@@ -136,11 +143,18 @@ def test_oracle_index_path(monkeypatch, tmp_path):
     with monkeypatch.context() as m:
         m.setattr(_paths, "get_project_root", lambda: tmp_path / "empty" / "repo")
         m.setattr(_paths, "get_data_dir", lambda: bundled_dir)
+        p_bun, tier_bun = _paths.resolve_oracle_index()
+        assert p_bun == bundled_file
+        assert tier_bun == "bundled"
         assert _paths.get_oracle_index_path() == bundled_file
 
-    # Neither exists -> returns None
+    # Neither exists -> returns (None, "none")
     with monkeypatch.context() as m:
         m.setattr(_paths, "get_project_root", lambda: tmp_path / "empty" / "repo")
         m.setattr(_paths, "get_data_dir", lambda: tmp_path / "no_data")
+        p_none, tier_none = _paths.resolve_oracle_index()
+        assert p_none is None
+        assert tier_none == "none"
         assert _paths.get_oracle_index_path() is None
+
 

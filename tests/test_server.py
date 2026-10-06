@@ -94,6 +94,13 @@ async def test_tool_parse_and_validate_frame():
     assert "- **Valid Grammar**: `NO`" in res_invalid
     assert "Unrecognized OpenWebNet syntax" in res_invalid
 
+    # Oracle lookup error degrades gracefully without failing syntax parsing
+    with patch.object(server._get_oracle(), "lookup", side_effect=RuntimeError("Simulated oracle crash")):
+        res_oracle_fail = await server.parse_and_validate_frame("*1*1*12##")
+        assert "- **Valid Grammar**: `YES`" in res_oracle_fail
+        assert "Empirical oracle lookup error: Simulated oracle crash" in res_oracle_fail
+
+
 
 @pytest.mark.asyncio
 async def test_tool_lookup_firmware_verdict():
@@ -158,9 +165,12 @@ async def test_tool_get_code_signature():
 
 @pytest.mark.asyncio
 async def test_tool_rescan_documentation():
+    server._oracle_cache.cache["*#1*74##"] = ("cached_value", 9999999999.0)
     res = await server.rescan_documentation()
     assert "# OpenWebNet Documentation Rescan Complete" in res
     assert "WHO Families Loaded" in res
+    assert "*#1*74##" not in server._oracle_cache.cache
+
 
 
 @pytest.mark.asyncio
