@@ -32,6 +32,7 @@ except ImportError:
 from openwebnet_mcp._paths import get_log_dir, get_protocol_grammar_path
 from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
+from openwebnet_mcp.firmware_oracle import FirmwareOracle
 from openwebnet_mcp.frame_generator import FrameGenerator
 from openwebnet_mcp.frame_parser import FrameParser
 from openwebnet_mcp.kb import MachineKB
@@ -126,6 +127,7 @@ _doc_indexer: DocIndexer | None = None
 _ast_indexer: AstIndexer | None = None
 _rescan_manager: RescanManager | None = None
 _kb: MachineKB | None = None
+_oracle: FirmwareOracle | None = None
 
 _catalog_lock = asyncio.Lock()
 _doc_lock = asyncio.Lock()
@@ -138,6 +140,7 @@ _guide_cache = AsyncTTLCache("guide", ttl_seconds=600)
 _frame_syntax_cache = AsyncTTLCache("frame_syntax", ttl_seconds=600)
 _ast_cache = AsyncTTLCache("ast_symbol", ttl_seconds=600)
 _kb_cache = AsyncTTLCache("kb", ttl_seconds=600)
+_oracle_cache = AsyncTTLCache("oracle_verdict", ttl_seconds=600)
 
 
 def _get_catalog() -> WhoCatalog:
@@ -185,6 +188,16 @@ def _get_kb() -> MachineKB:
     return _kb
 
 
+def _get_oracle() -> FirmwareOracle:
+    """Return the Empirical Firmware Oracle, loading it on first use."""
+    global _oracle
+    if _oracle is None:
+        _oracle = FirmwareOracle()
+    if not _oracle.loaded:
+        _oracle.load()
+    return _oracle
+
+
 def _get_rescan_manager() -> RescanManager:
     global _rescan_manager
     if _rescan_manager is None:
@@ -193,6 +206,7 @@ def _get_rescan_manager() -> RescanManager:
             doc_indexer=_get_doc_indexer(),
             ast_indexer=_get_ast_indexer(),
             kb=_get_kb(),
+            oracle=_get_oracle(),
         )
     return _rescan_manager
 
@@ -402,13 +416,51 @@ async def parse_and_validate_frame(frame: str) -> str:
             for w in parsed.warnings:
                 lines.append(f"- {w}")
 
+        # Empirical Firmware Oracle Verification
+        try:
+            oracle = _get_oracle()
+            verdicts = oracle.lookup(frame)
+            lines.extend(["", oracle.format_verdict_markdown(frame, verdicts)])
+        except Exception as oracle_err:
+            logger.warning("Empirical oracle lookup failed for frame '%s': %s", frame, oracle_err)
+            lines.extend([
+                "",
+                "## 🛡️ Empirical Firmware Oracle Verification",
+                f"*⚠️ Empirical oracle lookup error: {oracle_err}*",
+            ])
+
         return "\n".join(lines)
     except Exception as err:
         logger.error("parse_and_validate_frame failed: %s", err, exc_info=True)
         return f"**Error**: {err}"
 
 
-# ── 6b. Draft sound source selection ─────────────────────────────────
+# ── 6b. Lookup Firmware Verdict ──────────────────────────────────────
+@mcp.tool()
+async def lookup_firmware_verdict(frame: str) -> str:
+    """Look up empirical gateway firmware behavior (MH200N 010108, MyHomeServer1 028206) for an OpenWebNet frame.
+
+    Queries the hash-pinned oracle database from live QEMU firmware execution to return
+    exact gateway session responses (ACK/NACK), bus hex telegrams emitted, and SHA-256 provenance.
+
+    Args:
+        frame: OpenWebNet frame to check (e.g. '*1*1*12##', '*#4*1*0##', '*1001*19*0##').
+    """
+    key = frame.strip()
+
+    async def _impl():
+        oracle = _get_oracle()
+        verdicts = oracle.lookup(key)
+        return oracle.format_verdict_markdown(key, verdicts)
+
+    try:
+        return await _oracle_cache.get_or_set(key, _impl)
+    except Exception as err:
+        logger.error("lookup_firmware_verdict failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
+# ── 6c. Draft sound source selection ─────────────────────────────────
 @mcp.tool()
 async def draft_sound_source_selection(
     amplifier: str,
@@ -606,6 +658,7 @@ async def rescan_documentation() -> str:
         _frame_syntax_cache.clear()
         _ast_cache.clear()
         _kb_cache.clear()
+        _oracle_cache.clear()
 
         mgr = _get_rescan_manager()
         summary = mgr.rescan()
@@ -733,6 +786,13 @@ async def resource_kb_manifest() -> str:
     return json.dumps(kb.manifest, indent=2, sort_keys=True)
 
 
+@mcp.resource("oracle://index")
+async def resource_oracle_index() -> str:
+    """Read-only diagnostic summary of the empirical firmware oracle index."""
+    oracle = _get_oracle()
+    return json.dumps(oracle.status(), indent=2, sort_keys=True)
+
+
 @mcp.resource("docs://toc")
 async def resource_docs_toc() -> str:
     """Read-only table of contents for OpenWebNet & MyHOME documentation."""
@@ -795,7 +855,7 @@ Current requested context focus: **{topic}**
 ## Recommended Agent Workflow
 1. Use `search_documentation(query)` or `get_ha_guide(topic)` to verify installation and configuration requirements.
 2. Use `get_who_spec(who)` or `lookup_frame_syntax(frame_type, who)` to verify exact commands and dimension registers.
-3. Use `parse_and_validate_frame(frame)` to verify frame syntax, parameter definitions, and semantic meanings.
+3. Use `parse_and_validate_frame(frame)` to verify frame syntax, parameter definitions, semantic meanings, and empirical firmware oracle replay results (or `lookup_firmware_verdict(frame)` for dedicated QEMU provenance).
 4. Use `draft_own_frame(...)` and `draft_ha_config(...)` to build copy-pasteable frames and Home Assistant configurations.
 5. Use `get_code_signature(symbol)` to inspect Python classes and methods in `custom_components/myhome` or `OWNd`.
 6. Use `search_knowledge(query)` / `get_knowledge_record(id)` for evidence-qualified answers (epistemic status, applicability, cautions, open questions); treat `unresolved`, `inferred`, `rejected` and `superseded` records as not established, and absence of a record as not a negative assertion.

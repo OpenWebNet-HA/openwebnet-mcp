@@ -82,6 +82,7 @@ async def test_tool_parse_and_validate_frame():
     res_light = await server.parse_and_validate_frame("*1*1*12##")
     assert "- **Valid Grammar**: `YES`" in res_light
     assert "Lighting: Turn ON" in res_light
+    assert "Empirical Firmware Oracle Verification" in res_light
 
     # Valid climate frame
     res_climate = await server.parse_and_validate_frame("*#4*1*0*0215##")
@@ -92,6 +93,31 @@ async def test_tool_parse_and_validate_frame():
     res_invalid = await server.parse_and_validate_frame("*invalid*frame##")
     assert "- **Valid Grammar**: `NO`" in res_invalid
     assert "Unrecognized OpenWebNet syntax" in res_invalid
+
+    # Oracle lookup error degrades gracefully without failing syntax parsing
+    with patch.object(server._get_oracle(), "lookup", side_effect=RuntimeError("Simulated oracle crash")):
+        res_oracle_fail = await server.parse_and_validate_frame("*1*1*12##")
+        assert "- **Valid Grammar**: `YES`" in res_oracle_fail
+        assert "Empirical oracle lookup error: Simulated oracle crash" in res_oracle_fail
+
+
+
+@pytest.mark.asyncio
+async def test_tool_lookup_firmware_verdict():
+    # Verified frame from index
+    res_hit = await server.lookup_firmware_verdict("*#1*74##")
+    assert "Empirical Firmware Oracle Verification" in res_hit
+    assert "MH200N" in res_hit
+    assert "Ground Truth Analysis" in res_hit
+
+    # Cached hit
+    res_hit_cached = await server.lookup_firmware_verdict("*#1*74##")
+    assert res_hit == res_hit_cached
+
+    # Unverified frame
+    res_miss = await server.lookup_firmware_verdict("*999*999##")
+    assert "Empirical Firmware Oracle Verification" in res_miss
+    assert "has not yet been replayed" in res_miss
 
 
 @pytest.mark.asyncio
@@ -139,9 +165,12 @@ async def test_tool_get_code_signature():
 
 @pytest.mark.asyncio
 async def test_tool_rescan_documentation():
+    server._oracle_cache.cache["*#1*74##"] = ("cached_value", 9999999999.0)
     res = await server.rescan_documentation()
     assert "# OpenWebNet Documentation Rescan Complete" in res
     assert "WHO Families Loaded" in res
+    assert "*#1*74##" not in server._oracle_cache.cache
+
 
 
 @pytest.mark.asyncio
@@ -165,6 +194,11 @@ async def test_resources():
     # Resource unknown guide
     res_unknown = await server.resource_guide("unknown_topic")
     assert "not found" in res_unknown
+
+    # Resource oracle-index
+    res_oracle = await server.resource_oracle_index()
+    assert "MH200N" in res_oracle
+    assert "total_unique_inputs" in res_oracle
 
 
 def test_async_ttl_cache():
@@ -229,6 +263,12 @@ async def test_server_tool_exceptions(monkeypatch):
     with monkeypatch.context() as m:
         m.setattr(server, "_get_parser", lambda: (_ for _ in ()).throw(RuntimeError("Parser error")))
         res = await server.parse_and_validate_frame("*1*1*12##")
+        assert "**Error**" in res
+
+    # lookup_firmware_verdict error
+    with monkeypatch.context() as m:
+        m.setattr(server, "_get_oracle", lambda: (_ for _ in ()).throw(RuntimeError("Oracle error")))
+        res = await server.lookup_firmware_verdict("*1*1*12##")
         assert "**Error**" in res
 
     # draft_own_frame error

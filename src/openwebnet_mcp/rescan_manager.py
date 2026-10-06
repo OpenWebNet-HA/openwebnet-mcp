@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
 from openwebnet_mcp.kb import MachineKB
 from openwebnet_mcp.who_catalog import WhoCatalog
+
+if TYPE_CHECKING:
+    from openwebnet_mcp.firmware_oracle import FirmwareOracle
 
 logger = logging.getLogger("openwebnet_mcp.rescan_manager")
 
@@ -22,11 +25,13 @@ class RescanManager:
         doc_indexer: DocIndexer,
         ast_indexer: AstIndexer,
         kb: MachineKB | None = None,
+        oracle: FirmwareOracle | None = None,
     ) -> None:
         self.who_catalog = who_catalog
         self.doc_indexer = doc_indexer
         self.ast_indexer = ast_indexer
         self.kb = kb
+        self.oracle = oracle
 
     def rescan(self) -> dict[str, Any]:
         """Perform a complete rescan and return status statistics."""
@@ -41,6 +46,7 @@ class RescanManager:
         doc_sections_after = self.doc_indexer.reindex()
         ast_symbols_after = self.ast_indexer.reindex()
         kb_loaded = self.kb.load() if self.kb is not None else False
+        oracle_loaded = self.oracle.reload() if self.oracle is not None else False
 
         summary = {
             "who_families_loaded": len(self.who_catalog._families),
@@ -58,6 +64,10 @@ class RescanManager:
                 "loaded": kb_loaded,
                 "chunks": len(self.kb.chunks) if self.kb is not None else 0,
                 "claims": len(self.kb.claims) if self.kb is not None else 0,
+            },
+            "oracle": {
+                "loaded": oracle_loaded,
+                "verdicts": len(self.oracle.verdicts) if (self.oracle is not None and self.oracle.loaded) else 0,
             },
             "status": "success",
         }
