@@ -12,14 +12,9 @@
     {
       "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
       "product": "F453AV",
-      "status": "emulated",
-      "suites": [
-        "lights-level",
-        "matrix-refused",
-        "ownd-pr82-lights",
-        "what19"
-      ],
-      "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
       "version": "030014"
     },
     {
@@ -27,12 +22,7 @@
       "product": "F454",
       "status": "emulated",
       "suites": [
-        "lights-level",
-        "matrix-refused",
-        "ownd-pr82-lights",
-        "sound-who22",
-        "thermo-ts10",
-        "what19"
+        "sound-who22"
       ],
       "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
       "version": "020051"
@@ -48,15 +38,9 @@
     {
       "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
       "product": "F459",
-      "status": "emulated",
-      "suites": [
-        "lights-level",
-        "matrix-refused",
-        "ownd-pr82-lights",
-        "thermo-ts10",
-        "what19"
-      ],
-      "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
       "version": "020105"
     },
     {
@@ -101,13 +85,9 @@
     {
       "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
       "product": "MH202",
-      "status": "emulated",
-      "suites": [
-        "energy-params",
-        "matrix-refused",
-        "what19"
-      ],
-      "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
+      "status": "pending_emulation",
+      "suites": [],
+      "target_sha256": "",
       "version": "010024"
     },
     {
@@ -130,51 +110,6 @@
   "total_unique_inputs": 184,
   "verdicts": {
     "*#1*0*#1*100*0##": [
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 16,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 16,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 16,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -211,51 +146,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 16,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 16,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 16,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 16,
         "product": "MH200N",
@@ -266,116 +156,9 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [
-          "*#*0##"
-        ],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 16,
-        "product": "MH202",
-        "reply": "nack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#1*31*#1*100*0##": [
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 17,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 16,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 17,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 16,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 17,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 16,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -442,51 +225,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 18,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 18,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 18,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 18,
         "product": "MH200N",
@@ -515,96 +253,6 @@
       }
     ],
     "*#1*31*#1*100*5##": [
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 19,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 17,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 19,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 17,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 19,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 17,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -667,108 +315,6 @@
       }
     ],
     "*#1*31*#1*101*0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 20,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 18,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 20,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 18,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 20,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 18,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [
           "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 30 31 30 30 0d"
@@ -845,57 +391,6 @@
         ],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 19,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 33 32 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 19,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 33 32 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 19,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 33 32 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
@@ -926,57 +421,6 @@
       }
     ],
     "*#1*31*#1*200*0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 36 34 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 20,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 36 34 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 20,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 36 34 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 20,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [
           "24 30 36 44 31 33 31 30 31 34 32 30 44 30 44 36 34 30 30 0d"
@@ -1017,51 +461,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 21,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 21,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 21,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
@@ -1095,57 +494,6 @@
           "24 30 33 37 34 30 30 31 35 30 30 0d"
         ],
         "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 16,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/what19.tsv",
-        "suite": "what19",
-        "suite_sha256": "f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 37 34 30 30 31 35 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 16,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/what19.tsv",
-        "suite": "what19",
-        "suite_sha256": "f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 37 34 30 30 31 35 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 16,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/what19.tsv",
-        "suite": "what19",
-        "suite_sha256": "f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 37 34 30 30 31 35 30 30 0d"
-        ],
-        "direction": "down",
         "emitted_own": [
           "*1*19*74##",
           "*#1001*74*11*111110111111111111110111##"
@@ -1160,23 +508,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "out",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 37 34 30 30 31 35 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 16,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/what19.tsv",
-        "suite": "what19",
-        "suite_sha256": "f3c061a836cac17ee6bdf5bccab64d53e5c15998c1bb73a737cb27cedda18be4",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#18*51*51##": [
@@ -1194,23 +525,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 35 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 16,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/energy-params.tsv",
-        "suite": "energy-params",
-        "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#18*51*511#10#1##": [
@@ -1228,23 +542,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 17,
-        "product": "MH202",
-        "reply": "-",
-        "source_tsv": "results/MH202/010024/oracle/full/energy-params.tsv",
-        "suite": "energy-params",
-        "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#18*51*511#10#2##": [
@@ -1262,71 +559,9 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 41 30 41 30 32 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 18,
-        "product": "MH202",
-        "reply": "-",
-        "source_tsv": "results/MH202/010024/oracle/full/energy-params.tsv",
-        "suite": "energy-params",
-        "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#18*51*52##": [
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 17,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 17,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 17,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -1356,36 +591,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 19,
-        "product": "MH202",
-        "reply": "nack",
-        "source_tsv": "results/MH202/010024/oracle/full/energy-params.tsv",
-        "suite": "energy-params",
-        "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 17,
-        "product": "MH202",
-        "reply": "nack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*#18*51*52#26#9##": [
@@ -1403,71 +608,9 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 41 31 30 32 33 33 35 30 31 36 31 41 30 39 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 20,
-        "product": "MH202",
-        "reply": "-",
-        "source_tsv": "results/MH202/010024/oracle/full/energy-params.tsv",
-        "suite": "energy-params",
-        "suite_sha256": "964322cfdd7a0c940d08853d84d54a43c9e44101ca19e01616553d474d7301a2",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*#2*1*#1*50##": [
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 18,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 18,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 18,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -1482,21 +625,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 18,
-        "product": "MH202",
-        "reply": "nack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*#22*2#1*#6*33##": [
@@ -2812,40 +1940,6 @@
     ],
     "*#4*#0*#30*07*10*2026##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 33 30 37 30 41 31 41 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 16,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 33 30 37 30 41 31 41 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 16,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -2880,40 +1974,6 @@
     ],
     "*#4*#0*#31*18*30##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 34 31 32 31 45 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 17,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 34 31 32 31 45 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 17,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -2947,40 +2007,6 @@
       }
     ],
     "*#4*#0*#32*04*15##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 35 30 34 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 18,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 35 30 34 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 18,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -3065,40 +2091,6 @@
     ],
     "*#4*#23#1*#14*0215*1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 32 32 42 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 19,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 32 32 42 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 19,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3133,40 +2125,6 @@
     ],
     "*#4*#23#1*#14*0230*2##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 32 32 45 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 20,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 32 32 45 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 20,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3200,40 +2158,6 @@
       }
     ],
     "*#4*#23#1*#14*0250*3##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 32 33 32 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 21,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 32 33 32 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 21,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -3405,41 +2329,6 @@
     ],
     "*#4*1*0##": [
       {
-        "bus_frames": [
-          "24 30 34 39 39 30 31 33 30 30 30 0d",
-          "24 32 34 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 22,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 39 39 30 31 33 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 22,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3474,40 +2363,6 @@
     ],
     "*#4*1*15#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 23,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 23,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3541,40 +2396,6 @@
       }
     ],
     "*#4*1*15#2##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 32 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 24,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 33 32 31 30 32 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 24,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -3647,36 +2468,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 25,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 25,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
@@ -3705,40 +2496,6 @@
       }
     ],
     "*#4*23#1*15#1##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 26,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 39 37 31 33 30 33 32 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 26,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -3774,40 +2531,6 @@
     ],
     "*#4*23*#11*0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 27,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 30 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 27,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3841,40 +2564,6 @@
       }
     ],
     "*#4*23*#11*1##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 28,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 28,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -3910,40 +2599,6 @@
     ],
     "*#4*23*#11*2##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 29,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 32 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 29,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -3978,40 +2633,6 @@
     ],
     "*#4*23*#11*3##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 30,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 31 37 30 33 30 32 30 42 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 30,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -4045,41 +2666,6 @@
       }
     ],
     "*#4*23*11##": [
-      {
-        "bus_frames": [
-          "24 30 34 39 39 31 37 33 30 30 42 0d",
-          "24 32 34 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 31,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 39 39 31 37 33 30 30 42 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 31,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -4279,57 +2865,6 @@
         ],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 21,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 21,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 21,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
@@ -4360,57 +2895,6 @@
       }
     ],
     "*1*0#1*31##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 22,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 22,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 22,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [
           "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 31 0d"
@@ -4453,57 +2937,6 @@
         ],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 23,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 23,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 23,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 46 46 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
@@ -4534,108 +2967,6 @@
       }
     ],
     "*1*0#5*31##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 24,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 22,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 24,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 22,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 24,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 22,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [
           "24 30 36 44 31 33 31 30 31 34 32 30 44 30 31 30 30 30 35 0d"
@@ -4712,108 +3043,6 @@
         ],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 25,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 23,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 25,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 23,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 25,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 23,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/ownd-pr82-lights.tsv",
-        "suite": "ownd-pr82-lights",
-        "suite_sha256": "57c7e14d5ecbfb59443b3a15a20fe8092e368fa7a7070dc669078175dfd80707",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
@@ -4878,57 +3107,6 @@
       }
     ],
     "*1*1*31##": [
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 26,
-        "product": "F453AV",
-        "reply": "ack",
-        "source_tsv": "results/F453AV/030014/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "out",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 26,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 33 33 31 30 30 31 32 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 26,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/lights-level.tsv",
-        "suite": "lights-level",
-        "suite_sha256": "f1d47d88ed4afd662fbff17e9dc28967be295cfbea444b5b5eb824c1dc0f093b",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [
           "24 30 33 33 31 30 30 31 32 30 30 0d"
@@ -5007,51 +3185,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 19,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 19,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 19,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 19,
         "product": "MH200N",
@@ -5062,23 +3195,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 43 44 30 31 31 30 32 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 19,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*15*01#2*0001##": [
@@ -5086,51 +3202,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 20,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 20,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 20,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 20,
         "product": "MH200N",
@@ -5141,23 +3212,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 43 44 30 31 31 30 34 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 20,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*15*01#3*0001##": [
@@ -5165,51 +3219,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 21,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 21,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 21,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 21,
         "product": "MH200N",
@@ -5220,23 +3229,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 43 44 30 31 31 30 36 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 21,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*15*01*0001##": [
@@ -5244,51 +3236,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 22,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 22,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 22,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 22,
         "product": "MH200N",
@@ -5299,23 +3246,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [
-          "24 30 34 43 44 30 31 31 34 30 31 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 22,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "out",
-        "version": "010024"
       }
     ],
     "*2*1*21#4#1##": [
@@ -5323,51 +3253,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 23,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 23,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 23,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 23,
         "product": "MH200N",
@@ -5378,21 +3263,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 23,
-        "product": "MH202",
-        "reply": "nack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*22*0#4#0*3#0#6##": [
@@ -7202,51 +5072,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 24,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 24,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 24,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 24,
         "product": "MH200N",
@@ -7257,21 +5082,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 24,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*25*22*0001##": [
@@ -7279,51 +5089,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 25,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 25,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 25,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 25,
         "product": "MH200N",
@@ -7334,21 +5099,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 25,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*25*23#8*233##": [
@@ -7377,51 +5127,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "673d7ab2802fc324802bb8f59c50e018850e8c724e923e0bd7cbc8b5cca86d4a",
-        "line_number": 26,
-        "product": "F453AV",
-        "reply": "nack",
-        "source_tsv": "results/F453AV/030014/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "dd705ad8ba0f7b27b11a82c5d5e31c3072281d2aed46dbd9f8cf2b4e811a68dc",
-        "verdict": "silent",
-        "version": "030014"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 26,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 26,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 26,
         "product": "MH200N",
@@ -7432,21 +5137,6 @@
         "target_sha256": "4ac640408201240096b09374522a7130967ad074047aa3a0aa455835fd737301",
         "verdict": "silent",
         "version": "010108"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "bb561eb2b6b476de21cc4981234108b0698c2a58b1e229f2909ef4e49aef9df7",
-        "line_number": 26,
-        "product": "MH202",
-        "reply": "ack",
-        "source_tsv": "results/MH202/010024/oracle/full/matrix-refused.tsv",
-        "suite": "matrix-refused",
-        "suite_sha256": "688eb035af81e718cc32afaa824bb19d94e6e84542ed989ee8f31813bb410c40",
-        "target_sha256": "5858374ef26a02c10381cb7ffd09cabbf762367ecce090e238cdde81c1ffced4",
-        "verdict": "silent",
-        "version": "010024"
       }
     ],
     "*25*31#1*339##": [
@@ -7829,40 +5519,6 @@
     ],
     "*4*102*#23#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 32,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 31 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 32,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8022,40 +5678,6 @@
     ],
     "*4*112#0210#5*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 33,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 31 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 33,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8158,40 +5780,6 @@
     ],
     "*4*202*#23#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 34,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 32 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 34,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8226,40 +5814,6 @@
     ],
     "*4*212#0210#5*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 35,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 32 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 35,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8293,40 +5847,6 @@
       }
     ],
     "*4*302*#23#1##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 36,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 37 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 36,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -8430,40 +5950,6 @@
     ],
     "*4*303*#23#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 36 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 37,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 36 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 37,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8551,40 +6037,6 @@
     ],
     "*4*3101*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 38,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 38,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8619,40 +6071,6 @@
     ],
     "*4*3101*#0#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 39,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 31 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 39,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8686,40 +6104,6 @@
       }
     ],
     "*4*3102*#0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 40,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 40,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -8857,40 +6241,6 @@
     ],
     "*4*311*#23#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 41,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 32 31 37 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 41,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -8993,40 +6343,6 @@
     ],
     "*4*3116*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 42,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 31 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 42,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -9060,40 +6376,6 @@
       }
     ],
     "*4*312#0210#5*#0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 43,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 43,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -9129,40 +6411,6 @@
     ],
     "*4*312#0210#5*#1##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 44,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 39 32 41 30 35 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 44,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -9196,40 +6444,6 @@
       }
     ],
     "*4*315#3101*#0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 34 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 45,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 34 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 45,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -9265,40 +6479,6 @@
     ],
     "*4*3201*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 46,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 46,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -9332,40 +6512,6 @@
       }
     ],
     "*4*3201*#0#1##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 47,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 31 30 33 30 32 43 31 30 33 30 30 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 47,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -9401,40 +6547,6 @@
     ],
     "*4*3202*#0##": [
       {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 48,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 31 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 48,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
-      {
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
@@ -9468,40 +6580,6 @@
       }
     ],
     "*4*3216*#0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 49,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 33 30 46 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 49,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -9540,36 +6618,6 @@
         "bus_frames": [],
         "direction": "down",
         "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 50,
-        "product": "F454",
-        "reply": "nack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "silent",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 50,
-        "product": "F459",
-        "reply": "nack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "silent",
-        "version": "020105"
-      },
-      {
-        "bus_frames": [],
-        "direction": "down",
-        "emitted_own": [],
         "image_sha256": "e32d3404302f3619bbbb564ae50554ab81ac6ef818b6e5a2290142a5e2ab5fb3",
         "line_number": 50,
         "product": "MH200N",
@@ -9598,40 +6646,6 @@
       }
     ],
     "*4*33005#3101*#0##": [
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 35 30 35 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "15f80bc673e53fa105a68725b5a6d3ccf06767d1bae0e6139803de34e485f0f3",
-        "line_number": 51,
-        "product": "F454",
-        "reply": "ack",
-        "source_tsv": "results/F454/020051/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "73982da842dd98eeb87e2dc69d45fc9f228b9ec3d20896537f24d9a1dd5ca71d",
-        "verdict": "out",
-        "version": "020051"
-      },
-      {
-        "bus_frames": [
-          "24 30 36 44 31 30 30 30 33 30 32 43 31 30 35 30 35 30 30 0d"
-        ],
-        "direction": "down",
-        "emitted_own": [],
-        "image_sha256": "1d9539d6a9e500032438936d1ce28e7cbddef9788c5712d50c9a60586718f6d3",
-        "line_number": 51,
-        "product": "F459",
-        "reply": "ack",
-        "source_tsv": "results/F459/020105/oracle/full/thermo-ts10.tsv",
-        "suite": "thermo-ts10",
-        "suite_sha256": "d5dc4d7f934808519c83677a1bafbdf94dca750ee60cfd14493d738101577aca",
-        "target_sha256": "b7b1d924fc16b4be9a0756b3de06e313053e7338a919526738f0d64429d5cc79",
-        "verdict": "out",
-        "version": "020105"
-      },
       {
         "bus_frames": [],
         "direction": "down",
@@ -9666,5 +6680,5 @@
       }
     ]
   },
-  "verdicts_sha256": "f0f92ecffb3eb69c4bcc0fdfc593ec0860a88520af3d5995e80df489b37b678e"
+  "verdicts_sha256": "1ca5745aebaf54f30c7346ef03e7ad2022a646d99b4a390a31d1caaf77d8c40e"
 }
