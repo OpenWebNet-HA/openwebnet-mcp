@@ -411,12 +411,14 @@ class FrameParser:
         """
         import re as _re
 
+        full_where = where + ("#" + "#".join(where_params) if where_params else "")
         for form in family.get("where_forms", []):
             pattern = form.get("pattern")
             description = form.get("description")
             if not pattern or not description:
                 continue
-            match = _re.match(pattern, where)
+            target = full_where if "#" in pattern else where
+            match = _re.match(pattern, target)
             if not match:
                 continue
             out = description
@@ -426,7 +428,7 @@ class FrameParser:
                 out = out.replace(f"{{p{index}}}", str(param))
             if "{" in out:  # a placeholder had no value: the form does not fit
                 continue
-            if "{p" not in description:
+            if "{p" not in description and "#" not in pattern:
                 out += FrameParser._describe_routing(where_params)
             return out
         return ""

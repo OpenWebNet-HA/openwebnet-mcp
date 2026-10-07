@@ -240,42 +240,72 @@
     },
     {
       "who": 3,
-      "name": "Load Control (Legacy)",
+      "name": "Load Control",
       "italian_name": "Controllo Carichi",
-      "document_title": "OpenWebNet_Community_3_LoadControl",
+      "document_title": "OpenWebNet Load Control",
       "pdf_filename": "WHO_3.pdf",
       "version": "v1.0.0",
       "date": "2006",
-      "status": "Legacy Copy Available",
+      "status": "Legacy (Bus Translation Verified)",
       "ha_platform": "switch, sensor",
       "hardware_models": [
-        "F421",
+        "F421 (Central unit)",
         "3522",
-        "3523"
+        "3523",
+        "F422"
       ],
-      "description": "Priority-based load shedding and disconnection central unit (F421) to prevent main breaker tripping.",
-      "addressing": "WHERE represents load actuator index (1 to 8) or central unit address.",
+      "description": "Priority-based load shedding and management (central unit F421) to prevent main breaker tripping. Supports voltage, current, power, and energy measurements.",
+      "addressing": "WHERE represents load priority index (#1 to #8), central unit address ('10'), or general ('0').",
       "what_commands": {
-        "0": "Disconnect / shed load",
-        "1": "Reconnect / force load",
-        "2": "Normal operation mode"
+        "0": "Load disabled / shed",
+        "1": "Load enabled (automatic / normal priority)",
+        "2": "Load forced (*3*2*#PRIORITY##)",
+        "3": "Remove forcing"
       },
       "dimensions": {
+        "0": {
+          "name": "All Central Unit Measurements",
+          "description": "Ordered Voltage, Current, Power, Energy (emitted in sequence or multi-value *#3*10*0*V*I*P*E##).",
+          "query": "*#3*WHERE*0##",
+          "write": ""
+        },
         "1": {
-          "name": "Instantaneous Load Power",
-          "description": "Power measured on the load channel.",
+          "name": "Voltage",
+          "description": "Voltage measured by central unit (V).",
           "query": "*#3*WHERE*1##",
+          "write": ""
+        },
+        "2": {
+          "name": "Current",
+          "description": "Current measured by central unit (mA/A).",
+          "query": "*#3*WHERE*2##",
+          "write": ""
+        },
+        "3": {
+          "name": "Instantaneous Load Power",
+          "description": "Active power measured by central unit or load channel (W).",
+          "query": "*#3*WHERE*3##",
+          "write": ""
+        },
+        "4": {
+          "name": "Energy",
+          "description": "Accumulated energy measured by central unit.",
+          "query": "*#3*WHERE*4##",
           "write": ""
         }
       },
       "examples": [
         {
-          "frame": "*3*1*1##",
-          "description": "Force reconnect load 1"
+          "frame": "*#3*10*3##",
+          "description": "Request instantaneous active power from central unit 10"
         },
         {
-          "frame": "*#3*1##",
-          "description": "Request load 1 status"
+          "frame": "*3*2*#1##",
+          "description": "Force load on priority 1"
+        },
+        {
+          "frame": "*#3*#1##",
+          "description": "Request priority 1 load line status"
         }
       ]
     },
@@ -1007,17 +1037,38 @@
       "version": "v1.0.0",
       "date": "2010",
       "status": "Archived & Verified",
-      "ha_platform": "sensor",
+      "ha_platform": "sensor, switch",
       "hardware_models": [
         "F520 (Power meter)",
         "F521",
         "F522",
         "F523",
+        "F16EB (Stop&Go automatic reset breaker)",
         "3523"
       ],
-      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active power in Watts, total accumulated energy in Wh/kWh, and hourly/daily/monthly pulses.",
-      "addressing": "WHERE indicates meter probe line: '1' to '255', or '#1' to '#3' for multi-phase tariffs.",
-      "what_commands": {},
+      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active/reactive power, total accumulated energy in Wh/kWh, historical graph series (8-bit, 16-bit, 32-bit), automatic reporting (Dim 1200), energy actuator forcing/reset, and Stop&Go automatic reset breaker management.",
+      "addressing": "WHERE indicates meter probe line ('1' to '255', '51'..), tariff probe ('1N', '5N', '7N#0' for actuators), Stop&Go breaker ('1N'), or phase line ('#1' to '#3').",
+      "what_commands": {
+        "21": "Stop&Go: Open breaker",
+        "22": "Stop&Go: Close breaker",
+        "23": "Stop&Go: Trigger differential test (positive)",
+        "24": "Stop&Go: Trigger differential test (negative)",
+        "26": "Stop&Go: Activate automatic reset",
+        "27": "Stop&Go: Deactivate automatic reset",
+        "28": "Stop&Go: Activate tracking mode",
+        "29": "Stop&Go: Deactivate tracking mode",
+        "52#M#D": "TS10 8-bit daily graph request (month M, day D)",
+        "53#M": "TS10 8-bit daily average graph request (month M)",
+        "56#M": "TS10 8-bit monthly graph request (month M)",
+        "57#M#D": "TS10 16-bit cumulative daily graph request (month M, day D)",
+        "58#M": "TS10 16-bit daily average graph request (month M)",
+        "59#M": "TS10 32-bit cumulative monthly graph request (month M)",
+        "510#M": "TS10 cumulative monthly series request (month M)",
+        "71": "Actuator: Enable command (*18*71*WHERE##; distinct from Dim 71 status)",
+        "73#Time": "Actuator: Force OFF for specified minutes (e.g. *18*73#15*71#0##) or indefinite (*18*73*71#0##)",
+        "74": "Actuator: End forced OFF operation (*18*74*71#0##)",
+        "75#Tot_N": "Actuator: Reset totalizer N (e.g. *18*75#1*71#0##)"
+      },
       "dimensions": {
         "1": {
           "name": "Instantaneous Active Power",
@@ -1048,20 +1099,142 @@
           "description": "Total cumulative energy recorded by meter (Wh).",
           "query": "*#18*WHERE*11##",
           "write": ""
+        },
+        "51": {
+          "name": "Energy/Unit Totalizer",
+          "description": "Active power and cumulative energy totalizer.",
+          "query": "*#18*WHERE*51##",
+          "write": ""
+        },
+        "52": {
+          "name": "Monthly Energy/Unit Totalizer",
+          "description": "Dated energy totalizer per month (query: *#18*WHERE*52#Y#M##).",
+          "query": "*#18*WHERE*52#Y#M##",
+          "write": ""
+        },
+        "53": {
+          "name": "Current-Month Partial Totalizer",
+          "description": "Partial energy consumed in current month (distinct from TS10 WHAT 53#M daily average graph).",
+          "query": "*#18*WHERE*53##",
+          "write": ""
+        },
+        "54": {
+          "name": "Current-Day Partial Totalizer",
+          "description": "Partial energy consumed in current day.",
+          "query": "*#18*WHERE*54##",
+          "write": ""
+        },
+        "71": {
+          "name": "Energy Actuator Status",
+          "description": "Status query reporting disabled, forcing, threshold, protection, phase, and advanced flags.",
+          "query": "*#18*WHERE*71##",
+          "write": ""
+        },
+        "72": {
+          "name": "Energy Actuator Totalizer",
+          "description": "Cumulative totalizer N of energy actuator (e.g. *#18*WHERE*72#N##).",
+          "query": "*#18*WHERE*72#N##",
+          "write": ""
+        },
+        "73": {
+          "name": "Energy Actuator Differential-Current Level",
+          "description": "Current forcing state / differential-current level of actuator probe.",
+          "query": "*#18*WHERE*73##",
+          "write": ""
+        },
+        "113": {
+          "name": "Measurement Probe Active Power / Tariff Form",
+          "description": "Instantaneous active power in Watts and configured tariff form.",
+          "query": "*#18*WHERE*113##",
+          "write": ""
+        },
+        "212": {
+          "name": "Stop&Go Self-Test Interval",
+          "description": "Differential breaker self-test period in days (1..90).",
+          "query": "*#18*WHERE*212##",
+          "write": "*#18*WHERE*#212*Days##"
+        },
+        "250": {
+          "name": "Stop&Go Complete Status Mask",
+          "description": "Bitmask reporting breaker contacts, line state, and auto-reset status.",
+          "query": "*#18*WHERE*250##",
+          "write": ""
+        },
+        "251": {
+          "name": "Stop&Go Line Status",
+          "description": "Mains supply line status detected by Stop&Go probe.",
+          "query": "*#18*WHERE*251##",
+          "write": ""
+        },
+        "258": {
+          "name": "Stop&Go Failure / Trip Count",
+          "description": "Lifetime trip and auto-reset counter.",
+          "query": "*#18*WHERE*258##",
+          "write": ""
+        },
+        "511": {
+          "name": "Daily Hourly Historical Series",
+          "description": "Hourly consumption profile for month M, day D (reported via DIMENSION 511 tags 1..24 and daily total 25).",
+          "query": "*#18*WHERE*511#M#D##",
+          "write": ""
+        },
+        "512": {
+          "name": "Monthly-Average Hourly Historical Series",
+          "description": "Monthly-average hourly consumption profile for month M (reported via DIMENSION 512 tags 1..24 and average total 25).",
+          "query": "*#18*WHERE*512#M##",
+          "write": ""
+        },
+        "513": {
+          "name": "Current-Year Daily Monthly Series",
+          "description": "Current-year daily consumption profile for month M (reported via DIMENSION 513 tags 1..31).",
+          "query": "*#18*WHERE*513#M##",
+          "write": ""
+        },
+        "514": {
+          "name": "Previous-Year Daily Monthly Series",
+          "description": "Previous-year comparison profile for month M (reported via DIMENSION 514 tags 1..31).",
+          "query": "*#18*WHERE*514#M##",
+          "write": ""
+        },
+        "516": {
+          "name": "Energy Totalizer Query",
+          "description": "Accumulated energy totalizer query.",
+          "query": "*#18*WHERE*516##",
+          "write": ""
+        },
+        "517": {
+          "name": "Power Threshold Setting",
+          "description": "Power limit threshold N setting in Watts.",
+          "query": "*#18*WHERE*517#N##",
+          "write": "*#18*WHERE*#517#N*Value##"
+        },
+        "1200": {
+          "name": "Automatic Periodic Reporting",
+          "description": "Controls periodic active-power push (Time=0 to stop, Time=255 to start).",
+          "query": "*#18*WHERE*1200##",
+          "write": "*#18*WHERE*#1200#Type*Time##"
         }
       },
       "examples": [
         {
-          "frame": "*#18*1*1##",
-          "description": "Request instantaneous active power from meter 1"
+          "frame": "*#18*51*51##",
+          "description": "Request instantaneous active power from meter 51"
         },
         {
-          "frame": "*#18*1*1*1450##",
-          "description": "Meter 1 reports 1450 Watts instantaneous consumption"
+          "frame": "*18*26*11##",
+          "description": "Activate Stop&Go automatic reset for breaker 11"
         },
         {
-          "frame": "*#18*1*11*00452300##",
-          "description": "Cumulative totalizer reports 45,230.0 kWh"
+          "frame": "*18*57#10#1*51##",
+          "description": "TS10 16-bit cumulative daily graph for month 10, day 1 on line 51"
+        },
+        {
+          "frame": "*#18*51*#1200#1*255##",
+          "description": "Start automatic periodic reporting on meter 51"
+        },
+        {
+          "frame": "*18*73#15*71#0##",
+          "description": "Force OFF energy actuator 71#0 for 15 minutes"
         }
       ]
     },
@@ -1130,16 +1303,36 @@
       },
       "where_forms": [
         {
-          "pattern": "^2$",
-          "description": "Source {p1}"
+          "pattern": "^3#([0-9])#([0-9])$",
+          "description": "Speaker: area {1}, point {2}"
         },
         {
           "pattern": "^3$",
           "description": "Speaker: area {p1}, point {p2}"
         },
         {
+          "pattern": "^2#([0-9]+)$",
+          "description": "Source {1}"
+        },
+        {
+          "pattern": "^2$",
+          "description": "Source {p1}"
+        },
+        {
+          "pattern": "^4#([0-9]+)$",
+          "description": "Speaker area {1}"
+        },
+        {
           "pattern": "^4$",
           "description": "Speaker area {p1}"
+        },
+        {
+          "pattern": "^5#3#([0-9])#([0-9])$",
+          "description": "Local speaker: area {1}, point {2}"
+        },
+        {
+          "pattern": "^5#2#([0-9]+)$",
+          "description": "Local source {1}"
         },
         {
           "pattern": "^5$",
@@ -1148,34 +1341,47 @@
         {
           "pattern": "^6$",
           "description": "All sources"
+        },
+        {
+          "pattern": "^0$",
+          "description": "General sound diffusion"
         }
       ],
       "dimensions": {
         "1": {
           "name": "Volume",
           "description": "Absolute volume 0-31.",
-          "query": "*#22*3#AREA#POINT*1##"
+          "query": "*#22*3#AREA#POINT*1##",
+          "write": "*#22*3#AREA#POINT*#1*<VOLUME>##"
         },
         "2": {
           "name": "High tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer treble).",
+          "query": "*#22*3#AREA#POINT*2##",
+          "write": "*#22*3#AREA#POINT*#2*<VALUE>##"
         },
         "3": {
           "name": "Medium tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer mid tones).",
+          "query": "*#22*3#AREA#POINT*3##",
+          "write": "*#22*3#AREA#POINT*#3*<VALUE>##"
         },
         "4": {
           "name": "Low tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer bass).",
+          "query": "*#22*3#AREA#POINT*4##",
+          "write": "*#22*3#AREA#POINT*#4*<VALUE>##"
         },
         "5": {
           "name": "Frequency",
-          "description": "Payload MODULATION*FREQUENCY.",
+          "description": "Payload MODULATION*FREQUENCY (or frequency in 50kHz steps).",
           "query": "*#22*5#2#SOURCE_ID*5##"
         },
         "6": {
           "name": "Track or station",
-          "description": "Payload STATION_OR_TRACK."
+          "description": "Payload STATION_OR_TRACK.",
+          "query": "*#22*2#SOURCE_ID*6##",
+          "write": "*#22*2#SOURCE_ID*#6*<TRACK>##"
         },
         "7": {
           "name": "Play status",
@@ -1191,12 +1397,13 @@
         },
         "12": {
           "name": "Device state",
-          "description": "Payload DEVICE_STATE*MULTIMEDIA_TYPE."
+          "description": "Payload DEVICE_STATE*MULTIMEDIA_TYPE (e.g., 0 off, 1 on, and audio channel)."
         },
         "17": {
           "name": "Balance",
           "description": "Balance value 1-63.",
-          "write": "*#22*3#AREA#POINT*#17*<BALANCE>##"
+          "write": "*#22*3#AREA#POINT*#17*<BALANCE>##",
+          "query": "*#22*3#AREA#POINT*17##"
         },
         "18": {
           "name": "3D",
@@ -1204,17 +1411,24 @@
         },
         "19": {
           "name": "Preset",
-          "description": "Preset identifier.",
-          "write": "*#22*3#AREA#POINT*#19*<PRESET>##"
+          "description": "Preset identifier (2 normal, 3 dance, 4 pop, 5 rock, 6 classic, 7 techno, 8 party, 9 soft, 10 full bass, 11 full treble, 16-25 user defined).",
+          "write": "*#22*3#AREA#POINT*#19*<PRESET>##",
+          "query": "*#22*3#AREA#POINT*19##"
         },
         "20": {
           "name": "Loudness",
           "description": "0 OFF; 1 ON.",
-          "write": "*#22*3#AREA#POINT*#20*<LOUDNESS>##"
+          "write": "*#22*3#AREA#POINT*#20*<LOUDNESS>##",
+          "query": "*#22*3#AREA#POINT*20##"
         },
         "21": {
           "name": "Equalizer bands",
           "description": "Reported under selectors 21#1, 21#2 and 21#3 carrying bands 1-3, 4-6 and 7-8 separated by *. The source does not supply a band-value domain."
+        },
+        "13": {
+          "name": "Source matrix active areas",
+          "description": "Bitmask of active sound diffusion areas for the specified source.",
+          "query": "*#22*2#SOURCE_ID*13##"
         }
       },
       "examples": [
@@ -1261,6 +1475,54 @@
         {
           "frame": "*#22*3#1#1*#17*32##",
           "description": "Set the balance of that speaker"
+        },
+        {
+          "frame": "*22*3#1*3#1#1##",
+          "description": "Step volume up by 1 on speaker area 1, point 1"
+        },
+        {
+          "frame": "*22*4#1*3#1#1##",
+          "description": "Step volume down by 1 on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#1*20##",
+          "description": "Set volume of speaker area 1, point 1 to level 20 (dimension write)"
+        },
+        {
+          "frame": "*22*9*2#1##",
+          "description": "Next track / radio station on source 1"
+        },
+        {
+          "frame": "*22*10*2#1##",
+          "description": "Previous track / radio station on source 1"
+        },
+        {
+          "frame": "*22*5#1*2#1##",
+          "description": "Step tuner frequency up by 1 on source 1"
+        },
+        {
+          "frame": "*22*6#1*2#1##",
+          "description": "Step tuner frequency down by 1 on source 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#19*2##",
+          "description": "Set equalizer preset to preset 2 (normal) on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#20*1##",
+          "description": "Turn loudness ON on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#20*0##",
+          "description": "Turn loudness OFF on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*5#3#1#1*1*25##",
+          "description": "Local amplifier status update: volume level 25"
+        },
+        {
+          "frame": "*#22*5#3#1#1*12*1*3##",
+          "description": "Local amplifier status update: state ON, channel 3"
         }
       ],
       "notes": "Most commands are parameterized: a decoder must retain the entire WHAT field, because the operation and its magnitude, multimedia type and area live there. Follow Me (34) is a separate operation from ordinary ON and should not be normalized to it; 35 carries routing intent by selecting a source while turning an amplifier on. Absolute DIMENSION state complements relative WHAT operations; prefer reported values over reconstructing state from increments. One MH200N has been observed reporting every WHO 16 sound event a second time in this dialect, which is established for that device only.",
