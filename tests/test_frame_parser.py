@@ -408,6 +408,37 @@ def test_who22_structured_addresses():
     assert "Follow Me" in follow_me.explanation
     assert follow_me.warnings == []
 
+    # Local speaker compound address: 5#3#area#point
+    local_speaker = parser.parse("*#22*5#3#0#0*12*0*255##")
+    assert "Local speaker: area 0, point 0" in local_speaker.explanation
+    assert "Device state" in local_speaker.explanation
+
+    # Volume dimension writing: *#22*3#1#1*#1*20##
+    vol_write = parser.parse("*#22*3#1#1*#1*20##")
+    assert "Volume" in vol_write.explanation
+    assert vol_write.frame_type == "DIMENSION_WRITING"
+    assert "area 1, point 1" in vol_write.explanation
+
+    # Source matrix active areas query: *#22*2#1*13##
+    src_matrix = parser.parse("*#22*2#1*13##")
+    assert "Source matrix active areas" in src_matrix.explanation
+    assert "Source 1" in src_matrix.explanation
+
+    # Next track / station on source 1: *22*9*2#1##
+    next_trk = parser.parse("*22*9*2#1##")
+    assert "Next station" in next_trk.explanation
+    assert "Source 1" in next_trk.explanation
+
+    # Equalizer preset write: *#22*3#1#1*#19*2##
+    preset_write = parser.parse("*#22*3#1#1*#19*2##")
+    assert "Preset" in preset_write.explanation
+    assert preset_write.frame_type == "DIMENSION_WRITING"
+
+    # Loudness on write: *#22*3#1#1*#20*1##
+    loud_write = parser.parse("*#22*3#1#1*#20*1##")
+    assert "Loudness" in loud_write.explanation
+    assert loud_write.frame_type == "DIMENSION_WRITING"
+
 
 def test_who16_source_selection_is_not_what_100():
     """WHAT 100-102 are source busy and RDS control, not source selection.

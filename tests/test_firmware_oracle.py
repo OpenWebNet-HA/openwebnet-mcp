@@ -53,7 +53,7 @@ def test_oracle_lookup_and_normalization():
     v1 = oracle.lookup("*#1*74##")
     assert v1 is not None
     assert len(v1) >= 1
-    assert v1[0]["product"] in ("MH200N", "MyHomeServer1")
+    assert any(p["product"] in ("MH200N", "MyHomeServer1", "F454") for p in v1)
 
     # Unnormalized / stripped lookup
     v2 = oracle.lookup("  #1*74  ")

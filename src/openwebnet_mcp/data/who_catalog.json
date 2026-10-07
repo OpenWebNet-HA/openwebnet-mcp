@@ -1130,16 +1130,36 @@
       },
       "where_forms": [
         {
-          "pattern": "^2$",
-          "description": "Source {p1}"
+          "pattern": "^3#([0-9])#([0-9])$",
+          "description": "Speaker: area {1}, point {2}"
         },
         {
           "pattern": "^3$",
           "description": "Speaker: area {p1}, point {p2}"
         },
         {
+          "pattern": "^2#([0-9]+)$",
+          "description": "Source {1}"
+        },
+        {
+          "pattern": "^2$",
+          "description": "Source {p1}"
+        },
+        {
+          "pattern": "^4#([0-9]+)$",
+          "description": "Speaker area {1}"
+        },
+        {
           "pattern": "^4$",
           "description": "Speaker area {p1}"
+        },
+        {
+          "pattern": "^5#3#([0-9])#([0-9])$",
+          "description": "Local speaker: area {1}, point {2}"
+        },
+        {
+          "pattern": "^5#2#([0-9]+)$",
+          "description": "Local source {1}"
         },
         {
           "pattern": "^5$",
@@ -1148,34 +1168,47 @@
         {
           "pattern": "^6$",
           "description": "All sources"
+        },
+        {
+          "pattern": "^0$",
+          "description": "General sound diffusion"
         }
       ],
       "dimensions": {
         "1": {
           "name": "Volume",
           "description": "Absolute volume 0-31.",
-          "query": "*#22*3#AREA#POINT*1##"
+          "query": "*#22*3#AREA#POINT*1##",
+          "write": "*#22*3#AREA#POINT*#1*<VOLUME>##"
         },
         "2": {
           "name": "High tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer treble).",
+          "query": "*#22*3#AREA#POINT*2##",
+          "write": "*#22*3#AREA#POINT*#2*<VALUE>##"
         },
         "3": {
           "name": "Medium tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer mid tones).",
+          "query": "*#22*3#AREA#POINT*3##",
+          "write": "*#22*3#AREA#POINT*#3*<VALUE>##"
         },
         "4": {
           "name": "Low tones",
-          "description": "Tone value 1-63."
+          "description": "Tone value 1-63 (equalizer bass).",
+          "query": "*#22*3#AREA#POINT*4##",
+          "write": "*#22*3#AREA#POINT*#4*<VALUE>##"
         },
         "5": {
           "name": "Frequency",
-          "description": "Payload MODULATION*FREQUENCY.",
+          "description": "Payload MODULATION*FREQUENCY (or frequency in 50kHz steps).",
           "query": "*#22*5#2#SOURCE_ID*5##"
         },
         "6": {
           "name": "Track or station",
-          "description": "Payload STATION_OR_TRACK."
+          "description": "Payload STATION_OR_TRACK.",
+          "query": "*#22*2#SOURCE_ID*6##",
+          "write": "*#22*2#SOURCE_ID*#6*<TRACK>##"
         },
         "7": {
           "name": "Play status",
@@ -1191,12 +1224,13 @@
         },
         "12": {
           "name": "Device state",
-          "description": "Payload DEVICE_STATE*MULTIMEDIA_TYPE."
+          "description": "Payload DEVICE_STATE*MULTIMEDIA_TYPE (e.g., 0 off, 1 on, and audio channel)."
         },
         "17": {
           "name": "Balance",
           "description": "Balance value 1-63.",
-          "write": "*#22*3#AREA#POINT*#17*<BALANCE>##"
+          "write": "*#22*3#AREA#POINT*#17*<BALANCE>##",
+          "query": "*#22*3#AREA#POINT*17##"
         },
         "18": {
           "name": "3D",
@@ -1204,17 +1238,24 @@
         },
         "19": {
           "name": "Preset",
-          "description": "Preset identifier.",
-          "write": "*#22*3#AREA#POINT*#19*<PRESET>##"
+          "description": "Preset identifier (2 normal, 3 dance, 4 pop, 5 rock, 6 classic, 7 techno, 8 party, 9 soft, 10 full bass, 11 full treble, 16-25 user defined).",
+          "write": "*#22*3#AREA#POINT*#19*<PRESET>##",
+          "query": "*#22*3#AREA#POINT*19##"
         },
         "20": {
           "name": "Loudness",
           "description": "0 OFF; 1 ON.",
-          "write": "*#22*3#AREA#POINT*#20*<LOUDNESS>##"
+          "write": "*#22*3#AREA#POINT*#20*<LOUDNESS>##",
+          "query": "*#22*3#AREA#POINT*20##"
         },
         "21": {
           "name": "Equalizer bands",
           "description": "Reported under selectors 21#1, 21#2 and 21#3 carrying bands 1-3, 4-6 and 7-8 separated by *. The source does not supply a band-value domain."
+        },
+        "13": {
+          "name": "Source matrix active areas",
+          "description": "Bitmask of active sound diffusion areas for the specified source.",
+          "query": "*#22*2#SOURCE_ID*13##"
         }
       },
       "examples": [
@@ -1261,6 +1302,54 @@
         {
           "frame": "*#22*3#1#1*#17*32##",
           "description": "Set the balance of that speaker"
+        },
+        {
+          "frame": "*22*3#1*3#1#1##",
+          "description": "Step volume up by 1 on speaker area 1, point 1"
+        },
+        {
+          "frame": "*22*4#1*3#1#1##",
+          "description": "Step volume down by 1 on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#1*20##",
+          "description": "Set volume of speaker area 1, point 1 to level 20 (dimension write)"
+        },
+        {
+          "frame": "*22*9*2#1##",
+          "description": "Next track / radio station on source 1"
+        },
+        {
+          "frame": "*22*10*2#1##",
+          "description": "Previous track / radio station on source 1"
+        },
+        {
+          "frame": "*22*5#1*2#1##",
+          "description": "Step tuner frequency up by 1 on source 1"
+        },
+        {
+          "frame": "*22*6#1*2#1##",
+          "description": "Step tuner frequency down by 1 on source 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#19*2##",
+          "description": "Set equalizer preset to preset 2 (normal) on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#20*1##",
+          "description": "Turn loudness ON on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*3#1#1*#20*0##",
+          "description": "Turn loudness OFF on speaker area 1, point 1"
+        },
+        {
+          "frame": "*#22*5#3#1#1*1*25##",
+          "description": "Local amplifier status update: volume level 25"
+        },
+        {
+          "frame": "*#22*5#3#1#1*12*1*3##",
+          "description": "Local amplifier status update: state ON, channel 3"
         }
       ],
       "notes": "Most commands are parameterized: a decoder must retain the entire WHAT field, because the operation and its magnitude, multimedia type and area live there. Follow Me (34) is a separate operation from ordinary ON and should not be normalized to it; 35 carries routing intent by selecting a source while turning an amplifier on. Absolute DIMENSION state complements relative WHAT operations; prefer reported values over reconstructing state from increments. One MH200N has been observed reporting every WHO 16 sound event a second time in this dialect, which is established for that device only.",
