@@ -246,7 +246,7 @@
       "pdf_filename": "WHO_3.pdf",
       "version": "v1.0.0",
       "date": "2006",
-      "status": "Archived & Verified",
+      "status": "Legacy (Bus Translation Verified)",
       "ha_platform": "switch, sensor",
       "hardware_models": [
         "F421 (Central unit)",
@@ -254,53 +254,54 @@
         "3523",
         "F422"
       ],
-      "description": "Priority-based load shedding and management (central unit F421) to prevent main breaker tripping. Supports power, voltage, current, and power factor measurements.",
+      "description": "Priority-based load shedding and management (central unit F421) to prevent main breaker tripping. Supports voltage, current, power, and energy measurements.",
       "addressing": "WHERE represents load priority index (#1 to #8), central unit address ('10'), or general ('0').",
       "what_commands": {
-        "0": "Disconnect / shed load",
-        "1": "Reconnect / force load",
-        "2": "Normal operation / automatic load priority"
+        "0": "Load disabled / shed",
+        "1": "Load enabled (automatic / normal priority)",
+        "2": "Load forced (*3*2*#PRIORITY##)",
+        "3": "Remove forcing"
       },
       "dimensions": {
         "0": {
           "name": "All Central Unit Measurements",
-          "description": "Central unit emits dimensions 1, 2, 3, and 4 in sequence.",
+          "description": "Ordered Voltage, Current, Power, Energy (emitted in sequence or multi-value *#3*10*0*V*I*P*E##).",
           "query": "*#3*WHERE*0##",
           "write": ""
         },
         "1": {
-          "name": "Instantaneous Load Power",
-          "description": "Power measured on the load channel or central unit (W).",
+          "name": "Voltage",
+          "description": "Voltage measured by central unit (V).",
           "query": "*#3*WHERE*1##",
           "write": ""
         },
         "2": {
-          "name": "Voltage",
-          "description": "Voltage measured by central unit (V).",
+          "name": "Current",
+          "description": "Current measured by central unit (mA/A).",
           "query": "*#3*WHERE*2##",
           "write": ""
         },
         "3": {
-          "name": "Current",
-          "description": "Current measured by central unit (mA/A).",
+          "name": "Instantaneous Load Power",
+          "description": "Active power measured by central unit or load channel (W).",
           "query": "*#3*WHERE*3##",
           "write": ""
         },
         "4": {
-          "name": "Power Factor",
-          "description": "Power factor and phase angles measured by central unit.",
+          "name": "Energy",
+          "description": "Accumulated energy measured by central unit.",
           "query": "*#3*WHERE*4##",
           "write": ""
         }
       },
       "examples": [
         {
-          "frame": "*#3*10*1##",
+          "frame": "*#3*10*3##",
           "description": "Request instantaneous active power from central unit 10"
         },
         {
           "frame": "*3*2*#1##",
-          "description": "Force / reconnect load priority 1 into normal operation"
+          "description": "Force load on priority 1"
         },
         {
           "frame": "*#3*#1##",
@@ -1063,7 +1064,7 @@
         "58#M": "TS10 16-bit daily average graph request (month M)",
         "59#M": "TS10 32-bit cumulative monthly graph request (month M)",
         "510#M": "TS10 cumulative monthly series request (month M)",
-        "71": "Actuator: Request status / reset",
+        "71": "Actuator: Enable command (*18*71*WHERE##; distinct from Dim 71 status)",
         "73#Time": "Actuator: Force OFF for specified minutes (e.g. *18*73#15*71#0##) or indefinite (*18*73*71#0##)",
         "74": "Actuator: End forced OFF operation (*18*74*71#0##)",
         "75#Tot_N": "Actuator: Reset totalizer N (e.g. *18*75#1*71#0##)"
@@ -1100,50 +1101,50 @@
           "write": ""
         },
         "51": {
-          "name": "Instantaneous Active Power & Energy",
-          "description": "Active power (W) and cumulative energy totalizer.",
+          "name": "Energy/Unit Totalizer",
+          "description": "Active power and cumulative energy totalizer.",
           "query": "*#18*WHERE*51##",
           "write": ""
         },
         "52": {
-          "name": "Instantaneous Reactive / Apparent Power",
-          "description": "Reactive and apparent power measurements.",
-          "query": "*#18*WHERE*52#M#D##",
+          "name": "Monthly Energy/Unit Totalizer",
+          "description": "Dated energy totalizer per month (query: *#18*WHERE*52#Y#M##).",
+          "query": "*#18*WHERE*52#Y#M##",
           "write": ""
         },
         "53": {
-          "name": "Voltage, Current & Frequency",
-          "description": "Bus line voltage, current, and frequency measurements.",
+          "name": "Current-Month Partial Totalizer",
+          "description": "Partial energy consumed in current month (distinct from TS10 WHAT 53#M daily average graph).",
           "query": "*#18*WHERE*53##",
           "write": ""
         },
         "54": {
-          "name": "Power Factor",
-          "description": "Cos phi / power factor measurement.",
+          "name": "Current-Day Partial Totalizer",
+          "description": "Partial energy consumed in current day.",
           "query": "*#18*WHERE*54##",
           "write": ""
         },
         "71": {
           "name": "Energy Actuator Status",
-          "description": "State of energy management actuator probe.",
+          "description": "Status query reporting disabled, forcing, threshold, protection, phase, and advanced flags.",
           "query": "*#18*WHERE*71##",
           "write": ""
         },
         "72": {
           "name": "Energy Actuator Totalizer",
-          "description": "Cumulative totalizer of energy actuator (e.g. *#18*WHERE*72#N##).",
+          "description": "Cumulative totalizer N of energy actuator (e.g. *#18*WHERE*72#N##).",
           "query": "*#18*WHERE*72#N##",
           "write": ""
         },
         "73": {
-          "name": "Energy Actuator Forcing State",
-          "description": "Current forced status of actuator probe.",
+          "name": "Energy Actuator Differential-Current Level",
+          "description": "Current forcing state / differential-current level of actuator probe.",
           "query": "*#18*WHERE*73##",
           "write": ""
         },
         "113": {
-          "name": "Measurement Probe Tariff Form",
-          "description": "Configured tariff structure on probe line.",
+          "name": "Measurement Probe Active Power / Tariff Form",
+          "description": "Instantaneous active power in Watts and configured tariff form.",
           "query": "*#18*WHERE*113##",
           "write": ""
         },
@@ -1154,7 +1155,7 @@
           "write": "*#18*WHERE*#212*Days##"
         },
         "250": {
-          "name": "Stop&Go Status Mask",
+          "name": "Stop&Go Complete Status Mask",
           "description": "Bitmask reporting breaker contacts, line state, and auto-reset status.",
           "query": "*#18*WHERE*250##",
           "write": ""
@@ -1172,32 +1173,44 @@
           "write": ""
         },
         "511": {
-          "name": "Hourly Series Totalizer",
-          "description": "Hourly consumption profile for month M, day D.",
+          "name": "Daily Hourly Historical Series",
+          "description": "Hourly consumption profile for month M, day D (reported via DIMENSION 511 tags 1..24 and daily total 25).",
           "query": "*#18*WHERE*511#M#D##",
           "write": ""
         },
         "512": {
-          "name": "Daily Series Totalizer",
-          "description": "Daily consumption profile for month M.",
+          "name": "Monthly-Average Hourly Historical Series",
+          "description": "Monthly-average hourly consumption profile for month M (reported via DIMENSION 512 tags 1..24 and average total 25).",
           "query": "*#18*WHERE*512#M##",
           "write": ""
         },
         "513": {
-          "name": "Monthly Series Totalizer",
-          "description": "Monthly consumption profile for year.",
+          "name": "Current-Year Daily Monthly Series",
+          "description": "Current-year daily consumption profile for month M (reported via DIMENSION 513 tags 1..31).",
           "query": "*#18*WHERE*513#M##",
           "write": ""
         },
+        "514": {
+          "name": "Previous-Year Daily Monthly Series",
+          "description": "Previous-year comparison profile for month M (reported via DIMENSION 514 tags 1..31).",
+          "query": "*#18*WHERE*514#M##",
+          "write": ""
+        },
+        "516": {
+          "name": "Energy Totalizer Query",
+          "description": "Accumulated energy totalizer query.",
+          "query": "*#18*WHERE*516##",
+          "write": ""
+        },
         "517": {
-          "name": "Power Threshold",
+          "name": "Power Threshold Setting",
           "description": "Power limit threshold N setting in Watts.",
           "query": "*#18*WHERE*517#N##",
           "write": "*#18*WHERE*#517#N*Value##"
         },
         "1200": {
           "name": "Automatic Periodic Reporting",
-          "description": "Controls periodic telemetry push (Time=0 to stop, Time=255 to start).",
+          "description": "Controls periodic active-power push (Time=0 to stop, Time=255 to start).",
           "query": "*#18*WHERE*1200##",
           "write": "*#18*WHERE*#1200#Type*Time##"
         }
