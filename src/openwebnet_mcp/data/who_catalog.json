@@ -240,42 +240,71 @@
     },
     {
       "who": 3,
-      "name": "Load Control (Legacy)",
+      "name": "Load Control",
       "italian_name": "Controllo Carichi",
-      "document_title": "OpenWebNet_Community_3_LoadControl",
+      "document_title": "OpenWebNet Load Control",
       "pdf_filename": "WHO_3.pdf",
       "version": "v1.0.0",
       "date": "2006",
-      "status": "Legacy Copy Available",
+      "status": "Archived & Verified",
       "ha_platform": "switch, sensor",
       "hardware_models": [
-        "F421",
+        "F421 (Central unit)",
         "3522",
-        "3523"
+        "3523",
+        "F422"
       ],
-      "description": "Priority-based load shedding and disconnection central unit (F421) to prevent main breaker tripping.",
-      "addressing": "WHERE represents load actuator index (1 to 8) or central unit address.",
+      "description": "Priority-based load shedding and management (central unit F421) to prevent main breaker tripping. Supports power, voltage, current, and power factor measurements.",
+      "addressing": "WHERE represents load priority index (#1 to #8), central unit address ('10'), or general ('0').",
       "what_commands": {
         "0": "Disconnect / shed load",
         "1": "Reconnect / force load",
-        "2": "Normal operation mode"
+        "2": "Normal operation / automatic load priority"
       },
       "dimensions": {
+        "0": {
+          "name": "All Central Unit Measurements",
+          "description": "Central unit emits dimensions 1, 2, 3, and 4 in sequence.",
+          "query": "*#3*WHERE*0##",
+          "write": ""
+        },
         "1": {
           "name": "Instantaneous Load Power",
-          "description": "Power measured on the load channel.",
+          "description": "Power measured on the load channel or central unit (W).",
           "query": "*#3*WHERE*1##",
+          "write": ""
+        },
+        "2": {
+          "name": "Voltage",
+          "description": "Voltage measured by central unit (V).",
+          "query": "*#3*WHERE*2##",
+          "write": ""
+        },
+        "3": {
+          "name": "Current",
+          "description": "Current measured by central unit (mA/A).",
+          "query": "*#3*WHERE*3##",
+          "write": ""
+        },
+        "4": {
+          "name": "Power Factor",
+          "description": "Power factor and phase angles measured by central unit.",
+          "query": "*#3*WHERE*4##",
           "write": ""
         }
       },
       "examples": [
         {
-          "frame": "*3*1*1##",
-          "description": "Force reconnect load 1"
+          "frame": "*#3*10*1##",
+          "description": "Request instantaneous active power from central unit 10"
         },
         {
-          "frame": "*#3*1##",
-          "description": "Request load 1 status"
+          "frame": "*3*2*#1##",
+          "description": "Force / reconnect load priority 1 into normal operation"
+        },
+        {
+          "frame": "*#3*#1##",
+          "description": "Request priority 1 load line status"
         }
       ]
     },
@@ -1007,17 +1036,38 @@
       "version": "v1.0.0",
       "date": "2010",
       "status": "Archived & Verified",
-      "ha_platform": "sensor",
+      "ha_platform": "sensor, switch",
       "hardware_models": [
         "F520 (Power meter)",
         "F521",
         "F522",
         "F523",
+        "F16EB (Stop&Go automatic reset breaker)",
         "3523"
       ],
-      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active power in Watts, total accumulated energy in Wh/kWh, and hourly/daily/monthly pulses.",
-      "addressing": "WHERE indicates meter probe line: '1' to '255', or '#1' to '#3' for multi-phase tariffs.",
-      "what_commands": {},
+      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active/reactive power, total accumulated energy in Wh/kWh, historical graph series (8-bit, 16-bit, 32-bit), automatic reporting (Dim 1200), energy actuator forcing/reset, and Stop&Go automatic reset breaker management.",
+      "addressing": "WHERE indicates meter probe line ('1' to '255', '51'..), tariff probe ('1N', '5N', '7N#0' for actuators), Stop&Go breaker ('1N'), or phase line ('#1' to '#3').",
+      "what_commands": {
+        "21": "Stop&Go: Open breaker",
+        "22": "Stop&Go: Close breaker",
+        "23": "Stop&Go: Trigger differential test (positive)",
+        "24": "Stop&Go: Trigger differential test (negative)",
+        "26": "Stop&Go: Activate automatic reset",
+        "27": "Stop&Go: Deactivate automatic reset",
+        "28": "Stop&Go: Activate tracking mode",
+        "29": "Stop&Go: Deactivate tracking mode",
+        "52#M#D": "TS10 8-bit daily graph request (month M, day D)",
+        "53#M": "TS10 8-bit daily average graph request (month M)",
+        "56#M": "TS10 8-bit monthly graph request (month M)",
+        "57#M#D": "TS10 16-bit cumulative daily graph request (month M, day D)",
+        "58#M": "TS10 16-bit daily average graph request (month M)",
+        "59#M": "TS10 32-bit cumulative monthly graph request (month M)",
+        "510#M": "TS10 cumulative monthly series request (month M)",
+        "71": "Actuator: Request status / reset",
+        "73#Time": "Actuator: Force OFF for specified minutes (e.g. *18*73#15*71#0##) or indefinite (*18*73*71#0##)",
+        "74": "Actuator: End forced OFF operation (*18*74*71#0##)",
+        "75#Tot_N": "Actuator: Reset totalizer N (e.g. *18*75#1*71#0##)"
+      },
       "dimensions": {
         "1": {
           "name": "Instantaneous Active Power",
@@ -1048,20 +1098,130 @@
           "description": "Total cumulative energy recorded by meter (Wh).",
           "query": "*#18*WHERE*11##",
           "write": ""
+        },
+        "51": {
+          "name": "Instantaneous Active Power & Energy",
+          "description": "Active power (W) and cumulative energy totalizer.",
+          "query": "*#18*WHERE*51##",
+          "write": ""
+        },
+        "52": {
+          "name": "Instantaneous Reactive / Apparent Power",
+          "description": "Reactive and apparent power measurements.",
+          "query": "*#18*WHERE*52#M#D##",
+          "write": ""
+        },
+        "53": {
+          "name": "Voltage, Current & Frequency",
+          "description": "Bus line voltage, current, and frequency measurements.",
+          "query": "*#18*WHERE*53##",
+          "write": ""
+        },
+        "54": {
+          "name": "Power Factor",
+          "description": "Cos phi / power factor measurement.",
+          "query": "*#18*WHERE*54##",
+          "write": ""
+        },
+        "71": {
+          "name": "Energy Actuator Status",
+          "description": "State of energy management actuator probe.",
+          "query": "*#18*WHERE*71##",
+          "write": ""
+        },
+        "72": {
+          "name": "Energy Actuator Totalizer",
+          "description": "Cumulative totalizer of energy actuator (e.g. *#18*WHERE*72#N##).",
+          "query": "*#18*WHERE*72#N##",
+          "write": ""
+        },
+        "73": {
+          "name": "Energy Actuator Forcing State",
+          "description": "Current forced status of actuator probe.",
+          "query": "*#18*WHERE*73##",
+          "write": ""
+        },
+        "113": {
+          "name": "Measurement Probe Tariff Form",
+          "description": "Configured tariff structure on probe line.",
+          "query": "*#18*WHERE*113##",
+          "write": ""
+        },
+        "212": {
+          "name": "Stop&Go Self-Test Interval",
+          "description": "Differential breaker self-test period in days (1..90).",
+          "query": "*#18*WHERE*212##",
+          "write": "*#18*WHERE*#212*Days##"
+        },
+        "250": {
+          "name": "Stop&Go Status Mask",
+          "description": "Bitmask reporting breaker contacts, line state, and auto-reset status.",
+          "query": "*#18*WHERE*250##",
+          "write": ""
+        },
+        "251": {
+          "name": "Stop&Go Line Status",
+          "description": "Mains supply line status detected by Stop&Go probe.",
+          "query": "*#18*WHERE*251##",
+          "write": ""
+        },
+        "258": {
+          "name": "Stop&Go Failure / Trip Count",
+          "description": "Lifetime trip and auto-reset counter.",
+          "query": "*#18*WHERE*258##",
+          "write": ""
+        },
+        "511": {
+          "name": "Hourly Series Totalizer",
+          "description": "Hourly consumption profile for month M, day D.",
+          "query": "*#18*WHERE*511#M#D##",
+          "write": ""
+        },
+        "512": {
+          "name": "Daily Series Totalizer",
+          "description": "Daily consumption profile for month M.",
+          "query": "*#18*WHERE*512#M##",
+          "write": ""
+        },
+        "513": {
+          "name": "Monthly Series Totalizer",
+          "description": "Monthly consumption profile for year.",
+          "query": "*#18*WHERE*513#M##",
+          "write": ""
+        },
+        "517": {
+          "name": "Power Threshold",
+          "description": "Power limit threshold N setting in Watts.",
+          "query": "*#18*WHERE*517#N##",
+          "write": "*#18*WHERE*#517#N*Value##"
+        },
+        "1200": {
+          "name": "Automatic Periodic Reporting",
+          "description": "Controls periodic telemetry push (Time=0 to stop, Time=255 to start).",
+          "query": "*#18*WHERE*1200##",
+          "write": "*#18*WHERE*#1200#Type*Time##"
         }
       },
       "examples": [
         {
-          "frame": "*#18*1*1##",
-          "description": "Request instantaneous active power from meter 1"
+          "frame": "*#18*51*51##",
+          "description": "Request instantaneous active power from meter 51"
         },
         {
-          "frame": "*#18*1*1*1450##",
-          "description": "Meter 1 reports 1450 Watts instantaneous consumption"
+          "frame": "*18*26*11##",
+          "description": "Activate Stop&Go automatic reset for breaker 11"
         },
         {
-          "frame": "*#18*1*11*00452300##",
-          "description": "Cumulative totalizer reports 45,230.0 kWh"
+          "frame": "*18*57#10#1*51##",
+          "description": "TS10 16-bit cumulative daily graph for month 10, day 1 on line 51"
+        },
+        {
+          "frame": "*#18*51*#1200#1*255##",
+          "description": "Start automatic periodic reporting on meter 51"
+        },
+        {
+          "frame": "*18*73#15*71#0##",
+          "description": "Force OFF energy actuator 71#0 for 15 minutes"
         }
       ]
     },
