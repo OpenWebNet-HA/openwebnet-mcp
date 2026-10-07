@@ -585,6 +585,101 @@
       ]
     },
     {
+      "who": 8,
+      "name": "Video Door Entry & Intercom",
+      "italian_name": "Videocitofonia Avanzata ed Intercom",
+      "document_title": "BTicino TS10 Reference Stack (libqtdevices) & OPEN.db",
+      "pdf_filename": "WHO_8.pdf",
+      "version": "TS10_1_0_23",
+      "date": "2010",
+      "status": "Verified (libqtdevices Reference Stack)",
+      "ha_platform": "lock, switch, event, camera",
+      "hardware_models": [
+        "TS10",
+        "F454",
+        "MH202",
+        "346200",
+        "346210"
+      ],
+      "description": "Video door entry calls, audio/video intercom sessions, door lock actuators, staircase lighting, external camera activation, PTZ movements, and teleloop control.",
+      "addressing": "WHERE represents handset/touchscreen internal address, entrance panel address, or actuator address. Broadcast address is 4.",
+      "what_commands": {
+        "1#Kind#MMType#Addr": "Initiate call (Kind: 1..4 PE1..PE4, 5 autoswitch, 6 internal intercom, 7 external intercom, 13 floor, 14 pager; MMType: 2 audio, 4 audio/video)",
+        "2#Kind#MMType": "Answer call (or *8*2#14#2#Caller*4## for pager answer)",
+        "3#Kind#MMType": "End call (*8*3#Kind#MMType*4WHERE## with 4=END_ALL_CALLS, or *8*3#Kind#3*WHERE## to stop video)",
+        "4#Caller": "Auto-switch / camera turn ON (*8*4#Caller*Camera##)",
+        "6#Caller": "Cycle external units / cameras (*8*6#Caller*MasterCaller##)",
+        "9#Kind#MMType": "Caller address notification (*8*9#Kind#MMType*CallerAddr##)",
+        "19": "Door lock actuator: Activate / open (*8*19*WHERE##)",
+        "20": "Door lock actuator: Release (*8*20*WHERE##)",
+        "21": "Staircase light: Activate / ON (*8*21*WHERE##)",
+        "22": "Staircase light: Release / OFF (*8*22*WHERE##)",
+        "37#Mode": "Initialize VCT process (Mode 1: SCS, Mode 2: IP)",
+        "40#Kind#MMType": "Rearm session (*8*40#Kind#MMType*CallerAddr##)",
+        "59#1": "Camera PTZ: Move UP press",
+        "59#2": "Camera PTZ: Move UP release",
+        "60#1": "Camera PTZ: Move DOWN press",
+        "60#2": "Camera PTZ: Move DOWN release",
+        "61#1": "Camera PTZ: Move LEFT press",
+        "61#2": "Camera PTZ: Move LEFT release",
+        "62#1": "Camera PTZ: Move RIGHT press",
+        "62#2": "Camera PTZ: Move RIGHT release",
+        "63": "Silence multimedia amplifier (*8*63*WHERE##)",
+        "64": "Restore multimedia amplifier (*8*64*WHERE##)",
+        "76": "Teleloop: Start session (*8*76*PI_Address##)",
+        "77#Mode": "Teleloop: Association (*8*77#Mode*PI_Address##)",
+        "78": "Teleloop: Timeout (*8*78*WHERE##)",
+        "79#Kind#MMType#Teleloop": "Teleloop: Active session (*8*79#Kind#MMType#Teleloop*WHERE##)"
+      },
+      "dimensions": {},
+      "examples": [
+        {
+          "frame": "*8*19*20##",
+          "description": "Activate door lock actuator at address 20"
+        },
+        {
+          "frame": "*8*20*20##",
+          "description": "Release door lock actuator at address 20"
+        },
+        {
+          "frame": "*8*21*11##",
+          "description": "Turn ON staircase light at address 11"
+        },
+        {
+          "frame": "*8*22*11##",
+          "description": "Turn OFF staircase light at address 11"
+        },
+        {
+          "frame": "*8*4#11*20##",
+          "description": "Turn on camera 20 from console 11"
+        },
+        {
+          "frame": "*8*6#11*20##",
+          "description": "Cycle to next external camera from console 11"
+        },
+        {
+          "frame": "*8*1#6#2#11*16##",
+          "description": "Internal intercom audio call from station 11 to station 16"
+        },
+        {
+          "frame": "*8*1#7#2#11*16##",
+          "description": "External intercom audio call from station 11 to station 16"
+        },
+        {
+          "frame": "*8*1#14#2#11*4##",
+          "description": "Pager broadcast call from station 11 to all stations (WHERE=4)"
+        },
+        {
+          "frame": "*8*59#1*20##",
+          "description": "Start moving camera 20 UP (PTZ press)"
+        },
+        {
+          "frame": "*8*59#2*20##",
+          "description": "Stop moving camera 20 UP (PTZ release)"
+        }
+      ]
+    },
+    {
       "who": 9,
       "name": "Auxiliary",
       "italian_name": "Comandi Ausiliari",
