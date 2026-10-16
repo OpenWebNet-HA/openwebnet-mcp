@@ -1,7 +1,5 @@
 """Tests for AstIndexer module."""
 
-import pytest
-from pathlib import Path
 from openwebnet_mcp.ast_indexer import AstIndexer
 
 

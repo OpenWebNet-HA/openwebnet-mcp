@@ -1,8 +1,6 @@
 """Pytest fixtures and configuration for openwebnet-mcp."""
 
 import pytest
-import os
-from pathlib import Path
 
 from openwebnet_mcp import server
 

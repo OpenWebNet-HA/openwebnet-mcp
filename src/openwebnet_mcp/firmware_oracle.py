@@ -17,6 +17,8 @@ from openwebnet_mcp._paths import resolve_oracle_index
 
 logger = logging.getLogger("openwebnet_mcp.firmware_oracle")
 
+CANONICAL_WHERE_CANDIDATES: tuple[str, ...] = ("21", "31", "74", "1", "2", "11", "12")
+
 
 def normalize_frame(frame: str) -> str:
     """Normalize OpenWebNet frame string for dictionary lookup."""
@@ -26,6 +28,36 @@ def normalize_frame(frame: str) -> str:
     if f and not f.endswith("##"):
         f = f + "##"
     return f
+
+
+def _is_point_to_point_where(where: str) -> bool:
+    """Return True if `where` is a plain point-to-point numeric address (not `0`, group `#...`, or compound `#4#...`)."""
+    return bool(where) and where != "0" and where.isdigit() and 1 <= len(where) <= 4
+
+
+def _candidate_template_frames(norm: str) -> list[str]:
+    """Generate canonical WHERE-template candidate frames for an OpenWebNet frame."""
+    if not (norm.startswith("*") and norm.endswith("##")) or norm in ("*#*1##", "*#*0##"):
+        return []
+    inner = norm[1:-2]
+    tokens = inner.split("*")
+    candidates: list[str] = []
+    if inner.startswith("#"):
+        # Status request (*#WHO*WHERE##) or dimension request/write (*#WHO*WHERE*DIM...##)
+        if len(tokens) >= 2 and _is_point_to_point_where(tokens[1]):
+            orig_where = tokens[1]
+            for cand in CANONICAL_WHERE_CANDIDATES:
+                if cand != orig_where:
+                    new_tokens = [tokens[0], cand, *tokens[2:]]
+                    candidates.append("*" + "*".join(new_tokens) + "##")
+    else:
+        # Command/status frame (*WHO*WHAT*WHERE##)
+        if len(tokens) == 3 and _is_point_to_point_where(tokens[2]):
+            orig_where = tokens[2]
+            for cand in CANONICAL_WHERE_CANDIDATES:
+                if cand != orig_where:
+                    candidates.append(f"*{tokens[0]}*{tokens[1]}*{cand}##")
+    return candidates
 
 
 class FirmwareOracle:
@@ -146,10 +178,230 @@ class FirmwareOracle:
 
         return None
 
+    def lookup_with_fallback(
+        self, frame: str
+    ) -> tuple[list[dict[str, Any]] | None, str | None]:
+        """Look up empirical verdicts for a frame, falling back to canonical WHERE templates.
+
+        Returns `(verdicts, matched_template_frame)` where `matched_template_frame` is None
+        when matched directly, or the canonical frame string (e.g. `*1*1*21##`) when matched
+        via WHERE-address substitution.
+        """
+        direct = self.lookup(frame)
+        if direct is not None:
+            return direct, None
+        if not self.loaded:
+            return None, None
+        norm = normalize_frame(frame)
+        for cand in _candidate_template_frames(norm):
+            if cand in self.verdicts:
+                return self.verdicts[cand], cand
+        return None, None
+
+    def _emulated_fleet_summary(self) -> str:
+        """Format dynamic summary of emulated gateways in the index."""
+        emulated = [
+            f"{g.get('product')} `{g.get('version')}`"
+            for g in self.gateways
+            if g.get("status", "emulated") == "emulated" or g.get("suites")
+        ]
+        if not emulated:
+            return "MyHomeServer1 `028206` / MH200N `010108`"
+        return f"{len(emulated)} emulated gateways: {', '.join(emulated)}"
+
+    def preflight_check(
+        self, frame: str, gateway: str | None = None
+    ) -> dict[str, Any]:
+        """Evaluate whether a drafted frame is accepted or rejected by emulated gateways."""
+        verdicts, matched_template = self.lookup_with_fallback(frame)
+        norm = normalize_frame(frame)
+        if not verdicts:
+            return {
+                "checked": False,
+                "frame": norm,
+                "matched_frame": None,
+                "accepted_by": [],
+                "rejected_by": [],
+                "warnings": [],
+            }
+
+        accepted_by: list[str] = []
+        rejected_by: list[str] = []
+        target_gw_norm = gateway.strip().lower() if gateway else None
+        target_rejected = False
+        target_accepted = False
+
+        for v in verdicts:
+            gw_prod = str(v.get("product", "Unknown"))
+            gw_ver = str(v.get("version", ""))
+            label = f"{gw_prod} ({gw_ver})" if gw_ver else gw_prod
+            reply = str(v.get("reply", "silent")).strip().lower()
+            verdict = str(v.get("verdict", "silent")).strip().lower()
+
+            is_accepted = reply == "ack" or verdict == "out"
+            if is_accepted:
+                if label not in accepted_by:
+                    accepted_by.append(label)
+            else:
+                if label not in rejected_by:
+                    rejected_by.append(label)
+
+            if target_gw_norm and target_gw_norm in gw_prod.lower():
+                if is_accepted:
+                    target_accepted = True
+                else:
+                    target_rejected = True
+
+        warnings: list[str] = []
+        ref_note = (
+            f" (via template `{matched_template}`)" if matched_template else ""
+        )
+        if target_gw_norm and target_rejected and not target_accepted:
+            warnings.append(
+                f"Target gateway `{gateway}` empirically rejects `{norm}`{ref_note} with NACK/SILENT in firmware emulation."
+            )
+        elif rejected_by and not accepted_by:
+            warnings.append(
+                f"All {len(rejected_by)} tested gateway firmware(s) reject `{norm}`{ref_note} ({', '.join(rejected_by)})."
+            )
+        elif accepted_by and rejected_by:
+            warnings.append(
+                f"Split gateway support for `{norm}`{ref_note}: accepted by {len(accepted_by)} ({', '.join(accepted_by)}), "
+                f"rejected by {len(rejected_by)} ({', '.join(rejected_by)})."
+            )
+
+        return {
+            "checked": True,
+            "frame": norm,
+            "matched_frame": matched_template or norm,
+            "accepted_by": accepted_by,
+            "rejected_by": rejected_by,
+            "warnings": warnings,
+        }
+
+    def compare_gateways(
+        self, frame: str | None = None, suite: str | None = None
+    ) -> str:
+        """Compare behaviour across the gateway fleet by frame, suite divergences, or fleet summary."""
+        if not self.loaded:
+            self.load()
+        if not self.loaded:
+            err_msg = self.load_error or "Oracle index could not be loaded"
+            return f"**Error**: Oracle index unavailable: {err_msg}"
+
+        if frame:
+            verdicts, matched_template = self.lookup_with_fallback(frame)
+            norm = normalize_frame(frame)
+            if not verdicts:
+                return (
+                    f"# Cross-Gateway Comparison: `{norm}`\n\n"
+                    f"*Frame `{norm}` has not yet been replayed against firmware test suites "
+                    f"({self._emulated_fleet_summary()}).*"
+                )
+            template_note = (
+                f" *(Matched via equivalent address template `{matched_template}`)*"
+                if matched_template
+                else ""
+            )
+            lines = [
+                f"# Cross-Gateway Comparison: `{norm}`{template_note}",
+                "",
+                "| Gateway | Firmware | Reply | Verdict | Bus Frames | Emitted OWN | Suite |",
+                "|---|---|---|---|---|---|---|",
+            ]
+            groups: dict[str, list[str]] = {}
+            for v in verdicts:
+                gw = str(v.get("product", "Unknown"))
+                ver = str(v.get("version", "Unknown"))
+                reply = str(v.get("reply", "silent")).upper()
+                verdict = str(v.get("verdict", "silent")).upper()
+                bus = ", ".join(v.get("bus_frames") or []) or "-"
+                own = ", ".join(v.get("emitted_own") or []) or "-"
+                st = str(v.get("suite", "-"))
+                lines.append(
+                    f"| **{gw}** | `{ver}` | `{reply}` | `{verdict}` | `{bus}` | `{own}` | `{st}` |"
+                )
+                key = f"{reply} + {verdict}"
+                groups.setdefault(key, []).append(f"{gw} (`{ver}`)")
+
+            lines.extend(["", "## Outcome Equivalence Classes"])
+            for outcome, members in groups.items():
+                lines.append(f"- **{outcome}** ({len(members)}): {', '.join(members)}")
+            return "\n".join(lines)
+
+        if suite:
+            suite_norm = suite.strip().lower()
+            divergent_frames: list[tuple[str, dict[str, list[str]]]] = []
+            total_in_suite = 0
+            for inp, vlist in sorted(self.verdicts.items()):
+                matching = [
+                    v for v in vlist if str(v.get("suite", "")).lower() == suite_norm
+                ]
+                if not matching:
+                    continue
+                total_in_suite += 1
+                outcomes: dict[str, list[str]] = {}
+                for v in matching:
+                    key = f"{str(v.get('reply', '')).upper()}+{str(v.get('verdict', '')).upper()}"
+                    outcomes.setdefault(key, []).append(str(v.get("product", "?")))
+                if len(outcomes) > 1:
+                    divergent_frames.append((inp, outcomes))
+
+            if total_in_suite == 0:
+                return f"# Suite Comparison: `{suite}`\n\n*No indexed frames found for suite `{suite}`.*"
+
+            lines = [
+                f"# Cross-Gateway Divergences in Suite `{suite}`",
+                "",
+                f"- **Frames in suite**: `{total_in_suite}`",
+                f"- **Unanimous frames**: `{total_in_suite - len(divergent_frames)}`",
+                f"- **Divergent frames**: `{len(divergent_frames)}`",
+                "",
+            ]
+            if not divergent_frames:
+                lines.append("*All emulated gateways agreed on every frame in this suite.*")
+            else:
+                lines.extend([
+                    "| Frame | Outcome Breakdown |",
+                    "|---|---|",
+                ])
+                for inp, outcomes in divergent_frames:
+                    summary_parts = [
+                        f"**{k}** ({', '.join(gws)})" for k, gws in outcomes.items()
+                    ]
+                    lines.append(f"| `{inp}` | {'; '.join(summary_parts)} |")
+            return "\n".join(lines)
+
+        # Default: full fleet status summary
+        emulated_count = sum(
+            1
+            for g in self.gateways
+            if g.get("status", "emulated") == "emulated" or g.get("suites")
+        )
+        lines = [
+            "# Empirical Firmware Oracle Fleet Summary",
+            "",
+            f"- **Total Catalogued Gateways**: `{len(self.gateways)}` (`{emulated_count}` emulated)",
+            f"- **Total Indexed Frame Inputs**: `{len(self.verdicts)}`",
+            "",
+            "| Gateway | Firmware | Status | Suites Executed |",
+            "|---|---|---|---|",
+        ]
+        for g in self.gateways:
+            gw = g.get("product", "Unknown")
+            ver = g.get("version", "Unknown")
+            suites = g.get("suites") or []
+            status_val = g.get("status") or ("emulated" if suites else "catalogued")
+            lines.append(
+                f"| **{gw}** | `{ver}` | `{status_val}` | `{len(suites)}` |"
+            )
+        return "\n".join(lines)
+
     def format_verdict_markdown(
         self,
         frame: str,
         verdicts: list[dict[str, Any]] | None,
+        matched_template: str | None = None,
     ) -> str:
         """Format empirical verdicts into a GitHub-flavored Markdown section."""
         norm = normalize_frame(frame)
@@ -165,11 +417,15 @@ class FirmwareOracle:
             return (
                 "## 🛡️ Empirical Firmware Oracle Verification\n"
                 f"*Frame `{norm}` has not yet been replayed against firmware test suites "
-                "(MyHomeServer1 `028206` / MH200N `010108`).*"
+                f"({self._emulated_fleet_summary()}).*"
             )
 
         normalized_note = ""
-        if frame.strip() != norm:
+        if matched_template and matched_template != norm:
+            normalized_note = (
+                f" *(Matched via equivalent address template `{matched_template}`)*"
+            )
+        elif frame.strip() != norm:
             normalized_note = f" *(Matched normalized frame `{norm}`)*"
 
         lines = [

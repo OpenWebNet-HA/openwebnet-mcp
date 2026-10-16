@@ -1,9 +1,6 @@
 """Unit tests for FirmwareOracle loader, normalization, verdict formatting, and status."""
 
-import hashlib
 import json
-from pathlib import Path
-import pytest
 
 from openwebnet_mcp.firmware_oracle import FirmwareOracle, normalize_frame
 
@@ -256,3 +253,85 @@ def test_oracle_corrupt_file(tmp_path):
     assert oracle.loaded is False
     assert "Failed to parse oracle index" in oracle.load_error
     assert oracle.lookup("*1*1*12##") is None
+
+
+def test_lookup_with_fallback_and_preflight():
+    oracle = FirmwareOracle()
+    oracle.load()
+
+    # Exact hit returns matched_template=None
+    v_exact, tpl_exact = oracle.lookup_with_fallback("*#1*74##")
+    assert v_exact is not None
+    assert tpl_exact is None
+
+    # Fallback hit via canonical WHERE template (e.g. *1*1*99## -> *1*1*21## or *1*1*31##)
+    v_fb, tpl_fb = oracle.lookup_with_fallback("*1*1*99##")
+    assert v_fb is not None
+    assert tpl_fb is not None
+    assert tpl_fb.startswith("*1*1*")
+
+    md = oracle.format_verdict_markdown("*1*1*99##", v_fb, matched_template=tpl_fb)
+    assert f"*(Matched via equivalent address template `{tpl_fb}`)*" in md
+
+    # Status request fallback (*#1*99## -> *#1*74## or *#1*21##)
+    v_req, tpl_req = oracle.lookup_with_fallback("*#1*99##")
+    assert v_req is not None
+    assert tpl_req is not None
+
+    # Pre-flight check on accepted frame
+    pf_ok = oracle.preflight_check("*1*1*12##", gateway="MH200N")
+    assert pf_ok["checked"] is True
+    assert len(pf_ok["accepted_by"]) > 0
+
+    # Pre-flight check on rejected frame (*#1*99*1## is rejected by all gateways)
+    pf_rej = oracle.preflight_check("*#1*74*99##", gateway="MH200N")
+    if pf_rej["checked"]:
+        assert len(pf_rej["rejected_by"]) > 0
+        assert len(pf_rej["warnings"]) > 0
+
+    # Pre-flight check on split frame (*22*1*1## in sound-who22)
+    pf_split = oracle.preflight_check("*22*1*1##")
+    if pf_split["checked"] and pf_split["accepted_by"] and pf_split["rejected_by"]:
+        assert any("Split gateway support" in w for w in pf_split["warnings"])
+
+    # Pre-flight check on unknown frame
+    pf_unk = oracle.preflight_check("*999*999*999##")
+    assert pf_unk["checked"] is False
+
+    # Group (#99), general (0 on unindexed WHO/WHAT), and compound (99#4#01) WHERE addresses
+    # must NOT falsely fallback to point-to-point WHERE templates like 21
+    assert oracle.lookup_with_fallback("*1*1*#99##") == (None, None)
+    assert oracle.lookup_with_fallback("*1*1*99#4#01##") == (None, None)
+    assert oracle.lookup_with_fallback("*#1*0*99##") == (None, None)
+
+
+def test_compare_gateways(tmp_path):
+    oracle = FirmwareOracle()
+    oracle.load()
+
+    # 1. Fleet summary (no arguments)
+    summary = oracle.compare_gateways()
+    assert "# Empirical Firmware Oracle Fleet Summary" in summary
+    assert "MH200N" in summary
+
+    # 2. Single frame comparison (with template fallback)
+    comp_frame = oracle.compare_gateways(frame="*1*1*99##")
+    assert "# Cross-Gateway Comparison: `*1*1*99##`" in comp_frame
+    assert "Outcome Equivalence Classes" in comp_frame
+
+    # 3. Unknown frame comparison
+    comp_unk = oracle.compare_gateways(frame="*999*999##")
+    assert "has not yet been replayed" in comp_unk
+
+    # 4. Suite comparison with divergences
+    comp_suite = oracle.compare_gateways(suite="sound-who22")
+    assert "# Cross-Gateway Divergences in Suite `sound-who22`" in comp_suite
+
+    # 5. Unknown suite comparison
+    comp_no_suite = oracle.compare_gateways(suite="nonexistent_suite_xyz")
+    assert "No indexed frames found" in comp_no_suite
+
+    # 6. Unloaded oracle error
+    bad_oracle = FirmwareOracle(index_path=tmp_path / "missing.json")
+    assert "**Error**" in bad_oracle.compare_gateways()
+

@@ -1,6 +1,5 @@
 """Tests for DocIndexer and documentation search."""
 
-import pytest
 from pathlib import Path
 from openwebnet_mcp.doc_indexer import DocIndexer
 
