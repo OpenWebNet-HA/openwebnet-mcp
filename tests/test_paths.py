@@ -1,7 +1,5 @@
 """Tests for _paths module."""
 
-import os
-from pathlib import Path
 from openwebnet_mcp import _paths
 
 

@@ -18,7 +18,6 @@ import os
 import sys
 import time
 from collections import OrderedDict
-from pathlib import Path
 from typing import Any
 
 try:
@@ -419,8 +418,15 @@ async def parse_and_validate_frame(frame: str) -> str:
         # Empirical Firmware Oracle Verification
         try:
             oracle = _get_oracle()
-            verdicts = oracle.lookup(frame)
-            lines.extend(["", oracle.format_verdict_markdown(frame, verdicts)])
+            verdicts, matched_tpl = oracle.lookup_with_fallback(frame)
+            lines.extend(
+                [
+                    "",
+                    oracle.format_verdict_markdown(
+                        frame, verdicts, matched_template=matched_tpl
+                    ),
+                ]
+            )
         except Exception as oracle_err:
             logger.warning("Empirical oracle lookup failed for frame '%s': %s", frame, oracle_err)
             lines.extend([
@@ -438,7 +444,7 @@ async def parse_and_validate_frame(frame: str) -> str:
 # ── 6b. Lookup Firmware Verdict ──────────────────────────────────────
 @mcp.tool()
 async def lookup_firmware_verdict(frame: str) -> str:
-    """Look up empirical gateway firmware behavior (MH200N 010108, MyHomeServer1 028206) for an OpenWebNet frame.
+    """Look up empirical gateway firmware behavior across the emulated gateway fleet for an OpenWebNet frame.
 
     Queries the hash-pinned oracle database from live QEMU firmware execution to return
     exact gateway session responses (ACK/NACK), bus hex telegrams emitted, and SHA-256 provenance.
@@ -450,8 +456,10 @@ async def lookup_firmware_verdict(frame: str) -> str:
 
     async def _impl():
         oracle = _get_oracle()
-        verdicts = oracle.lookup(key)
-        return oracle.format_verdict_markdown(key, verdicts)
+        verdicts, matched_tpl = oracle.lookup_with_fallback(key)
+        return oracle.format_verdict_markdown(
+            key, verdicts, matched_template=matched_tpl
+        )
 
     try:
         return await _oracle_cache.get_or_set(key, _impl)
@@ -460,7 +468,27 @@ async def lookup_firmware_verdict(frame: str) -> str:
         return f"**Error**: {err}"
 
 
-# ── 6c. Draft sound source selection ─────────────────────────────────
+# ── 6c. Compare Gateways ─────────────────────────────────────────────
+@mcp.tool()
+async def compare_gateways(
+    frame: str | None = None,
+    suite: str | None = None,
+) -> str:
+    """Compare empirical firmware behavior across the gateway fleet by frame, suite divergences, or fleet summary.
+
+    Args:
+        frame: Optional OpenWebNet frame to compare across all emulated gateways (e.g. '*1*1*21##').
+        suite: Optional test suite name to list cross-gateway divergences (e.g. 'sound-who22', 'what19').
+    """
+    try:
+        oracle = _get_oracle()
+        return oracle.compare_gateways(frame=frame, suite=suite)
+    except Exception as err:
+        logger.error("compare_gateways failed: %s", err, exc_info=True)
+        return f"**Error**: {err}"
+
+
+# ── 6d. Draft sound source selection ─────────────────────────────────
 @mcp.tool()
 async def draft_sound_source_selection(
     amplifier: str,
@@ -524,6 +552,7 @@ async def draft_own_frame(
     what: int | str | None = None,
     dimension: int | None = None,
     values: list[str] | None = None,
+    gateway: str | None = None,
 ) -> str:
     """Construct and validate a syntactically correct OpenWebNet frame.
 
@@ -534,6 +563,7 @@ async def draft_own_frame(
         what: Action or WHAT code (e.g. 1 for ON, 0 for OFF).
         dimension: Dimension index (e.g. 1 for level, 0 for temp).
         values: Optional list of values for dimension writes (e.g. ['50', '0'] for 50% brightness).
+        gateway: Optional target gateway model (e.g. 'MH200N', 'F454', 'MyHomeServer1') for oracle pre-flight validation.
     """
     try:
         generator = _get_generator()
@@ -556,10 +586,31 @@ async def draft_own_frame(
             f"- **Meaning**: {parsed.explanation}",
         ]
 
-        if parsed.warnings:
+        all_warnings = list(parsed.warnings)
+        preflight: dict[str, Any] = {"checked": False}
+        try:
+            oracle = _get_oracle()
+            preflight = oracle.preflight_check(frame_str, gateway=gateway)
+            all_warnings.extend(preflight.get("warnings", []))
+        except Exception as pf_err:
+            logger.debug("Oracle preflight check skipped for '%s': %s", frame_str, pf_err)
+
+        if all_warnings:
             lines.extend(["", "## ⚠️ Warnings"])
-            for w in parsed.warnings:
+            for w in all_warnings:
                 lines.append(f"- {w}")
+
+        if preflight.get("checked"):
+            acc = preflight.get("accepted_by", [])
+            rej = preflight.get("rejected_by", [])
+            matched = preflight.get("matched_frame", frame_str)
+            tpl_note = f" (via template `{matched}`)" if matched != frame_str else ""
+            lines.extend([
+                "",
+                f"## 🛡️ Firmware Oracle Pre-Flight{tpl_note}",
+                f"- **Accepted (`ACK`/`OUT`)**: `{len(acc)}` gateway(s)" + (f" ({', '.join(acc)})" if acc else ""),
+                f"- **Rejected (`NACK`/`SILENT`)**: `{len(rej)}` gateway(s)" + (f" ({', '.join(rej)})" if rej else ""),
+            ])
 
         return "\n".join(lines)
     except Exception as err:
@@ -662,6 +713,20 @@ async def rescan_documentation() -> str:
 
         mgr = _get_rescan_manager()
         summary = mgr.rescan()
+        oracle_info = summary.get("oracle", {})
+
+        oracle = _get_oracle()
+        emulated_gws = sum(
+            1
+            for g in oracle.gateways
+            if g.get("status", "emulated") == "emulated" or g.get("suites")
+        )
+        total_gws = len(oracle.gateways)
+        sha_state = (
+            "verified"
+            if oracle.hash_verified is True
+            else ("MISMATCH" if oracle.hash_verified is False else "unverified")
+        )
 
         lines = [
             "# OpenWebNet Documentation Rescan Complete",
@@ -671,6 +736,8 @@ async def rescan_documentation() -> str:
             f"- **AST Symbols**: `{summary['ast_symbols']['after']}` (delta: `{summary['ast_symbols']['delta']}`)",
             f"- **Machine KB**: `{'loaded' if summary['kb']['loaded'] else 'unavailable'}` "
             f"(chunks: `{summary['kb']['chunks']}`, claims: `{summary['kb']['claims']}`)",
+            f"- **Firmware Oracle**: `{'loaded' if oracle_info.get('loaded') else 'unavailable'}` "
+            f"({oracle_info.get('verdicts', 0)} inputs, {emulated_gws}/{total_gws} gateways emulated, SHA-256: {sha_state})",
             f"- **Status**: `{summary['status']}`",
         ]
         return "\n".join(lines)

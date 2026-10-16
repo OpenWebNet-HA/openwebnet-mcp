@@ -1,6 +1,5 @@
 """Tests for RescanManager."""
 
-import pytest
 from openwebnet_mcp.ast_indexer import AstIndexer
 from openwebnet_mcp.doc_indexer import DocIndexer
 from openwebnet_mcp.firmware_oracle import FirmwareOracle

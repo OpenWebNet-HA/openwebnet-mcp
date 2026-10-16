@@ -95,11 +95,10 @@ async def test_tool_parse_and_validate_frame():
     assert "Unrecognized OpenWebNet syntax" in res_invalid
 
     # Oracle lookup error degrades gracefully without failing syntax parsing
-    with patch.object(server._get_oracle(), "lookup", side_effect=RuntimeError("Simulated oracle crash")):
+    with patch.object(server._get_oracle(), "lookup_with_fallback", side_effect=RuntimeError("Simulated oracle crash")):
         res_oracle_fail = await server.parse_and_validate_frame("*1*1*12##")
         assert "- **Valid Grammar**: `YES`" in res_oracle_fail
         assert "Empirical oracle lookup error: Simulated oracle crash" in res_oracle_fail
-
 
 
 @pytest.mark.asyncio
@@ -121,11 +120,24 @@ async def test_tool_lookup_firmware_verdict():
 
 
 @pytest.mark.asyncio
+async def test_tool_compare_gateways():
+    res_fleet = await server.compare_gateways()
+    assert "# Empirical Firmware Oracle Fleet Summary" in res_fleet
+
+    res_frame = await server.compare_gateways(frame="*1*1*21##")
+    assert "# Cross-Gateway Comparison: `*1*1*21##`" in res_frame
+
+    res_suite = await server.compare_gateways(suite="sound-who22")
+    assert "# Cross-Gateway Divergences in Suite `sound-who22`" in res_suite
+
+
+@pytest.mark.asyncio
 async def test_tool_draft_own_frame():
-    # Valid draft
-    res = await server.draft_own_frame(who=1, command_type="command", where="12", what=1)
+    # Valid draft (with oracle pre-flight section via WHERE template)
+    res = await server.draft_own_frame(who=1, command_type="command", where="12", what=1, gateway="MH200N")
     assert "Drafted OpenWebNet Frame: `*1*1*12##`" in res
     assert "- **Valid**: `YES`" in res
+    assert "Firmware Oracle Pre-Flight" in res
 
     # Invalid draft type
     res_err = await server.draft_own_frame(who=1, command_type="unknown", where="12")
@@ -209,9 +221,9 @@ def test_async_ttl_cache():
         return v
 
     import asyncio
-    v1 = asyncio.run(cache.get_or_set("k1", dummy, "val1"))
-    v2 = asyncio.run(cache.get_or_set("k2", dummy, "val2"))
-    v3 = asyncio.run(cache.get_or_set("k3", dummy, "val3"))
+    asyncio.run(cache.get_or_set("k1", dummy, "val1"))
+    asyncio.run(cache.get_or_set("k2", dummy, "val2"))
+    asyncio.run(cache.get_or_set("k3", dummy, "val3"))
 
     assert len(cache.cache) <= 2
     assert "k1" not in cache.cache  # Evicted LRU entry
