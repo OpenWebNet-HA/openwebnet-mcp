@@ -1,6 +1,6 @@
 {
   "_comment": "Ground truth for Machine KB retrieval. Answers come from the Encyclopedia pages cited in OpenWebNet-Encyclopedia#32, not from the retriever. A hit is correct when its source path ends with `path` and its text (chunk text or claim statement) matches `text` (regex, case-insensitive).",
-  "release": "machine-kb-v0.1.0",
+  "release": "machine-kb-v0.2.0 / schema 2.0.0",
   "cases": [
     {
       "id": "who2-255-terse",
@@ -21,8 +21,7 @@
       "issue": "32#1.2",
       "query": "WHO 16 volume down WHAT",
       "path": "who-16-sound-system/README.md",
-      "text": "1101",
-      "known_miss": "correct record ranks below 5 in machine-kb-v0.1.0"
+      "text": "1101"
     },
     {
       "id": "who16-volume-natural",
@@ -113,6 +112,7 @@
     {
       "id": "dali-natural",
       "query": "how do I address a DALI ballast",
+      "area": "functional",
       "must_not": "DALI"
     },
     {

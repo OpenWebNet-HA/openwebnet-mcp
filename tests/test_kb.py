@@ -363,6 +363,61 @@ def test_catalog_who1_timed_and_blink_commands():
     assert "Dim UP" not in json.dumps(what) and "Toggle" not in json.dumps(what)
 
 
+def test_schema_v2_compatibility_and_formatting(kb_dir):
+    manifest = json.loads((kb_dir / "manifest.json").read_text())
+    manifest["schema_compatibility_version"] = "2.0.0"
+    (kb_dir / "manifest.json").write_text(json.dumps(manifest))
+    kb = MachineKB(kb_dir)
+    assert kb.load()
+    claim = kb.claims["ownkb:claim:c000001"]
+    claim["provenance"].append(
+        {
+            "evidence_class": "implementation_artifact",
+            "location": {"path": "functional/who-2-automation/dimensions.md", "section_id": "s1"},
+            "source_id": "ownkb:source:s000001",
+            "examination": {
+                "method": "source_inspection",
+                "implementation_role": "library",
+                "conclusion_kind": "direct",
+                "relationship": "corroborates",
+                "finding_id": "moc-e0001",
+                "code_location": {"symbol": "Shutter::setLevel"},
+                "execution": {"result": "passed"},
+            },
+        }
+    )
+    rendered_claim = format_record(claim, kb, detail=True)
+    assert "method=`source_inspection`" in rendered_claim
+    assert "finding=`moc-e0001`" in rendered_claim
+    assert "symbol=`Shutter::setLevel`" in rendered_claim
+    assert "execution=`passed`" in rendered_claim
+
+    chunk = kb.chunks["ownkb:chunk:r000001"]
+    chunk["evidence_support"] = [
+        {
+            "finding_id": "moc-e0001",
+            "disposition": "claimed",
+            "summary": "Shutter level check",
+            "reason": "Reviewed implementation finding",
+        }
+    ]
+    rendered_chunk = format_record(chunk, kb, detail=True)
+    assert "Evidence support" in rendered_chunk and "moc-e0001" in rendered_chunk
+
+    src = _rec(
+        "source",
+        "ownkb:source:s000001",
+        artifact_locator={
+            "kind": "git_file",
+            "repository": "MyOpenCommunity/libqtdevices",
+            "path": "shutter.cpp",
+            "revision": "deadbeef",
+        },
+    )
+    rendered_src = format_record(src, kb, detail=True)
+    assert "Artifact locator" in rendered_src and "MyOpenCommunity/libqtdevices" in rendered_src
+
+
 @pytest.mark.network
 @pytest.mark.skipif(os.environ.get("OPENWEBNET_LIVE_TESTS") != "1", reason="set OPENWEBNET_LIVE_TESTS=1 to hit GitHub")
 def test_kb_fetch_live_release(tmp_path, monkeypatch):
@@ -373,3 +428,4 @@ def test_kb_fetch_live_release(tmp_path, monkeypatch):
     assert (len(kb.chunks), len(kb.claims)) == (1173, 7449)
     top = kb.search("WHO 1 WHAT 17", kind="claim", limit=2)
     assert "WHAT 17" in kb.claims[top[0]["id"]]["label"]
+

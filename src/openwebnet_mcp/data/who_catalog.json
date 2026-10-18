@@ -520,29 +520,70 @@
       "who": 6,
       "name": "Door Entry Call & Lock",
       "italian_name": "Citofonia",
-      "document_title": "OpenWebNet_Community_DoorEntry",
+      "document_title": "L4686SDK Specification & OpenWebNet_Community_DoorEntry",
       "pdf_filename": "WHO_6.pdf",
       "version": "v1.0.0",
-      "date": "2006",
-      "status": "Legacy Copy Available",
+      "date": "2009-02-11",
+      "status": "Archived & Verified (L4686SDK Specification)",
       "ha_platform": "lock, switch, event",
       "hardware_models": [
+        "L4686SDK",
         "346200",
         "346210",
         "346850"
       ],
-      "description": "Audio door entry calls, entrance panel ring triggers, door lock release, and staircase lighting activation.",
-      "addressing": "WHERE is Entrance Panel address or Internal Handset address.",
+      "description": "Basic video/audio door entry calls, camera activation and cycling, door lock release, and staircase lighting activation.",
+      "addressing": "WHERE is Entrance Panel address (4000..4095, optional #2 riser suffix), internal apartment handset address (0..3999, 1..99), or broadcast call sentinel (4100).",
       "what_commands": {
-        "10": "Release door lock (*6*10*WHERE##)",
-        "11": "Turn on staircase light",
-        "20": "Incoming call chime"
+        "0": "Turn camera ON (*6*0*WHERE##, WHERE=4000..4095, optional #2 riser)",
+        "6": "Incoming apartment or broadcast call (*6*6*WHERE##, WHERE=0..3999 or 4100 broadcast)",
+        "9": "Turn camera OFF (*6*9##, short form without WHERE)",
+        "10": "Release door lock (*6*10*WHERE##, WHERE=4000..4095 or 1..99, optional #2 riser)",
+        "11": "Staircase light OFF (*6*11*WHERE##, L4686SDK) / Turn on staircase light (legacy)",
+        "12": "Staircase light ON (*6*12*WHERE##, L4686SDK)",
+        "18": "Cycle camera (*6*18*WHERE##, WHERE=4000..4095, optional #2 riser)",
+        "20": "Incoming call chime (*6*20*WHERE##, legacy/unverified; not in L4686SDK v1.0.0)",
+        "22": "Open lock confirmation with external unit in conversation (*6*22*WHERE##, receive event)"
       },
+      "where_forms": [
+        {
+          "pattern": "^4100$",
+          "description": "Broadcast call sentinel (4100)"
+        },
+        {
+          "pattern": "^40(\\d{2})#2$",
+          "description": "Entrance panel 40{1} on riser #2"
+        },
+        {
+          "pattern": "^40(\\d{2})$",
+          "description": "Entrance panel 40{1}"
+        }
+      ],
       "dimensions": {},
       "examples": [
         {
           "frame": "*6*10*1##",
           "description": "Unlock door at Entrance Panel 1"
+        },
+        {
+          "frame": "*6*10*4000##",
+          "description": "Unlock door at Entrance Panel 4000 (L4686SDK)"
+        },
+        {
+          "frame": "*6*10*4000#2##",
+          "description": "Unlock door at Entrance Panel 4000 on riser #2"
+        },
+        {
+          "frame": "*6*6*4100##",
+          "description": "Incoming broadcast call from entrance panel (WHERE=4100)"
+        },
+        {
+          "frame": "*6*0*4000##",
+          "description": "Turn camera ON at Entrance Panel 4000"
+        },
+        {
+          "frame": "*6*9##",
+          "description": "Turn camera OFF (short form without WHERE)"
         },
         {
           "frame": "*6*11*0##",
@@ -631,7 +672,18 @@
         "78": "Teleloop: Timeout (*8*78*WHERE##)",
         "79#Kind#MMType#Teleloop": "Teleloop: Active session (*8*79#Kind#MMType#Teleloop*WHERE##)"
       },
-      "dimensions": {},
+      "dimensions": {
+        "9001": {
+          "name": "Guard Unit Message Parameter Block",
+          "description": "Historical TS10 Guard Unit message parameter block (*#8*LOCAL#00#GUARD*#9001*VALUES##).",
+          "write": "*#8*LOCAL#00#GUARD*#9001*<VALUES>##"
+        },
+        "9002": {
+          "name": "Guard Unit Message Character Data",
+          "description": "Historical TS10 Guard Unit message decimal 16-bit UTF-16 character codes (*#8*LOCAL#00#GUARD*#9002*CHAR1*CHAR2*...##).",
+          "write": "*#8*LOCAL#00#GUARD*#9002*<CHAR1>*<CHAR2>*...##"
+        }
+      },
       "examples": [
         {
           "frame": "*8*19*20##",

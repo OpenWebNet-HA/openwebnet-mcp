@@ -26,7 +26,8 @@ from openwebnet_mcp._paths import get_kb_dir
 
 logger = logging.getLogger("openwebnet_mcp.kb")
 
-SUPPORTED_SCHEMA = (0, 1)  # (major, minor) of manifest.schema_compatibility_version
+SUPPORTED_SCHEMA = (0, 1)  # legacy single-tuple constant retained for compatibility
+SUPPORTED_SCHEMAS = {(0, 1), (2, 0)}  # (major, minor) of manifest.schema_compatibility_version
 
 # Statuses that are preserved history or open knowledge, not established guidance.
 NON_ESTABLISHED = {
@@ -224,10 +225,11 @@ class MachineKB:
             major, minor = (int(p) for p in version.split(".")[:2])
         except ValueError as err:
             raise KBError(f"unreadable schema_compatibility_version {version!r}") from err
-        if (major, minor) != SUPPORTED_SCHEMA:
+        if (major, minor) not in SUPPORTED_SCHEMAS:
+            supported = ", ".join(f"{maj}.{min_}.x" for maj, min_ in sorted(SUPPORTED_SCHEMAS))
             raise KBError(
                 f"schema_compatibility_version {version} is not supported "
-                f"(this consumer understands {SUPPORTED_SCHEMA[0]}.{SUPPORTED_SCHEMA[1]}.x)"
+                f"(this consumer understands {supported})"
             )
 
     # ── search index (BM25 over chunks + claims) ─────────────────────
