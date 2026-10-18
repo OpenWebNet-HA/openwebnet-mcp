@@ -76,7 +76,7 @@ def fidelity_failures(kb: MachineKB, query: str, k: int = 5) -> list[str]:
 def abstention_failures(kb: MachineKB, case: dict[str, Any], k: int = 5) -> list[str]:
     """Hits that appear to answer a question the corpus cannot answer."""
     bad = []
-    for hit in kb.search(case["query"], limit=k):
+    for hit in kb.search(case["query"], area=case.get("area"), limit=k):
         rec = kb.get(hit["id"])
         if re.search(case["must_not"], record_text(rec) + " " + record_path(rec), re.I):
             bad.append(rec["id"])

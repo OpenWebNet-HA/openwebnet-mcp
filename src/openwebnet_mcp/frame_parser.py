@@ -20,6 +20,7 @@ _RE_SHA = re.compile(r"^\*98\*(?P<sha>\d+)##$")
 _RE_STATUS_EVENT = re.compile(
     r"^\*(?P<who>\d+)\*(?P<what>\d+)(?P<what_param>(?:#\d+)*)\*(?P<where>\*|#?\d+)(?P<where_param>(?:#\d+)*)##$"
 )
+_RE_WHO6_CAMERA_OFF = re.compile(r"^\*6\*9##$")
 _RE_COMMAND_TRANSLATION = re.compile(
     r"^\*(?P<who>\d+)\*1000#(?P<what>\d+)(?P<what_param>(?:#\d+)*)\*(?P<where>\*|#?\d+)(?P<where_param>(?:#\d+)*)##$"
 )
@@ -213,6 +214,16 @@ class FrameParser:
             self._enrich(result)
             return result
 
+        # WHO 6 published short-form Camera OFF (*6*9## without WHERE)
+        if _RE_WHO6_CAMERA_OFF.match(f):
+            result.is_valid = True
+            result.frame_type = "STATUS_EVENT"
+            result.who = 6
+            result.what = 9
+            result.where = None
+            self._enrich(result)
+            return result
+
         result.is_valid = False
         result.frame_type = "SYNTAX_ERROR"
         result.warnings.append("Frame does not match any valid OpenWebNet message grammar pattern.")
@@ -268,6 +279,12 @@ class FrameParser:
             # Handle transition speed specifically for WHO 1
             if parsed.who == 1 and parsed.what == 1 and parsed.what_params:
                 what_desc = f"Turn ON with transition speed {parsed.what_params[0]}"
+
+            # WHO 8 carries parameterized video door entry / intercom / guard unit commands
+            if parsed.who == 8 and parsed.what is not None:
+                who8_what, where_desc = self._describe_who8(parsed, where_desc)
+                if who8_what:
+                    what_desc = who8_what
 
             # CEN (WHO 15: *15*BUTTON[#PHASE]*WHERE##): WHAT is the button, the phase its parameter
             if parsed.who == 15 and parsed.what is not None:
@@ -379,6 +396,13 @@ class FrameParser:
             elif dimension == 10 and values:
                 return f"Memorized station {values[-1]}"
 
+        # WHO 8: Guard Unit message UTF-16 character codes
+        elif who == 8 and dimension == 9002 and values:
+            chars = "".join(
+                chr(int(v)) for v in values if v.isdigit() and 32 <= int(v) <= 0xFFFF
+            )
+            return f"UTF-16 text {chars!r}" if chars else "UTF-16 character block"
+
         return ""
 
     @staticmethod
@@ -444,6 +468,111 @@ class FrameParser:
                 return f" routed to private SCS bus {where_params[idx + 1]}"
             return ""
         return f" with parameters ({', '.join(where_params)})"
+
+    _WHO8_KINDS = {
+        1: "Entrance panel PE1",
+        2: "Entrance panel PE2",
+        3: "Entrance panel PE3",
+        4: "Entrance panel PE4",
+        5: "Camera autoswitch",
+        6: "Internal intercom",
+        7: "External intercom",
+        13: "Floor call",
+        14: "Pager call",
+    }
+    _WHO8_MMTYPES = {
+        "2": "Audio",
+        "3": "Stop video",
+        "4": "Audio/Video",
+    }
+
+    @classmethod
+    def _who8_kind_desc(cls, kind_str: str) -> str:
+        if kind_str.isdigit():
+            k = int(kind_str)
+            if k in cls._WHO8_KINDS:
+                return f"{cls._WHO8_KINDS[k]} (Kind={k})"
+            prefix = "IP " if k > 1000 else ""
+            rem = k % 1000
+            if 101 <= rem <= 105:
+                return f"{prefix}movable camera (Kind={k})"
+            if 1000 < k < 2000 and rem in cls._WHO8_KINDS:
+                return f"{prefix}{cls._WHO8_KINDS[rem]} (Kind={k})"
+        return f"Kind={kind_str}"
+
+    def _describe_who8(self, parsed: ParsedFrame, where_desc: str) -> tuple[str, str]:
+        """Describe parameterized WHO 8 video door entry, intercom, and guard unit frames."""
+        if parsed.where == "4" and not parsed.where_params:
+            where_desc = "Broadcast (all stations, WHERE=4)"
+
+        w = parsed.what
+        params = parsed.what_params
+
+        if w in (1, 2):
+            action = "Initiate call" if w == 1 else "Answer call"
+            kind = self._who8_kind_desc(params[0]) if params else "unspecified kind"
+            mm = self._WHO8_MMTYPES.get(params[1], f"MMType={params[1]}") if len(params) > 1 else ""
+            caller = f" from caller {params[2]}" if len(params) > 2 else ""
+            mm_part = f" [{mm}]" if mm else ""
+            return f"{action}: {kind}{mm_part}{caller}", where_desc
+
+        if w == 3:
+            kind = self._who8_kind_desc(params[0]) if params else "unspecified kind"
+            mm_raw = params[1] if len(params) > 1 else ""
+            if mm_raw == "3":
+                return f"Stop video reproduction ({kind})", where_desc
+            mm = self._WHO8_MMTYPES.get(mm_raw, f"MMType={mm_raw}") if mm_raw else ""
+            mm_part = f" [{mm}]" if mm else ""
+            if parsed.where and len(parsed.where) >= 2 and parsed.where.startswith("4") and not parsed.where_params:
+                where_desc = f"station '{parsed.where[1:]}' (END_ALL_CALLS prefix 4)"
+            return f"End call: {kind}{mm_part}", where_desc
+
+        if w == 4 and params:
+            return f"Auto-switch / camera turn ON from caller {params[0]}", where_desc
+
+        if w == 6 and params:
+            return f"Cycle external units / cameras from caller {params[0]}", where_desc
+
+        if w == 9:
+            kind = self._who8_kind_desc(params[0]) if params else "unspecified kind"
+            mm = self._WHO8_MMTYPES.get(params[1], f"MMType={params[1]}") if len(params) > 1 else ""
+            mm_part = f" [{mm}]" if mm else ""
+            return f"Caller address notification: {kind}{mm_part}", where_desc
+
+        if w == 37:
+            modes = {"1": "SCS", "2": "IP"}
+            mode = modes.get(params[0], f"Mode {params[0]}") if params else "unspecified"
+            return f"Initialize VCT process ({mode} mode)", where_desc
+
+        if w == 40:
+            kind = self._who8_kind_desc(params[0]) if params else "unspecified kind"
+            mm = self._WHO8_MMTYPES.get(params[1], f"MMType={params[1]}") if len(params) > 1 else ""
+            mm_part = f" [{mm}]" if mm else ""
+            return f"Rearm session: {kind}{mm_part}", where_desc
+
+        if w == 77 and params:
+            return f"Teleloop: Association (ID={params[0]})", where_desc
+
+        if w == 79:
+            kind = self._who8_kind_desc(params[0]) if params else "unspecified kind"
+            mm = self._WHO8_MMTYPES.get(params[1], f"MMType={params[1]}") if len(params) > 1 else ""
+            tid = f", ID={params[2]}" if len(params) > 2 else ""
+            mm_part = f" [{mm}]" if mm else ""
+            return f"Teleloop: Active session ({kind}{mm_part}{tid})", where_desc
+
+        guard_msgs = {
+            9001: "Guard Unit messaging: End message",
+            9012: f"Guard Unit messaging: Begin message (ID={params[0] if params else '?'})",
+            9013: "Guard Unit messaging: Ready reply",
+            9014: "Guard Unit messaging: Busy reply",
+            9015: f"Guard Unit messaging: Bad checksum reply (value={params[0] if params else '?'})",
+            9016: f"Guard Unit messaging: Timeout reply (count={params[0] if params else '?'})",
+            9017: f"Guard Unit messaging: Checksum ({params[0] if params else '?'})",
+        }
+        if w in guard_msgs:
+            return guard_msgs[w], where_desc
+
+        return "", where_desc
 
     _CEN_PHASES = {
         None: "Pressure",

@@ -509,3 +509,43 @@ def test_who5_alarm_frames(frame, expected):
     assert parsed.is_valid is True
     assert not parsed.warnings, parsed.warnings
     assert expected in parsed.explanation, parsed.explanation
+
+
+@pytest.mark.parametrize(
+    "frame, expected",
+    [
+        ("*6*0*4000##", "Turn camera ON"),
+        ("*6*0*4000##", "Entrance panel 4000"),
+        ("*6*9##", "Turn camera OFF (*6*9##, short form without WHERE) at system-wide"),
+        ("*6*6*1##", "Incoming apartment or broadcast call"),
+        ("*6*6*4100##", "Broadcast call sentinel (4100)"),
+        ("*6*10*4000#2##", "Entrance panel 4000 on riser #2"),
+        ("*6*12*4000##", "Staircase light ON"),
+        ("*6*18*4000##", "Cycle camera"),
+        ("*6*20*1##", "Incoming call chime"),
+        ("*6*22*4000##", "Open lock confirmation with external unit in conversation"),
+        ("*8*1#1#4*74##", "Initiate call: Entrance panel PE1 (Kind=1) [Audio/Video] at address '74'"),
+        ("*8*1#6#2#11*16##", "Initiate call: Internal intercom (Kind=6) [Audio] from caller 11 at address '16'"),
+        ("*8*1#14#2#11*4##", "Initiate call: Pager call (Kind=14) [Audio] from caller 11 at Broadcast (all stations, WHERE=4)"),
+        ("*8*2#1#4*11##", "Answer call: Entrance panel PE1 (Kind=1) [Audio/Video] at address '11'"),
+        ("*8*3#1#4*411##", "End call: Entrance panel PE1 (Kind=1) [Audio/Video] at station '11' (END_ALL_CALLS prefix 4)"),
+        ("*8*3#1#3*11##", "Stop video reproduction (Entrance panel PE1 (Kind=1)) at address '11'"),
+        ("*8*4#11*20##", "Auto-switch / camera turn ON from caller 11 at address '20'"),
+        ("*8*6#11*20##", "Cycle external units / cameras from caller 11 at address '20'"),
+        ("*8*9#1#4*73##", "Caller address notification: Entrance panel PE1 (Kind=1) [Audio/Video] at address '73'"),
+        ("*8*37#1*11##", "Initialize VCT process (SCS mode) at address '11'"),
+        ("*8*40#1#4*20##", "Rearm session: Entrance panel PE1 (Kind=1) [Audio/Video] at address '20'"),
+        ("*8*77#5*11##", "Teleloop: Association (ID=5) at address '11'"),
+        ("*8*79#1#4#5*11##", "Teleloop: Active session (Entrance panel PE1 (Kind=1) [Audio/Video], ID=5) at address '11'"),
+        ("*8*9012#1*11#00#1##", "Guard Unit messaging: Begin message (ID=1)"),
+        ("*#8*11#00#99*#9001*1*2##", "Guard Unit Message Parameter Block"),
+        ("*#8*11#00#99*#9002*66*116*105*99*105*110*111##", "UTF-16 text 'Bticino'"),
+        ("*8*1#1101#4#74*11##", "Initiate call: IP movable camera (Kind=1101) [Audio/Video] from caller 74 at address '11'"),
+    ],
+)
+def test_who6_and_who8_frames(frame, expected):
+    parsed = FrameParser().parse(frame)
+    assert parsed.is_valid is True
+    assert not parsed.warnings, f"{frame}: {parsed.warnings}"
+    assert expected in parsed.explanation, parsed.explanation
+

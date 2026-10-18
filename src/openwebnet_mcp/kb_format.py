@@ -19,6 +19,23 @@ def _provenance_line(prov: dict[str, Any], kb: MachineKB) -> str:
     where = f"{loc.get('path', '?')} ({loc.get('section_id', '?')})"
     source = prov.get("source_id")
     tail = f" — source: {kb.registry_label(source)} `{source}`" if source else ""
+    exam = prov.get("examination")
+    if isinstance(exam, dict):
+        parts = [
+            f"method=`{exam.get('method', '?')}`",
+            f"role=`{exam.get('implementation_role', '?')}`",
+            f"kind=`{exam.get('conclusion_kind', '?')}`",
+            f"rel=`{exam.get('relationship', '?')}`",
+        ]
+        if exam.get("finding_id"):
+            parts.append(f"finding=`{exam['finding_id']}`")
+        code_loc = exam.get("code_location") or exam.get("artifact_location")
+        if isinstance(code_loc, dict) and code_loc.get("symbol"):
+            parts.append(f"symbol=`{code_loc['symbol']}`")
+        exec_info = exam.get("execution")
+        if isinstance(exec_info, dict) and exec_info.get("result"):
+            parts.append(f"execution=`{exec_info['result']}`")
+        tail += " [" + ", ".join(parts) + "]"
     return f"`{prov.get('evidence_class', '?')}` @ {where}{tail}"
 
 
@@ -61,11 +78,7 @@ def format_claim(claim: dict[str, Any], kb: MachineKB, *, detail: bool = True) -
     value = claim.get("value", {})
     if value.get("state") not in (None, "known"):
         lines.append(f"- **Value**: `{value['state']}` — {value.get('reason', 'no reason given')}")
-    if detail:
-        for prov in claim.get("provenance", []):
-            lines.append(f"- **Provenance**: {_provenance_line(prov, kb)}")
-    else:
-        prov = (claim.get("provenance") or [{}])[0]
+    for prov in claim.get("provenance") or [{}]:
         lines.append(f"- **Provenance**: {_provenance_line(prov, kb)}")
     if claim.get("cautions"):
         lines.append("- **Cautions**:")
@@ -102,6 +115,13 @@ def format_chunk(chunk: dict[str, Any], kb: MachineKB, *, detail: bool = True) -
     for name in ("uncertainty_cues", "caution_cues", "applicability_cues"):
         if cues.get(name):
             lines.append(f"- **{name.replace('_', ' ').title()}**: " + ", ".join(cues[name]))
+    if detail and chunk.get("evidence_support"):
+        lines.append("- **Evidence support**:")
+        for ev in chunk["evidence_support"]:
+            lines.append(
+                f"  - `{ev.get('finding_id', '?')}` (`{ev.get('disposition', '?')}`): "
+                f"{ev.get('summary', '')} — {ev.get('reason', '')}"
+            )
     if detail and chunk.get("reference_ids"):
         lines.append("- **References**: " + ", ".join(f"`{i}`" for i in chunk["reference_ids"]))
     lines += ["", "```markdown", text, "```"]
@@ -119,6 +139,13 @@ def format_registry_record(rec: dict[str, Any], kb: MachineKB) -> str:
     for key in ("predicate", "resolution_state", "entity_type", "source_type", "publisher"):
         if key in rec:
             lines.append(f"- **{key}**: `{rec[key]}`")
+    locator = rec.get("artifact_locator")
+    if isinstance(locator, dict):
+        loc_parts = [f"kind=`{locator.get('kind', '?')}`"]
+        for k in ("repository", "path", "revision", "version", "sha256", "public_uri"):
+            if locator.get(k):
+                loc_parts.append(f"{k}=`{locator[k]}`")
+        lines.append("- **Artifact locator**: " + ", ".join(loc_parts))
     for key in ("subject_id", "object_id"):
         if key in rec:
             lines.append(f"- **{key}**: `{rec[key]}` ({kb.registry_label(rec[key])})")
