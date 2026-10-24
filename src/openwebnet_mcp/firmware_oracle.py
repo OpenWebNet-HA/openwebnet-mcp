@@ -74,6 +74,7 @@ class FirmwareOracle:
         self.schema_version: str | None = None
         self.total_unique_inputs: int = 0
         self.verdicts_sha256: str | None = None
+        self.reply_semantics: dict[str, str] = {}
         self.computed_sha256: str | None = None
         self.hash_verified: bool | None = None
         self.gateways: list[dict[str, Any]] = []
@@ -113,6 +114,16 @@ class FirmwareOracle:
             self.total_unique_inputs = int(data.get("total_unique_inputs", 0))
             self.gateways = data.get("gateways", [])
             self.verdicts = data.get("verdicts", {})
+            # Schema 1.2.0: what a `reply` means in a gateway's full suites. On
+            # F460 / F461 / MyHomeServer1 the firmware only reports success after
+            # a device TX-ACK, which an empty emulated bus never gives, so a NACK
+            # with verdict `out` is "went out, nobody answered", not a refusal
+            # (own-firmware-oracle findings/empty-bus-reply-semantics.md).
+            self.reply_semantics = {
+                str(g.get("product")): str(g.get("reply_semantics") or "")
+                for g in self.gateways
+                if g.get("product")
+            }
             self.verdicts_sha256 = data.get("verdicts_sha256")
 
             # Cryptographic canonical hash verification
@@ -197,6 +208,48 @@ class FirmwareOracle:
             if cand in self.verdicts:
                 return self.verdicts[cand], cand
         return None, None
+
+    EMPTY_BUS_TXACK = "empty_bus_txack"
+
+    def reply_meaning(self, product: str, reply: str, verdict: str) -> str:
+        """One sentence on what `reply` + `verdict` mean for this gateway.
+
+        Uses `gateways[].reply_semantics` when the index has it (schema 1.2.0); an
+        index without it gets the plain reading.
+        """
+        reply = reply.strip().lower()
+        verdict = verdict.strip().lower()
+        semantics = self.reply_semantics.get(product, "")
+        if reply == "nack" and verdict == "out" and semantics == self.EMPTY_BUS_TXACK:
+            return (
+                "Frame went out on the bus; the NACK is this firmware's empty-bus rule "
+                "(no device TX-ACK on the emulated bus), not a refusal."
+            )
+        if reply == "nack" and verdict == "silent":
+            return "Gateway refused the frame (`*#*0##`); nothing reached the bus."
+        if reply == "nack":
+            return "Gateway answered NACK (`*#*0##`)."
+        if reply == "ack":
+            return "Gateway acknowledged the command (`*#*1##`)."
+        if reply == "-":
+            return "Gateway recorded no client session reply."
+        if reply == "silent":
+            return "Gateway was silent on the client session."
+        return f"Gateway returned: `{reply}`."
+
+    def _empty_bus_gateways(self, verdicts: list[dict[str, Any]]) -> list[str]:
+        """Gateways among `verdicts` whose NACK + OUT rows follow the empty-bus rule."""
+        found: list[str] = []
+        for v in verdicts:
+            gw = str(v.get("product", ""))
+            if (
+                str(v.get("reply", "")).strip().lower() == "nack"
+                and str(v.get("verdict", "")).strip().lower() == "out"
+                and self.reply_semantics.get(gw) == self.EMPTY_BUS_TXACK
+                and gw not in found
+            ):
+                found.append(gw)
+        return found
 
     def _emulated_fleet_summary(self) -> str:
         """Format dynamic summary of emulated gateways in the index."""
@@ -327,6 +380,14 @@ class FirmwareOracle:
             lines.extend(["", "## Outcome Equivalence Classes"])
             for outcome, members in groups.items():
                 lines.append(f"- **{outcome}** ({len(members)}): {', '.join(members)}")
+            empty_bus = self._empty_bus_gateways(verdicts)
+            if empty_bus:
+                lines.extend([
+                    "",
+                    f"*`NACK + OUT` on {', '.join(empty_bus)} is the empty-bus rule of that firmware "
+                    "(the frame went out, no device on the emulated bus answered); it is not a refusal "
+                    "and not a divergence from a gateway that answers `ACK + OUT`.*",
+                ])
             return "\n".join(lines)
 
         if suite:
@@ -384,16 +445,17 @@ class FirmwareOracle:
             f"- **Total Catalogued Gateways**: `{len(self.gateways)}` (`{emulated_count}` emulated)",
             f"- **Total Indexed Frame Inputs**: `{len(self.verdicts)}`",
             "",
-            "| Gateway | Firmware | Status | Suites Executed |",
-            "|---|---|---|---|",
+            "| Gateway | Firmware | Status | Suites Executed | Reply Semantics |",
+            "|---|---|---|---|---|",
         ]
         for g in self.gateways:
             gw = g.get("product", "Unknown")
             ver = g.get("version", "Unknown")
             suites = g.get("suites") or []
             status_val = g.get("status") or ("emulated" if suites else "catalogued")
+            semantics = g.get("reply_semantics") or "-"
             lines.append(
-                f"| **{gw}** | `{ver}` | `{status_val}` | `{len(suites)}` |"
+                f"| **{gw}** | `{ver}` | `{status_val}` | `{len(suites)}` | `{semantics}` |"
             )
         return "\n".join(lines)
 
@@ -487,17 +549,7 @@ class FirmwareOracle:
             suite = v.get("suite", "unknown")
             src = v.get("source_tsv", "")
 
-            details = [f"- **{gw} ({ver})**:"]
-            if reply == "ack":
-                details.append("Gateway acknowledged the command (`*#*1##`).")
-            elif reply == "nack":
-                details.append("Gateway refused/rejected the command (`*#*0##`).")
-            elif reply == "-":
-                details.append("Gateway recorded no client session reply.")
-            elif reply == "silent":
-                details.append("Gateway was silent on the client session.")
-            else:
-                details.append(f"Gateway returned: `{reply}`.")
+            details = [f"- **{gw} ({ver})**:", self.reply_meaning(gw, reply, verdict)]
 
             if verdict == "out":
                 details.append(
@@ -544,6 +596,7 @@ class FirmwareOracle:
             "generator": self.generator,
             "format_version": self.format_version,
             "schema_version": self.schema_version,
+            "reply_semantics": dict(self.reply_semantics),
             "total_unique_inputs": self.total_unique_inputs,
             "total_verdicts": len(self.verdicts),
             "verdicts_sha256": self.verdicts_sha256,

@@ -1,5 +1,6 @@
 """Unit tests for FirmwareOracle loader, normalization, verdict formatting, and status."""
 
+import hashlib
 import json
 
 from openwebnet_mcp.firmware_oracle import FirmwareOracle, normalize_frame
@@ -164,7 +165,7 @@ def test_format_verdict_markdown_various_verdicts():
     assert "Dispatched 2 SCS bus telegram(s)" in md
     assert "Frame consumed or dropped internally" in md
     assert "Gateway acknowledged the command (`*#*1##`)." in md
-    assert "Gateway refused/rejected the command (`*#*0##`)." in md
+    assert "Gateway refused the frame (`*#*0##`); nothing reached the bus." in md
     assert "Gateway was silent on the client session." in md
     assert "Gateway returned: `custom_response`." in md
     assert "Provenance: suite `suite_lighting`" in md
@@ -335,3 +336,109 @@ def test_compare_gateways(tmp_path):
     bad_oracle = FirmwareOracle(index_path=tmp_path / "missing.json")
     assert "**Error**" in bad_oracle.compare_gateways()
 
+
+
+def _index_with_reply_semantics(tmp_path):
+    """A schema-1.2.0 index: F461 follows the empty-bus rule, MH200N does not."""
+    verdicts = {
+        "*#1*06##": [
+            {"product": "F461", "version": "020011", "reply": "nack", "verdict": "out",
+             "bus_frames": ["24 30 30 33 30 36 30 30 31 35 30 30 0d"], "emitted_own": [],
+             "suite": "lights-area0", "source_tsv": "results/F461/020011/oracle/full/lights-area0.tsv"},
+            {"product": "MH200N", "version": "010108", "reply": "ack", "verdict": "out",
+             "bus_frames": ["24 30 30 33 30 36 30 30 31 35 30 30 0d"], "emitted_own": [],
+             "suite": "lights-area0", "source_tsv": "results/MH200N/010108/oracle/full/lights-area0.tsv"},
+        ],
+        "*#4*0##": [
+            {"product": "F461", "version": "020011", "reply": "nack", "verdict": "silent",
+             "bus_frames": [], "emitted_own": [], "suite": "thermo-ts10", "source_tsv": ""},
+            {"product": "MH200N", "version": "010108", "reply": "nack", "verdict": "out",
+             "bus_frames": ["24 30 34 42 30 30 30 30 39 30 30 0d"], "emitted_own": [], "suite": "thermo-ts10", "source_tsv": ""},
+        ],
+    }
+    canonical = json.dumps(verdicts, sort_keys=True, separators=(",", ":"))
+    data = {
+        "generator": "own-firmware-oracle",
+        "format_version": "1.0.0",
+        "schema_version": "1.2.0",
+        "verdicts_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "total_unique_inputs": 2,
+        "gateways": [
+            {"product": "F461", "version": "020011", "status": "emulated", "suites": ["lights-area0"],
+             "reply_semantics": "empty_bus_txack"},
+            {"product": "MH200N", "version": "010108", "status": "emulated", "suites": ["lights-area0"],
+             "reply_semantics": "pic_ack"},
+            {"product": "F455", "version": "010102", "status": "catalogued", "suites": [], "reply_semantics": ""},
+        ],
+        "verdicts": verdicts,
+    }
+    path = tmp_path / "index_1_2_0.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_reply_semantics_loaded_and_exposed(tmp_path):
+    oracle = FirmwareOracle(index_path=_index_with_reply_semantics(tmp_path))
+    assert oracle.load() is True
+    assert oracle.reply_semantics == {"F461": "empty_bus_txack", "MH200N": "pic_ack", "F455": ""}
+    assert oracle.status()["reply_semantics"]["F461"] == "empty_bus_txack"
+
+
+def test_reply_meaning_follows_the_empty_bus_rule(tmp_path):
+    oracle = FirmwareOracle(index_path=_index_with_reply_semantics(tmp_path))
+    oracle.load()
+    # F461: a NACK after a bus frame is the empty-bus TX-ACK rule, not a refusal.
+    assert "empty-bus rule" in oracle.reply_meaning("F461", "nack", "out")
+    assert "not a refusal" in oracle.reply_meaning("F461", "nack", "out")
+    # A NACK with nothing on the bus is a refusal on every gateway.
+    assert oracle.reply_meaning("F461", "nack", "silent").startswith("Gateway refused the frame")
+    # A pic_ack gateway's NACK + OUT is just a NACK.
+    assert oracle.reply_meaning("MH200N", "nack", "out") == "Gateway answered NACK (`*#*0##`)."
+    assert oracle.reply_meaning("MH200N", "ack", "out").startswith("Gateway acknowledged")
+    assert oracle.reply_meaning("MH200N", "-", "out") == "Gateway recorded no client session reply."
+    assert oracle.reply_meaning("MH200N", "silent", "silent") == "Gateway was silent on the client session."
+    assert oracle.reply_meaning("MH200N", "weird", "out") == "Gateway returned: `weird`."
+
+
+def test_format_verdict_markdown_explains_empty_bus_nack(tmp_path):
+    oracle = FirmwareOracle(index_path=_index_with_reply_semantics(tmp_path))
+    oracle.load()
+    md = oracle.format_verdict_markdown("*#1*06##", oracle.lookup("*#1*06##"))
+    assert "- **F461 (020011)**: Frame went out on the bus; the NACK is this firmware's empty-bus rule" in md
+    assert "Gateway refused" not in md
+    md_refused = oracle.format_verdict_markdown("*#4*0##", oracle.lookup("*#4*0##"))
+    assert "- **F461 (020011)**: Gateway refused the frame (`*#*0##`); nothing reached the bus." in md_refused
+    assert "- **MH200N (010108)**: Gateway answered NACK (`*#*0##`)." in md_refused
+
+
+def test_compare_gateways_notes_the_empty_bus_rule(tmp_path):
+    oracle = FirmwareOracle(index_path=_index_with_reply_semantics(tmp_path))
+    oracle.load()
+    md = oracle.compare_gateways(frame="*#1*06##")
+    assert "**NACK + OUT** (1): F461" in md
+    assert "`NACK + OUT` on F461 is the empty-bus rule of that firmware" in md
+    assert "not a divergence" in md
+    # A frame without such rows gets no note.
+    md_refused = oracle.compare_gateways(frame="*#4*0##")
+    assert "empty-bus rule" not in md_refused
+    # The fleet summary shows each gateway's semantics.
+    fleet = oracle.compare_gateways()
+    assert "| Gateway | Firmware | Status | Suites Executed | Reply Semantics |" in fleet
+    assert "| **F461** | `020011` | `emulated` | `1` | `empty_bus_txack` |" in fleet
+    assert "| **F455** | `010102` | `catalogued` | `0` | `-` |" in fleet
+
+
+def test_index_without_reply_semantics_keeps_the_plain_reading(tmp_path):
+    plain = tmp_path / "index_1_1_0.json"
+    plain.write_text(json.dumps({
+        "generator": "own-firmware-oracle", "format_version": "1.0.0", "schema_version": "1.1.0",
+        "total_unique_inputs": 1,
+        "gateways": [{"product": "F461", "version": "020011", "status": "emulated", "suites": ["x"]}],
+        "verdicts": {"*#1*06##": [{"product": "F461", "version": "020011", "reply": "nack", "verdict": "out",
+                                   "bus_frames": ["aa"], "emitted_own": [], "suite": "x", "source_tsv": ""}]},
+    }), encoding="utf-8")
+    oracle = FirmwareOracle(index_path=plain)
+    oracle.load()
+    assert oracle.reply_semantics == {"F461": ""}
+    assert oracle.reply_meaning("F461", "nack", "out") == "Gateway answered NACK (`*#*0##`)."
+    assert "empty-bus rule" not in oracle.compare_gateways(frame="*#1*06##")
