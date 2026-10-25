@@ -335,3 +335,100 @@ def test_compare_gateways(tmp_path):
     bad_oracle = FirmwareOracle(index_path=tmp_path / "missing.json")
     assert "**Error**" in bad_oracle.compare_gateways()
 
+
+def test_crash_and_unrouted_interface_verdicts(tmp_path):
+    idx_file = tmp_path / "oracle_crash_unrouted.json"
+    verdicts = {
+        "*#4*2#4#01##": [
+            {
+                "product": "MH202",
+                "version": "010024",
+                "reply": "silent",
+                "verdict": "crash",
+                "bus_frames": [],
+                "emitted_own": [],
+                "suite": "thermo-zone-requests",
+                "target_sha256": "deadbeef12345678",
+                "source_tsv": "results/MH202/010024/oracle/full/thermo-zone-requests.tsv",
+            },
+            {
+                "product": "H4684",
+                "version": "060016",
+                "reply": "nack",
+                "verdict": "out",
+                "bus_frames": ["24 30 34 39 39 30 32 33 30 30 30 0d"],
+                "emitted_own": [],
+                "suite": "thermo-zone-requests",
+                "target_sha256": "cafebabe12345678",
+                "source_tsv": "results/H4684/060016/oracle/full/thermo-zone-requests.tsv",
+            },
+            {
+                "product": "F454",
+                "version": "020060",
+                "reply": "nack",
+                "verdict": "silent",
+                "bus_frames": [],
+                "emitted_own": [],
+                "suite": "thermo-zone-requests",
+                "target_sha256": "feedface12345678",
+                "source_tsv": "results/F454/020060/oracle/full/thermo-zone-requests.tsv",
+            },
+        ],
+        "*1*1*12#4#01##": [
+            {
+                "product": "F454",
+                "version": "020060",
+                "reply": "ack",
+                "verdict": "out",
+                "bus_frames": ["24 30 36 45 43 30 31 30 31 31 32 30 30 30 30 0d"],
+                "emitted_own": [],
+                "suite": "lighting",
+                "target_sha256": "feedface12345678",
+                "source_tsv": "results/F454/020060/oracle/full/lighting.tsv",
+            }
+        ],
+    }
+    data = {
+        "generator": "own-firmware-oracle",
+        "format_version": "1.0.0",
+        "schema_version": "1.0.0",
+        "total_unique_inputs": len(verdicts),
+        "gateways": [
+            {"product": "MH202", "version": "010024", "suites": ["thermo-zone-requests"]},
+            {"product": "H4684", "version": "060016", "suites": ["thermo-zone-requests"]},
+            {"product": "F454", "version": "020060", "suites": ["thermo-zone-requests", "lighting"]},
+        ],
+        "verdicts": verdicts,
+    }
+    idx_file.write_text(json.dumps(data), encoding="utf-8")
+    oracle = FirmwareOracle(index_path=idx_file)
+    assert oracle.load() is True
+
+    # Preflight detects both CRASH and unrouted local-bus OUT (not accepted!)
+    pf = oracle.preflight_check("*#4*2#4#01##", gateway="MH202")
+    assert pf["checked"] is True
+    assert pf["accepted_by"] == []
+    assert pf["crashed_by"] == ["MH202 (010024)"]
+    assert pf["unrouted_by"] == ["H4684 (060016)"]
+    assert "MH202 (010024)" in pf["rejected_by"]
+    assert any("CRITICAL:" in w and "MH202 (010024)" in w for w in pf["warnings"])
+    assert any("UNROUTED BUS OUTPUT:" in w and "H4684 (060016)" in w for w in pf["warnings"])
+    assert any("Target gateway `MH202` crashes" in w for w in pf["warnings"])
+
+    pf_unrouted_target = oracle.preflight_check("*#4*2#4#01##", gateway="H4684")
+    assert any("Target gateway `H4684` does NOT route" in w for w in pf_unrouted_target["warnings"])
+
+    # Markdown surfaces CRASH and OUT (Unrouted Local Bus)
+    md = oracle.format_verdict_markdown("*#4*2#4#01##", oracle.lookup("*#4*2#4#01##"))
+    assert "`CRASH (Daemon Exit)`" in md
+    assert "`OUT (Unrouted Local Bus)`" in md
+    assert "CRITICAL: Gateway translator daemon crashed/exited" in md
+    assert "$0499023000\\r" in md
+
+    # Genuine $06EC01 lighting frame IS accepted and NOT flagged unrouted
+    pf_light = oracle.preflight_check("*1*1*12#4#01##", gateway="F454")
+    assert pf_light["accepted_by"] == ["F454 (020060)"]
+    assert pf_light["unrouted_by"] == []
+    assert pf_light["crashed_by"] == []
+    assert pf_light["warnings"] == []
+

@@ -549,3 +549,51 @@ def test_who6_and_who8_frames(frame, expected):
     assert not parsed.warnings, f"{frame}: {parsed.warnings}"
     assert expected in parsed.explanation, parsed.explanation
 
+
+def test_who4_addressing_dimensions_and_warnings():
+    parser = FrameParser()
+
+    # Valid Dimension 20 actuator queries (no warnings)
+    for frame, expected in [
+        ("*#4*#0*20##", "99-zone central unit (#0)"),
+        ("*#4*#0#2*20##", "4-zone central unit #2"),
+        ("*#4*0#0*20##", "All zones, all actuators (0#0)"),
+        ("*#4*2#0*20##", "Zone 2, all actuators (2#0)"),
+        ("*#4*2#1*20##", "Zone 2, actuator 1 (2#1)"),
+        ("*#4*002*0##", "Zone 02, all probes"),
+        ("*#4*102*0##", "Zone 02, slave probe 1"),
+        ("*#4*2*60*55##", "55% RH"),
+        ("*#4*2#1*20*6##", "Actuator On Speed 1"),
+    ]:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True
+        assert not parsed.warnings, f"{frame}: {parsed.warnings}"
+        assert expected in parsed.explanation, parsed.explanation
+
+    # Dimensionless actuator status request (*#4*2#1##) warns about NACK + MH202 coso crash
+    p_act_status = parser.parse("*#4*2#1##")
+    assert p_act_status.is_valid is True
+    assert any("crashes coso with SIGSEGV" in w and "Dimension 20" in w for w in p_act_status.warnings)
+
+    # 4-zone central unit status request (*#4*#0#1##) is NOT an actuator address
+    p_cu4 = parser.parse("*#4*#0#1##")
+    assert p_cu4.is_valid is True
+    assert not p_cu4.warnings
+
+    # WHO=4 #4#INTERFACE status request warns about unrouted #4# AND MH202 coso crash on 01..09
+    p_if_crash = parser.parse("*#4*2#4#01##")
+    assert p_if_crash.is_valid is True
+    assert "unrouted #4#01" in p_if_crash.explanation
+    assert any("misparses 3-token *#4*2#4#01##" in w and "SIGSEGV" in w for w in p_if_crash.warnings)
+
+    # WHO=4 #4#INTERFACE dimension request warns about unrouted local-bus truncation
+    p_if_dim = parser.parse("*#4*2#4#01*20##")
+    assert p_if_dim.is_valid is True
+    assert "unrouted #4#01" in p_if_dim.explanation
+    assert any("not implemented in gateway translators" in w for w in p_if_dim.warnings)
+
+    p_if_act_dim = parser.parse("*#4*2#1#4#01*20##")
+    assert p_if_act_dim.is_valid is True
+    assert "Zone 2, actuator 1 with unrouted #4#01" in p_if_act_dim.explanation
+    assert any("not implemented in gateway translators" in w for w in p_if_act_dim.warnings)
+
