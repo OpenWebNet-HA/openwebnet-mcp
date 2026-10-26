@@ -346,6 +346,26 @@ class FrameParser:
                         "Speed code 4 does not exist in OpenWebNet; physical gateways silently drop this frame."
                     )
                 return f"Fancoil Unknown Speed ({spd})"
+            elif dimension == 19 and values:
+                valve_states = {
+                    "0": "OFF",
+                    "1": "ON",
+                    "2": "Opened",
+                    "3": "Closed",
+                    "4": "Stop",
+                    "5": "Fan-coil OFF",
+                    "6": "Fan-coil ON speed 1",
+                    "7": "Fan-coil ON speed 2",
+                    "8": "Fan-coil ON speed 3",
+                    "14": "Fan-coil OFF speed 1",
+                    "15": "Fan-coil OFF speed 2",
+                    "16": "Fan-coil OFF speed 3",
+                }
+                cv = valve_states.get(values[0], f"State {values[0]}")
+                if len(values) >= 2:
+                    hv = valve_states.get(values[1], f"State {values[1]}")
+                    return f"Conditioning valve {cv}, heating valve {hv}"
+                return f"Valve {cv}"
             elif dimension == 20 and values:
                 act_states = {
                     "0": "OFF",
@@ -357,9 +377,7 @@ class FrameParser:
                     "6": "On Speed 1",
                     "7": "On Speed 2",
                     "8": "On Speed 3",
-                    "9": "Off Speed 1",
-                    "14": "Off Speed 2",
-                    "15": "Off Speed 3",
+                    "9": "Fan-coil ON",
                 }
                 return f"Actuator {act_states.get(values[0], f'State {values[0]}')}"
             elif dimension == 22 and values:
@@ -687,15 +705,15 @@ class FrameParser:
                     parsed.warnings.append(
                         f"WHO=4 #4#{iface} interface routing is not implemented in gateway translators "
                         "(0 of 12 emulated gateways emit $06EC/$06E4 sub-bus frames). Worse, MH202 (010024) "
-                        f"misparses 3-token *#4*{parsed.where}#4#{iface}## as actuator address M#Z#N and "
-                        "crashes coso with SIGSEGV."
+                        f"misparses 3-token *#4*{parsed.where}#4#{iface}## (tested on 2#4#01; static range "
+                        "01..09 in libthermo.so) as actuator address M#Z#N and crashes coso with SIGSEGV."
                     )
                 else:
                     parsed.warnings.append(
                         f"WHO=4 #4#{iface} interface routing is not implemented in gateway translators: "
                         "0 of 12 emulated gateways emit $06EC/$06E4 sub-bus frames (gateways either NACK/drop "
-                        f"or truncate via atoi to local zone {parsed.where} on the main bus; MH202 010024 "
-                        "misparses Z#4#01..09 as local zone 4 actuator 1..9)."
+                        f"or truncate WHERE at '#' to local zone {parsed.where} on the main bus; MH202 010024 "
+                        "misparses tested 2#4#01 / 2#1#4#01 as local zone 4 actuator 1, static range 1..9)."
                     )
                 return
 
@@ -709,7 +727,8 @@ class FrameParser:
         ):
             parsed.warnings.append(
                 f"Dimensionless WHO=4 actuator status request (*#4*{parsed.where}#{wp[0]}##) is not supported: "
-                "gateways NACK/drop it, and MH202 (010024) crashes coso with SIGSEGV on *#4*Z#1..9##. "
+                "gateways NACK/drop it (or strip #<N> on H4684/MH200), and MH202 (010024) crashes coso with "
+                "SIGSEGV (confirmed on *#4*2#1##; static range 1..9 in libthermo.so). "
                 f"Query Dimension 20 instead (*#4*{parsed.where}#{wp[0]}*20## or *#4*#0*20##)."
             )
 
@@ -718,15 +737,8 @@ class FrameParser:
         if where is None:
             return "system-wide"
 
-        # Special decoding for WHO 4 manual setpoints (WHERE#TEMP[#DURATION]) and unrouted #4#INTERFACE
+        # Special decoding for WHO 4 #4#INTERFACE suffixes and manual setpoints (WHERE#TEMP[#DURATION])
         if who == 4 and where_params:
-            if where_params[0].isdigit() and len(where_params[0]) >= 3:
-                t_val = int(where_params[0]) / 10.0
-                desc = f"Zone {where} with target setpoint {t_val:.1f}°C"
-                extra = where_params[1:]
-                if extra:
-                    desc += f" (duration {extra[0]} min)"
-                return desc
             if "4" in where_params:
                 idx = where_params.index("4")
                 if idx + 1 < len(where_params):
@@ -738,6 +750,13 @@ class FrameParser:
                         else f"Zone {where.lstrip('#')}"
                     )
                     return f"{target_desc} with unrouted #4#{iface} interface suffix"
+            if where_params[0].isdigit() and len(where_params[0]) >= 2:
+                t_val = int(where_params[0]) / 10.0
+                desc = f"Zone {where} with target setpoint {t_val:.1f}°C"
+                extra = where_params[1:]
+                if extra:
+                    desc += f" (duration {extra[0]} min)"
+                return desc
 
         # Declared forms come first: WHERE 0 is not "general" in every family
         # (WHO=5 uses it for the alarm central unit).

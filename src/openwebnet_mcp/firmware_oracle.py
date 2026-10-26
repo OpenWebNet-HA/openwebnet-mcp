@@ -96,6 +96,9 @@ def _decode_bus_hex_ascii(bus_frames: list[str]) -> list[str]:
     return decoded
 
 
+_RE_ROUTED_INTERFACE_BUS = re.compile(r"^\$0?06E[C4]", re.IGNORECASE)
+
+
 def _is_unrouted_interface_bus(norm: str, bus_frames: list[str]) -> bool:
     """Return True when `norm` requests `#4#<IF>` routing but `bus_frames` emit only local-bus SCS telegrams."""
     iface = _extract_interface_suffix(norm)
@@ -104,7 +107,7 @@ def _is_unrouted_interface_bus(norm: str, bus_frames: list[str]) -> bool:
     ascii_frames = [s for s in _decode_bus_hex_ascii(bus_frames) if s.startswith("$")]
     if not ascii_frames:
         return False
-    return not any("EC" in s.upper() or "E4" in s.upper() for s in ascii_frames)
+    return not any(_RE_ROUTED_INTERFACE_BUS.match(s) for s in ascii_frames)
 
 
 class FirmwareOracle:

@@ -562,8 +562,14 @@ def test_who4_addressing_dimensions_and_warnings():
         ("*#4*2#1*20##", "Zone 2, actuator 1 (2#1)"),
         ("*#4*002*0##", "Zone 02, all probes"),
         ("*#4*102*0##", "Zone 02, slave probe 1"),
+        ("*#4*2*19*0*1##", "Conditioning valve OFF, heating valve ON"),
+        ("*#4*2*19*15*0##", "Conditioning valve Fan-coil OFF speed 2, heating valve OFF"),
         ("*#4*2*60*55##", "55% RH"),
         ("*#4*2#1*20*6##", "Actuator On Speed 1"),
+        ("*#4*2#1*20*9##", "Actuator Fan-coil ON"),
+        ("*4*301*1#0210##", "Zone 1 with target setpoint 21.0°C"),
+        ("*4*301*1#50##", "Zone 1 with target setpoint 5.0°C"),
+        ("*4*311*1#0215#60##", "Zone 1 with target setpoint 21.5°C (duration 60 min)"),
     ]:
         parsed = parser.parse(frame)
         assert parsed.is_valid is True

@@ -432,3 +432,20 @@ def test_crash_and_unrouted_interface_verdicts(tmp_path):
     assert pf_light["crashed_by"] == []
     assert pf_light["warnings"] == []
 
+
+def test_is_unrouted_interface_bus_prefix_matching():
+    from openwebnet_mcp.firmware_oracle import _is_unrouted_interface_bus
+
+    def to_hex(ascii_str: str) -> str:
+        return " ".join(f"{b:02x}" for b in ascii_str.encode("ascii"))
+
+    # Local-bus frames whose payload happens to contain 'EC' or 'E4' MUST still be flagged unrouted
+    assert _is_unrouted_interface_bus("*#4*2#4#01##", [to_hex("$04990230EC\r")]) is True
+    assert _is_unrouted_interface_bus("*#4*2#4#01##", [to_hex("$04990E4000\r")]) is True
+
+    # Genuine $06EC / $006EC / $06E4 / $006E4 bridge prefixes are routed (NOT unrouted)
+    assert _is_unrouted_interface_bus("*1*1*12#4#01##", [to_hex("$06EC0101120000\r")]) is False
+    assert _is_unrouted_interface_bus("*1*1*12#4#01##", [to_hex("$006EC0101120000\r")]) is False
+    assert _is_unrouted_interface_bus("*1*1*12#4#01##", [to_hex("$06E40101120000\r")]) is False
+    assert _is_unrouted_interface_bus("*1*1*12#4#01##", [to_hex("$006E40101120000\r")]) is False
+
