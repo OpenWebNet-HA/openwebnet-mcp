@@ -158,7 +158,7 @@ def test_who4_dimensions_and_where_forms():
     assert dims["19"]["write"] == ""
     assert dims["20"]["name"] == "Actuator Status"
     assert dims["20"]["write"] == ""
-    assert "9=Fan-coil ON" in dims["20"]["description"]
+    assert "ON Fan Coil" in dims["20"]["description"]
     assert dims["60"]["name"] == "Relative Humidity"
     assert dims["60"]["write"] == ""
     assert "F459" in dims["60"]["description"]
