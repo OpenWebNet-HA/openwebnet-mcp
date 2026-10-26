@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +59,55 @@ def _candidate_template_frames(norm: str) -> list[str]:
                 if cand != orig_where:
                     candidates.append(f"*{tokens[0]}*{tokens[1]}*{cand}##")
     return candidates
+
+
+_RE_INTERFACE_SUFFIX = re.compile(r"#4#(\d+)$")
+
+
+def _extract_interface_suffix(norm: str) -> str | None:
+    """Return the `<IF>` digits if `norm` carries a `#4#<IF>` WHERE routing suffix."""
+    if not (norm.startswith("*") and norm.endswith("##")) or norm in ("*#*1##", "*#*0##"):
+        return None
+    inner = norm[1:-2]
+    tokens = inner.split("*")
+    where_tok = ""
+    if inner.startswith("#"):
+        if len(tokens) >= 2:
+            where_tok = tokens[1]
+    elif len(tokens) >= 3:
+        where_tok = tokens[2]
+    m = _RE_INTERFACE_SUFFIX.search(where_tok)
+    return m.group(1) if m else None
+
+
+def _decode_bus_hex_ascii(bus_frames: list[str]) -> list[str]:
+    """Decode space-separated hex SCS bus captures (e.g. `24 30 34 ... 0d`) to ASCII strings."""
+    decoded: list[str] = []
+    for raw in bus_frames:
+        try:
+            b = bytes.fromhex(raw.strip())
+            decoded.append(
+                b.decode("ascii", errors="ignore")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+            )
+        except ValueError:
+            continue
+    return decoded
+
+
+_RE_ROUTED_INTERFACE_BUS = re.compile(r"^\$0?06E[C4]", re.IGNORECASE)
+
+
+def _is_unrouted_interface_bus(norm: str, bus_frames: list[str]) -> bool:
+    """Return True when `norm` requests `#4#<IF>` routing but `bus_frames` emit only local-bus SCS telegrams."""
+    iface = _extract_interface_suffix(norm)
+    if iface is None or not bus_frames:
+        return False
+    ascii_frames = [s for s in _decode_bus_hex_ascii(bus_frames) if s.startswith("$")]
+    if not ascii_frames:
+        return False
+    return not any(_RE_ROUTED_INTERFACE_BUS.match(s) for s in ascii_frames)
 
 
 class FirmwareOracle:
@@ -222,14 +272,21 @@ class FirmwareOracle:
                 "matched_frame": None,
                 "accepted_by": [],
                 "rejected_by": [],
+                "crashed_by": [],
+                "unrouted_by": [],
                 "warnings": [],
             }
 
         accepted_by: list[str] = []
         rejected_by: list[str] = []
+        crashed_by: list[str] = []
+        unrouted_by: list[str] = []
         target_gw_norm = gateway.strip().lower() if gateway else None
         target_rejected = False
         target_accepted = False
+        target_crashed = False
+        target_unrouted = False
+        check_frame = matched_template or norm
 
         for v in verdicts:
             gw_prod = str(v.get("product", "Unknown"))
@@ -237,9 +294,21 @@ class FirmwareOracle:
             label = f"{gw_prod} ({gw_ver})" if gw_ver else gw_prod
             reply = str(v.get("reply", "silent")).strip().lower()
             verdict = str(v.get("verdict", "silent")).strip().lower()
+            bus = v.get("bus_frames") or []
 
-            is_accepted = reply == "ack" or verdict == "out"
-            if is_accepted:
+            is_crash = verdict == "crash"
+            is_unrouted = verdict == "out" and _is_unrouted_interface_bus(check_frame, bus)
+            is_accepted = (reply == "ack" or verdict == "out") and not is_crash and not is_unrouted
+
+            if is_crash:
+                if label not in crashed_by:
+                    crashed_by.append(label)
+                if label not in rejected_by:
+                    rejected_by.append(label)
+            elif is_unrouted:
+                if label not in unrouted_by:
+                    unrouted_by.append(label)
+            elif is_accepted:
                 if label not in accepted_by:
                     accepted_by.append(label)
             else:
@@ -247,7 +316,12 @@ class FirmwareOracle:
                     rejected_by.append(label)
 
             if target_gw_norm and target_gw_norm in gw_prod.lower():
-                if is_accepted:
+                if is_crash:
+                    target_crashed = True
+                    target_rejected = True
+                elif is_unrouted:
+                    target_unrouted = True
+                elif is_accepted:
                     target_accepted = True
                 else:
                     target_rejected = True
@@ -256,11 +330,31 @@ class FirmwareOracle:
         ref_note = (
             f" (via template `{matched_template}`)" if matched_template else ""
         )
-        if target_gw_norm and target_rejected and not target_accepted:
+        if crashed_by:
+            warnings.append(
+                f"CRITICAL: `{norm}`{ref_note} crashes the gateway translator daemon on {len(crashed_by)} firmware(s) "
+                f"({', '.join(crashed_by)})."
+            )
+        if unrouted_by:
+            iface = _extract_interface_suffix(check_frame) or "?"
+            warnings.append(
+                f"UNROUTED BUS OUTPUT: {len(unrouted_by)} firmware(s) ({', '.join(unrouted_by)}) emit local-bus SCS telegrams "
+                f"without `#4#{iface}` interface routing (`$06EC`/`$06E4`) for `{norm}`{ref_note}, cross-addressing a local "
+                f"device instead of interface `{iface}`."
+            )
+        if target_gw_norm and target_crashed:
+            warnings.append(
+                f"Target gateway `{gateway}` crashes its translator daemon on `{norm}`{ref_note} in firmware emulation."
+            )
+        elif target_gw_norm and target_unrouted and not target_accepted:
+            warnings.append(
+                f"Target gateway `{gateway}` does NOT route `{norm}`{ref_note} across `#4#` — it emits an unrouted local-bus SCS frame."
+            )
+        elif target_gw_norm and target_rejected and not target_accepted:
             warnings.append(
                 f"Target gateway `{gateway}` empirically rejects `{norm}`{ref_note} with NACK/SILENT in firmware emulation."
             )
-        elif rejected_by and not accepted_by:
+        elif rejected_by and not accepted_by and not unrouted_by:
             warnings.append(
                 f"All {len(rejected_by)} tested gateway firmware(s) reject `{norm}`{ref_note} ({', '.join(rejected_by)})."
             )
@@ -276,6 +370,8 @@ class FirmwareOracle:
             "matched_frame": matched_template or norm,
             "accepted_by": accepted_by,
             "rejected_by": rejected_by,
+            "crashed_by": crashed_by,
+            "unrouted_by": unrouted_by,
             "warnings": warnings,
         }
 
@@ -451,14 +547,20 @@ class FirmwareOracle:
                 reply = f"`{raw_reply}`"
 
             raw_verdict = str(v.get("verdict", "unknown")).lower()
-            if raw_verdict == "out":
+            bus = v.get("bus_frames") or []
+            check_frame = matched_template or norm
+            is_unrouted = raw_verdict == "out" and _is_unrouted_interface_bus(check_frame, bus)
+            if raw_verdict == "crash":
+                verdict_badge = "`CRASH (Daemon Exit)`"
+            elif is_unrouted:
+                verdict_badge = "`OUT (Unrouted Local Bus)`"
+            elif raw_verdict == "out":
                 verdict_badge = "`OUT (Bus)`"
             elif raw_verdict == "silent":
                 verdict_badge = "`SILENT (Drop)`"
             else:
                 verdict_badge = f"`{raw_verdict}`"
 
-            bus = v.get("bus_frames") or []
             bus_str = f"`{', '.join(bus)}`" if bus else "*(none)*"
 
             emitted = v.get("emitted_own") or []
@@ -499,7 +601,20 @@ class FirmwareOracle:
             else:
                 details.append(f"Gateway returned: `{reply}`.")
 
-            if verdict == "out":
+            if verdict == "crash":
+                details.append(
+                    "CRITICAL: Gateway translator daemon crashed/exited while processing this frame; "
+                    "no valid translation completed."
+                )
+            elif verdict == "out" and _is_unrouted_interface_bus(matched_template or norm, bus):
+                iface = _extract_interface_suffix(matched_template or norm) or "?"
+                decoded = ", ".join(_decode_bus_hex_ascii(bus))
+                details.append(
+                    f"Dispatched {len(bus)} SCS bus telegram(s): `{', '.join(bus)}` (`{decoded}`). "
+                    f"WARNING: Input requested interface `#4#{iface}`, but emitted SCS telegram(s) are unrouted "
+                    "local-bus frames (no `$06EC`/`$06E4` interface bridge header)."
+                )
+            elif verdict == "out":
                 details.append(
                     f"Dispatched {len(bus)} SCS bus telegram(s): `{', '.join(bus)}` (physical bus transmission confirmed)."
                 )

@@ -603,6 +603,8 @@ async def draft_own_frame(
         if preflight.get("checked"):
             acc = preflight.get("accepted_by", [])
             rej = preflight.get("rejected_by", [])
+            crashed = preflight.get("crashed_by", [])
+            unrouted = preflight.get("unrouted_by", [])
             matched = preflight.get("matched_frame", frame_str)
             tpl_note = f" (via template `{matched}`)" if matched != frame_str else ""
             lines.extend([
@@ -611,6 +613,14 @@ async def draft_own_frame(
                 f"- **Accepted (`ACK`/`OUT`)**: `{len(acc)}` gateway(s)" + (f" ({', '.join(acc)})" if acc else ""),
                 f"- **Rejected (`NACK`/`SILENT`)**: `{len(rej)}` gateway(s)" + (f" ({', '.join(rej)})" if rej else ""),
             ])
+            if unrouted:
+                lines.append(
+                    f"- **Unrouted Local Bus (`OUT` without `#4#`)**: `{len(unrouted)}` gateway(s) ({', '.join(unrouted)})"
+                )
+            if crashed:
+                lines.append(
+                    f"- **Crashed (`CRASH`)**: `{len(crashed)}` gateway(s) ({', '.join(crashed)})"
+                )
 
         return "\n".join(lines)
     except Exception as err:

@@ -143,6 +143,11 @@ async def test_tool_draft_own_frame():
     res_err = await server.draft_own_frame(who=1, command_type="unknown", where="12")
     assert "**Error**" in res_err
 
+    # WHO=4 routed status request surfaces both unrouted local bus and MH202 crash in pre-flight
+    res_who4_if = await server.draft_own_frame(who=4, command_type="status_request", where="2#4#01", gateway="MH202")
+    assert "Unrouted Local Bus" in res_who4_if
+    assert "Crashed (`CRASH`)" in res_who4_if
+
 
 @pytest.mark.asyncio
 async def test_tool_draft_ha_config():

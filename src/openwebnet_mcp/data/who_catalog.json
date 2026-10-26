@@ -327,8 +327,46 @@
         "F430/2",
         "F430/4"
       ],
-      "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, and local knob offsets.",
-      "addressing": "WHERE is zone number (1 to 99), probe number ('#0' for master probe), or central unit ('0').",
+      "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, actuator statuses, humidity readings, and local knob offsets.",
+      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#1'..'#0#4' for 4-zone, '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
+      "where_forms": [
+        {
+          "pattern": "^#0$",
+          "description": "99-zone central unit (#0)"
+        },
+        {
+          "pattern": "^#0#([1-4])$",
+          "description": "4-zone central unit #{1}"
+        },
+        {
+          "pattern": "^#([1-9][0-9]?)$",
+          "description": "Zone {1} (via central unit)"
+        },
+        {
+          "pattern": "^0#0$",
+          "description": "All zones, all actuators (0#0)"
+        },
+        {
+          "pattern": "^([1-9][0-9]?)#0$",
+          "description": "Zone {1}, all actuators ({1}#0)"
+        },
+        {
+          "pattern": "^([1-9][0-9]?)#([1-9])$",
+          "description": "Zone {1}, actuator {2} ({1}#{2})"
+        },
+        {
+          "pattern": "^0(0[1-9]|[1-9][0-9])$",
+          "description": "Zone {1}, all probes (0{1})"
+        },
+        {
+          "pattern": "^([1-8])(0[1-9]|[1-9][0-9])$",
+          "description": "Zone {2}, slave probe {1} ({1}{2})"
+        },
+        {
+          "pattern": "^([1-9][0-9]?)$",
+          "description": "Zone {1}"
+        }
+      ],
       "what_commands": {
         "100": "Conditioning: Conditioning OFF",
         "101": "Conditioning: Manual Heating",
@@ -387,11 +425,29 @@
           "query": "*#4*WHERE*14##",
           "write": "*#4*WHERE*#14*<TEMP>*<MODE>##"
         },
+        "19": {
+          "name": "Valve Status",
+          "description": "Cooling- and heating-valve state (*#4*WHERE*19*CV*HV##, CV = conditioning valve, HV = heating valve). Published values: 0=OFF, 1=ON, 2=Opened, 3=Closed, 4=Stop, 5=Fan-coil OFF, 6=Fan-coil ON speed 1, 7=Fan-coil ON speed 2, 8=Fan-coil ON speed 3; later MyHOME extensions add fan-coil OFF-speed states 14, 15, 16.",
+          "query": "*#4*WHERE*19##",
+          "write": ""
+        },
+        "20": {
+          "name": "Actuator Status",
+          "description": "Thermoregulation actuator output state (*#4*Z#N*20*VALUE##): 0=OFF, 1=ON, 2=Opened, 3=Closed, 4=Stop, 5=Fan-coil OFF, 6=Fan-coil ON speed 1, 7=Fan-coil ON speed 2, 8=Fan-coil ON speed 3, 9=Fan-coil ON. Read-only. Query per-actuator *#4*Z#N*20## (forwarded by 10/12 emulated gateways) or central *#4*#0*20## / *#4*0#0*20## / *#4*Z#0*20## (9/12; zone-level *#4*Z*20## is dropped by 6/12); never send dimensionless *#4*Z#N##.",
+          "query": "*#4*WHERE*20##",
+          "write": ""
+        },
         "22": {
           "name": "Local Knob Offset",
           "description": "Physical thermostat knob offset (-3 to +3 degrees in 0.5 steps).",
           "query": "*#4*WHERE*22##",
           "write": "*#4*WHERE*#22*<OFFSET>##"
+        },
+        "60": {
+          "name": "Relative Humidity",
+          "description": "Zone relative humidity report/request in integer percent (e.g. *#4*Z*60*55## = 55% RH). Read-only. Requests (*#4*Z*60##, *#4*0*60##) are forwarded in firmware emulation by F459, F460, F461, and MyHomeServer1; the other eight emulated gateways NACK/drop them.",
+          "query": "*#4*WHERE*60##",
+          "write": ""
         }
       },
       "examples": [

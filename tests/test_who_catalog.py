@@ -147,3 +147,22 @@ def test_who5_alarm_vocabulary_is_activation_and_engage_not_arm():
     assert "| `1` | Activation" in spec
     assert "| `8` | Engage" in spec
     assert "## Notes" in spec and "not that it is armed" in spec
+
+
+def test_who4_dimensions_and_where_forms():
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    dims = who_4["dimensions"]
+    assert {"0", "11", "12", "13", "14", "19", "20", "22", "60"} <= set(dims)
+    assert dims["19"]["name"] == "Valve Status"
+    assert dims["19"]["write"] == ""
+    assert dims["20"]["name"] == "Actuator Status"
+    assert dims["20"]["write"] == ""
+    assert "9=Fan-coil ON" in dims["20"]["description"]
+    assert dims["60"]["name"] == "Relative Humidity"
+    assert dims["60"]["write"] == ""
+    assert "F459" in dims["60"]["description"]
+    assert "NOT implemented in gateway WHO=4 translators" in who_4["addressing"]
+    patterns = {wf["pattern"] for wf in who_4["where_forms"]}
+    assert "^#0$" in patterns
+    assert "^([1-9][0-9]?)#([1-9])$" in patterns
