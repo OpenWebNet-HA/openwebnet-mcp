@@ -329,7 +329,7 @@
         "F430/4"
       ],
       "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, actuator statuses, humidity readings, and local knob offsets.",
-      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' with C = 1..99 for a 4-zone unit, a form from the MyHOME Suite catalogue, not from the document, '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
+      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured zone ZAZB = 1..99, a form from the MyHOME Suite catalogue, not from the document, '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
       "where_forms": [
         {
           "pattern": "^#0$",
@@ -337,7 +337,7 @@
         },
         {
           "pattern": "^#0#(0[1-9]|[1-9][0-9]?)$",
-          "description": "4-zone central unit #{1} (configured zone C = 1..99 of the unit; #0#C is not in the Legrand document)"
+          "description": "4-zone central unit #{1} (the 4695 unit's configured zone ZAZB = 1..99, also written 01..99; #0#C is not in the Legrand document, it comes from MyHOME_Suite OPEN.db / MHCatalogue)"
         },
         {
           "pattern": "^#([1-9][0-9]?)$",
@@ -455,13 +455,13 @@
         },
         "20": {
           "name": "Actuator Status",
-          "description": "Thermoregulation actuator output state (*#4*Z#N*20*VALUE##): 0=OFF, 1=ON, 2=Opened, 3=Closed, 4=Stop, 5=Fan-coil OFF, 6=Fan-coil ON speed 1, 7=Fan-coil ON speed 2, 8=Fan-coil ON speed 3, 9=Fan-coil ON (the document's wording; OWNd reports it as the automatic speed). Read-only in the document (p. 7, 22); the `*#4*Z#N*#20*V##` write echoes seen on an F461 are not in it. Query per-actuator *#4*Z#N*20## (forwarded by 10/12 emulated gateways) or central *#4*#0*20## / *#4*0#0*20## / *#4*Z#0*20## (9/12; zone-level *#4*Z*20## is dropped by 6/12); never send dimensionless *#4*Z#N##.",
+          "description": "Thermoregulation actuator output state (*#4*Z#N*20*VALUE##): 0=OFF, 1=ON, 2=Opened, 3=Closed, 4=Stop, 5=Fan-coil OFF, 6=Fan-coil ON speed 1, 7=Fan-coil ON speed 2, 8=Fan-coil ON speed 3, 9=\"ON Fan Coil\" (the document's wording, p. 22; OWNd reports it as the automatic speed). Read-only in the document (p. 7, 22); the `*#4*Z#N*#20*V##` write echoes seen on an F461 are not in it. Query per-actuator *#4*Z#N*20## (forwarded by 10/12 emulated gateways) or central *#4*#0*20## / *#4*0#0*20## / *#4*Z#0*20## (9/12; zone-level *#4*Z*20## is dropped by 6/12); never send dimensionless *#4*Z#N##.",
           "query": "*#4*WHERE*20##",
           "write": ""
         },
         "22": {
           "name": "Split Control (air-conditioner IR actuator)",
-          "description": "Split-unit control on WHERE `3#Z#N` (pp. 66-68): read / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`; MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto, SP 000..1270 in 0.5 °C, VEL 0 auto / 1 min / 2 med / 3 max / 4 silent, SWING 0 / 1, NULL = keep. CAUTION: any dimension 22 frame crashes the thermoregulation daemon (`bt_termo`) of Linux IP gateways and reboots an F461 (OWNd refuses to send it). This is NOT the knob offset: that is dimension 13.",
+          "description": "Split-unit control on WHERE `3#Z#N` (pp. 66-68): read / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`; MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto, SP 000..1270 in 0.5 °C, VEL 0 auto / 1 min / 2 med / 3 max / 4 silent, SWING 0 / 1, NULL = keep. CAUTION: any dimension 22 frame crashes the thermoregulation daemon (`bt_termo`) of Linux IP gateways and reboots an F461 (OWNd refuses to send it). This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
           "query": "*#4*3#Z#N*22##",
           "write": "*#4*3#Z#N*#22*<MOD>*<SP>*<VEL>*<SWING>##"
         },
