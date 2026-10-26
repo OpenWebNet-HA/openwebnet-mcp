@@ -396,7 +396,9 @@
         "24": "At least one probe in manual: optional status reply (p. 24)",
         "30": "Failure discovered: optional status reply (p. 24, 64)",
         "31": "Central unit battery KO: optional status reply (p. 24, 64)",
-        "40": "Release of the sensor's local adjustment: `*4*40*Z##` (p. 13), the only plain-zone command in the document"
+        "40": "Release of the sensor's local adjustment: `*4*40*Z##` (p. 13), the only plain-zone command in the document",
+        "301": "Manual setpoint with temperature in the WHAT parameter (`*4*301*Z#T##`): NOT in the Legrand document (its manual set point is the dimension 14 write); kept because the frame parser decodes this observed / Encyclopedia form",
+        "311#T#M": "Automatic / manual with timeout (`*4*311*Z#T#M##`, M minutes): NOT in the Legrand document; observed / Encyclopedia form decoded by the frame parser"
       },
       "dimensions": {
         "0": {

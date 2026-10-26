@@ -181,9 +181,10 @@ def test_who4_catalog_follows_the_legrand_document():
     assert "knob" in dims["13"]["name"].lower()
     for present in ("102", "202", "302", "303", "311", "40", "3000", "3100", "3200"):
         assert present in who_4["what_commands"], present
-    for absent in ("100", "101", "301"):
+    for absent in ("100", "101"):
         assert absent not in who_4["what_commands"], absent
     assert "reply only" in who_4["what_commands"]["103"]
+    assert "NOT in the Legrand document" in who_4["what_commands"]["301"]
     assert "*4*311*#Z##" in who_4["what_commands"]["311"]
     assert "*4*303*#Z##" in who_4["what_commands"]["303"]
     assert {(r["from"], r["to"]) for r in who_4["what_ranges"]} >= {(1101, 1103), (1201, 1216), (13001, 13255)}
