@@ -94,51 +94,120 @@ class FrameGenerator:
         if act == "stop":
             return f"*2*0*{where}##"
         if act == "position" or position_pct is not None:
-            pos = max(0, min(100, int(position_pct or 0)))
-            return f"*#2*{where}*#10*{pos}##"
+            # WHO_2.pdf p. 20: the only level write is the dimension 11
+            # GoToLevel `*#2*WHERE*#11#<PRIORITY>*<LEVEL>##` (LEVEL 0..100);
+            # dimension 10 is the read-only status (p. 19), it has no write.
+            if position_pct is None:
+                raise ValueError("cover action 'position' needs position_pct (0..100)")
+            pos = int(position_pct)
+            if not 0 <= pos <= 100:
+                raise ValueError(f"position_pct must be 0..100 (WHO_2.pdf p. 6 <shutterLevel>), got {position_pct}")
+            return f"*#2*{where}*#11#001*{pos}##"
         raise ValueError(f"Unknown cover action '{action}'. Use 'up', 'down', 'stop', or 'position'.")
+
+    # WHO_4.pdf mode-only commands on a zone: OFF is WHAT 303 (p. 10),
+    # anti-freeze 102 (p. 10), thermal protection 202 (p. 11), automatic
+    # (weekly program) 311 (p. 9). Manual heating / conditioning / generic is
+    # the dimension 14 write with M = 1 / 2 / 3 (pp. 8, 23); WHATs 100 / 101 /
+    # 110 and 301 do not exist as commands in the document.
+    _CLIMATE_MODE_WHATS = {
+        "off": 303,
+        "antifreeze": 102,
+        "protection": 202,
+        "auto": 311,
+    }
+    _CLIMATE_SETPOINT_MODES = {"heat": 1, "cool": 2, "generic": 3}
+    _CLIMATE_MODE_ALIASES = {
+        "anti-freeze": "antifreeze",
+        "anti_freeze": "antifreeze",
+        "thermal_protection": "protection",
+        "automatic": "auto",
+        "program": "auto",
+        "heating": "heat",
+        "cooling": "cool",
+        "conditioning": "cool",
+    }
 
     def generate_climate(
         self,
-        zone: int,
+        zone: int | str,
         target_temp: float | None = None,
         mode: str | None = None,
+        standalone: bool = False,
     ) -> str:
-        """Generate climate temperature setpoint or mode frame."""
-        # Modes: 1 = heating, 2 = cooling, 3 = generic (WHO_4.pdf p. 8, 23).
-        # Mode-only commands address the zone through the central unit
-        # (`#Z`): OFF is WHAT 303 (p. 10), anti-freeze 102 (p. 10), thermal
-        # protection 202 (p. 11), automatic 311 (p. 9). WHATs 100 / 101 / 103
-        # / 110 do not exist as commands in the document.
-        mode_code = 1
-        if mode:
-            m = mode.lower()
-            if "cool" in m:
-                mode_code = 2
-            elif "generic" in m:
-                mode_code = 3
-            elif "off" in m:
-                return f"*4*303*#{zone}##"
-            elif "antifreeze" in m or "anti-freeze" in m:
-                return f"*4*102*#{zone}##"
-            elif "protect" in m:
-                return f"*4*202*#{zone}##"
-            elif "auto" in m:
-                return f"*4*311*#{zone}##"
+        """Generate a WHO 4 set-point write or mode command for one zone.
 
-        if target_temp is not None:
-            tenths = int(round(target_temp * 10))
-            temp_str = f"{tenths:04d}"
-            # The plain-zone write is what physical F461 / MyHomeServer1
-            # gateways accept (and echo as dimension 12); the document's own
-            # form is `*#4*#Z*#14*T*M##`.
-            return f"*#4*{zone}*#14*{temp_str}*{mode_code}##"
+        OpenWebNet thermoregulation comes in two plant types, and the zone is
+        addressed differently on each:
 
-        raise ValueError(
-            "a manual heating / cooling mode needs target_temp: the document sets it "
-            "with the dimension 14 write (*#4*#Z*#14*T*M##); use mode='off', "
-            "'antifreeze', 'protection' or 'auto' for a mode-only command"
-        )
+        * ``standalone=False`` (default): a plant with a central unit (3550,
+          4695). The document addresses the zone *through the central unit*
+          as ``#Z`` for both the mode commands (``*4*303*#Z##``, p. 10) and
+          the set-point write (``*#4*#Z*#14*T*M##``, p. 8). ``zone=0`` is the
+          central unit itself (``#0``: ``*4*303*#0##`` p. 24, ``*4*102*#0##``
+          p. 27, ``*4*202*#0##`` p. 26, ``*#4*#0*#14*T*M##`` p. 23). Five of
+          the twelve firmware-oracle gateways (F453, F453AV, H4684, MH200,
+          MH200N) NACK a bare-zone set-point write on such a plant.
+        * ``standalone=True``: thermostats without a central unit (4691 on
+          the live F461 plant, the MyHomeServer1 plant of issue 466). They
+          take the bare zone ``Z`` for both (``*4*303*Z##``,
+          ``*#4*Z*#14*T*M##``); the ``#Z`` forms are silently ignored there.
+          The bare-zone forms are not in the Legrand document (it lists
+          ``*4*303*Z##`` etc. as monitor frames only).
+
+        ``mode`` is one of ``off``, ``antifreeze``, ``protection``, ``auto``
+        (mode-only commands, no ``target_temp``), or ``heat``, ``cool``,
+        ``generic`` (manual set point, ``target_temp`` required). With no
+        ``mode`` a ``target_temp`` is written in heating mode. The set point
+        must be 5.0..40.0 °C in 0.5 °C steps (``0050``..``0400``, pp. 8, 23).
+        A leading ``#`` on ``zone`` is stripped (the addressing form is chosen
+        by ``standalone``, not by the caller).
+        """
+        zone_str = str(zone).strip()
+        if zone_str.startswith("#"):
+            zone_str = zone_str[1:]
+        if not zone_str.isdigit() or not 0 <= int(zone_str) <= 99:
+            raise ValueError(f"zone must be 0 (central unit) or 1..99, got {zone!r}")
+        zone_num = int(zone_str)
+        if zone_num == 0 and standalone:
+            raise ValueError("zone 0 is the central unit (#0); a standalone plant has none")
+        target = str(zone_num) if standalone else f"#{zone_num}"
+
+        mode_name: str | None = None
+        if mode is not None:
+            key = mode.strip().lower().replace(" ", "_")
+            mode_name = self._CLIMATE_MODE_ALIASES.get(key, key)
+            if mode_name not in self._CLIMATE_MODE_WHATS and mode_name not in self._CLIMATE_SETPOINT_MODES:
+                known = sorted([*self._CLIMATE_MODE_WHATS, *self._CLIMATE_SETPOINT_MODES])
+                raise ValueError(f"Unknown climate mode {mode!r}; use one of {', '.join(known)}")
+
+        if mode_name in self._CLIMATE_MODE_WHATS:
+            if target_temp is not None:
+                raise ValueError(
+                    f"mode='{mode_name}' is a mode-only command (WHAT {self._CLIMATE_MODE_WHATS[mode_name]}); "
+                    "it carries no set point. Use mode='heat', 'cool' or 'generic' with target_temp."
+                )
+            if mode_name == "auto" and zone_num == 0:
+                raise ValueError(
+                    "*4*311*#0## is not in WHO_4.pdf (automatic is a zone command, p. 9; the central unit "
+                    "runs its programs with WHAT 1101..1103 / 2101..2103 / 3101..3103) and H4684 / MH200 NACK it"
+                )
+            return f"*4*{self._CLIMATE_MODE_WHATS[mode_name]}*{target}##"
+
+        if target_temp is None:
+            raise ValueError(
+                "a manual heating / cooling / generic mode needs target_temp: the document sets it "
+                "with the dimension 14 write (*#4*#Z*#14*T*M##, p. 8); use mode='off', "
+                "'antifreeze', 'protection' or 'auto' for a mode-only command"
+            )
+        mode_code = self._CLIMATE_SETPOINT_MODES[mode_name or "heat"]
+        tenths = int(round(float(target_temp) * 10))
+        if not 50 <= tenths <= 400 or tenths % 5:
+            raise ValueError(
+                f"target_temp must be 5.0..40.0 °C in 0.5 °C steps (WHO_4.pdf pp. 8, 23: T = 0050..0400 "
+                f"by 0.5° step), got {target_temp}"
+            )
+        return f"*#4*{target}*#14*{tenths:04d}*{mode_code}##"
 
     def generate_cen(
         self,
