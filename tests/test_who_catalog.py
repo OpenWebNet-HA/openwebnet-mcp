@@ -184,7 +184,16 @@ def test_who4_catalog_follows_the_legrand_document():
     for absent in ("100", "101"):
         assert absent not in who_4["what_commands"], absent
     assert "reply only" in who_4["what_commands"]["103"]
-    assert "NOT in the Legrand document" in who_4["what_commands"]["301"]
+    for absent in ("301", "311#T#M", "115#P", "215#P", "315#P"):
+        assert absent not in who_4["what_commands"], absent
+    for bare in ("115", "215", "315"):
+        assert "#P" in who_4["what_commands"][bare]
+    assert "1101-1103" in who_4["what_commands"]["115"] and "p. 40" in who_4["what_commands"]["115"]
+    patterns = [w["pattern"] for w in who_4["where_forms"]]
+    assert "^3#(0|[1-9][0-9]?)#([1-9])$" in patterns
+    assert "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$" in patterns
+    assert patterns.index("^3#(0|[1-9][0-9]?)#([1-9])$") < patterns.index("^([1-9][0-9]?)$")
+    assert "^0(0[1-9]|[1-9][0-9])$" in patterns and "^([1-8])(0[1-9]|[1-9][0-9])$" in patterns
     assert "*4*311*#Z##" in who_4["what_commands"]["311"]
     assert "*4*303*#Z##" in who_4["what_commands"]["303"]
     assert {(r["from"], r["to"]) for r in who_4["what_ranges"]} >= {(1101, 1103), (1201, 1216), (13001, 13255)}

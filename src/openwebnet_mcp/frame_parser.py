@@ -158,8 +158,10 @@ class FrameParser:
             result.where_params = [p for p in (m_dim_w.group("where_param") or "").split("#") if p]
             result.dimension = int(m_dim_w.group("dimension"))
             result.dimension_params = [p for p in (m_dim_w.group("dimension_param") or "").split("#") if p]
-            vals = m_dim_w.group("dimension_value").split("*")
-            result.dimension_values = [v for v in vals if v]
+            # The group starts with '*', so the first token is always empty;
+            # the others are kept even when empty: a NULL field is positional
+            # (`*#4*3#Z#N*#22*0***##` is MOD=0 with SP, VEL, SWING unchanged).
+            result.dimension_values = m_dim_w.group("dimension_value").split("*")[1:]
             self._enrich(result)
             return result
 
@@ -173,8 +175,7 @@ class FrameParser:
             result.where_params = [p for p in (m_dim_r.group("where_param") or "").split("#") if p]
             result.dimension = int(m_dim_r.group("dimension"))
             result.dimension_params = [p for p in (m_dim_r.group("dimension_param") or "").split("#") if p]
-            vals = m_dim_r.group("dimension_value").split("*")
-            result.dimension_values = [v for v in vals if v]
+            result.dimension_values = m_dim_r.group("dimension_value").split("*")[1:]
             self._enrich(result)
             return result
 
@@ -257,12 +258,38 @@ class FrameParser:
 
             if str(parsed.dimension) not in dims and parsed.dimension is not None:
                 parsed.warnings.append(f"Dimension {parsed.dimension} is not officially documented for WHO={parsed.who}.")
+            # The catalogue records `"write": ""` for a read-only dimension and
+            # `"query": ""` for a write-only one; the warnings follow those
+            # fields so they cannot drift from the documented forms.
+            read_only_write = parsed.frame_type == "DIMENSION_WRITING" and dim_meta.get("write", None) == ""
+            if read_only_write:
+                writable = {k: v.get("write") for k, v in dims.items() if isinstance(v, dict) and v.get("write")}
+                hint = ""
+                if 0 < len(writable) <= 3:
+                    hint = " Writable dimensions of this family: " + "; ".join(
+                        f"{k} ({form})" for k, form in sorted(writable.items(), key=lambda kv: int(kv[0]))
+                    ) + "."
+                parsed.warnings.append(
+                    f"Dimension {parsed.dimension} ({dim_name}) is read-only for WHO={parsed.who}: the document "
+                    f"defines no write form (*#{parsed.who}*WHERE*#{parsed.dimension}*...##). "
+                    f"Read it with {dim_meta.get('query') or 'its query form'}.{hint}"
+                )
+            if parsed.frame_type == "DIMENSION_REQUEST" and dim_meta.get("query", None) == "":
+                parsed.warnings.append(
+                    f"Dimension {parsed.dimension} ({dim_name}) is write-only for WHO={parsed.who}: the document "
+                    f"defines no read form (*#{parsed.who}*WHERE*{parsed.dimension}##). "
+                    f"Write it with {dim_meta.get('write') or 'its write form'}."
+                )
 
             if parsed.frame_type == "DIMENSION_REQUEST":
                 parsed.explanation = f"Request {dim_name} from {subsystem} at {where_desc}"
             else:
                 vals = ", ".join(parsed.dimension_values)
-                semantic = self._decode_dimension_values(parsed.who, parsed.dimension, parsed.dimension_values, parsed)
+                semantic = (
+                    ""
+                    if read_only_write  # the values of a non-existent write have no documented meaning
+                    else self._decode_dimension_values(parsed.who, parsed.dimension, parsed.dimension_values, parsed)
+                )
                 semantic_suffix = f" ({semantic})" if semantic else ""
                 if parsed.frame_type == "DIMENSION_WRITING":
                     parsed.explanation = f"Write values [{vals}]{semantic_suffix} to {dim_name} for {subsystem} at {where_desc}"
@@ -276,7 +303,13 @@ class FrameParser:
                 what_str += "#" + "#".join(parsed.what_params)
 
             whats = family.get("what_commands", {})
-            what_desc = whats.get(what_str) or whats.get(str(parsed.what))
+            what_desc = whats.get(what_str)
+            if not what_desc and parsed.what_params:
+                # A WHAT with parameters (`*4*115#1101*#0##`) is keyed by its
+                # bare value; the parameters are reported alongside.
+                what_desc = whats.get(str(parsed.what))
+                if what_desc:
+                    what_desc += f" [WHAT parameter #{'#'.join(parsed.what_params)}]"
 
             # Handle transition speed specifically for WHO 1
             if parsed.who == 1 and parsed.what == 1 and parsed.what_params:
@@ -380,8 +413,10 @@ class FrameParser:
                     "9": "Fan-coil ON",
                 }
                 return f"Actuator {act_states.get(values[0], f'State {values[0]}')}"
-            elif dimension == 22 and values:
-                return f"Offset {values[0]}"
+            elif dimension == 13 and values:
+                return self._decode_who4_local_offset(values[0])
+            elif dimension == 22:
+                return self._decode_who4_split(values)
             elif dimension == 60 and values:
                 return f"{values[0]}% RH"
 
@@ -406,7 +441,7 @@ class FrameParser:
         # WHO 2: Automation / Covers
         elif who == 2:
             if dimension == 10 and values:
-                return f"{values[0]}% open"
+                return self._decode_who2_shutter_status(values)
             elif dimension == 11 and values:
                 # WHO_2.pdf p. 20: dimension 11 is the GoToLevel write
                 # (`*#2*WHERE*#11#<priority>*<level>##`); there is no tilt
@@ -445,6 +480,73 @@ class FrameParser:
             return f"UTF-16 text {chars!r}" if chars else "UTF-16 character block"
 
         return ""
+
+    # WHO_4.pdf p. 17: dimension 13 local offset `OL` of the thermostat knob.
+    _WHO4_LOCAL_OFFSET = {
+        "00": "knob at 0 (no offset)",
+        "0": "knob at 0 (no offset)",
+        "01": "knob at +1 °C",
+        "02": "knob at +2 °C",
+        "03": "knob at +3 °C",
+        "11": "knob at -1 °C",
+        "12": "knob at -2 °C",
+        "13": "knob at -3 °C",
+        "4": "local OFF",
+        "5": "local protection (anti-freeze / thermal protection)",
+    }
+    # WHO_4.pdf pp. 66-68: dimension 22 `MOD*SP*VEL*SWING` of a split actuator.
+    _WHO4_SPLIT_MOD = {"0": "Off", "1": "Winter", "2": "Summer", "3": "Fan", "4": "Dehumidification", "5": "Auto"}
+    _WHO4_SPLIT_VEL = {"0": "auto", "1": "minimum", "2": "medium", "3": "maximum", "4": "silent"}
+    _WHO4_SPLIT_SWING = {"0": "off", "1": "on"}
+
+    @classmethod
+    def _decode_who4_local_offset(cls, value: str) -> str:
+        """Dimension 13: 00, 01..03, 11..13, 4, 5 (WHO_4.pdf p. 17)."""
+        desc = cls._WHO4_LOCAL_OFFSET.get(value)
+        if desc:
+            return f"Local offset {desc}"
+        if value == "6":
+            return "Local offset 6 (override; an OWNd extension, not in the document)"
+        return f"Local offset code {value!r} (not in WHO_4.pdf p. 17: 00, 01..03, 11..13, 4, 5)"
+
+    @classmethod
+    def _decode_who4_split(cls, values: list[str]) -> str:
+        """Dimension 22 positional MOD*SP*VEL*SWING; an empty field is NULL (keep current)."""
+        mod, sp, vel, swing = (list(values) + ["", "", "", ""])[:4]
+        parts = []
+        parts.append("mode " + (cls._WHO4_SPLIT_MOD.get(mod, f"code {mod!r}") if mod else "unchanged"))
+        if sp:
+            # SP is in tenths of a degree in 0.5 °C steps: 000 = 0 °C, 005 = 0.5 °C, 0215 = 21.5 °C, 1270 = 127 °C.
+            parts.append(f"set point {int(sp) / 10.0:.1f} °C" if sp.isdigit() else f"set point code {sp!r}")
+        else:
+            parts.append("set point unchanged")
+        parts.append("fan speed " + (cls._WHO4_SPLIT_VEL.get(vel, f"code {vel!r}") if vel else "unchanged"))
+        parts.append("swing " + (cls._WHO4_SPLIT_SWING.get(swing, f"code {swing!r}") if swing else "unchanged"))
+        return "Split control: " + ", ".join(parts)
+
+    # WHO_2.pdf pp. 6-7, 19: dimension 10 `<STATUS>*<LEVEL>*<PRIORITY>*<INFO>`.
+    _WHO2_SHUTTER_STATUS = {"10": "Stop", "11": "Up", "12": "Down", "13": "Step-by-step up", "14": "Step-by-step down"}
+    _WHO2_SHUTTER_INFO = {
+        "0": "normal",
+        "12": "PUL + disabled",
+        "13": "disabled",
+        "14": "command not executed",
+        "15": "PUL",
+    }
+
+    @classmethod
+    def _decode_who2_shutter_status(cls, values: list[str]) -> str:
+        status, level, priority, info = (list(values) + ["", "", "", ""])[:4]
+        parts = [cls._WHO2_SHUTTER_STATUS.get(status, f"status code {status!r}")]
+        if level == "255":
+            parts.append("position unknown (255)")
+        elif level:
+            parts.append(f"{level}% open")
+        if priority:
+            parts.append(f"priority {priority}")
+        if info:
+            parts.append("info " + cls._WHO2_SHUTTER_INFO.get(info, f"code {info!r}"))
+        return ", ".join(parts)
 
     @staticmethod
     def _describe_what_range(family: dict, what: int) -> str:
@@ -693,6 +795,15 @@ class FrameParser:
     @staticmethod
     def _validate_who4(parsed: ParsedFrame) -> None:
         """Emit protocol/firmware warnings for unsupported or crashing WHO=4 WHERE forms."""
+        if parsed.dimension == 22:
+            parsed.warnings.append(
+                "WHO=4 dimension 22 (split control) crashes Linux IP gateways: on the live F461 020011 "
+                "*#4*2*22## killed the bt_termo thermoregulation daemon and the watchdog rebooted the gateway "
+                "about 3 minutes later (own-firmware-oracle tools/expected_divergences.yaml); OWNd (#136) "
+                "refuses to send any WHO 4 dimension 22 frame as a safety guard (destructive_frame). "
+                "oracle_index.json has no replayed dimension 22 row, so the 3#Z#N form and the other Linux "
+                "gateways are untested, and the oracle pre-flight does not catch it."
+            )
         wp = parsed.where_params
         if "4" in wp:
             idx = wp.index("4")
@@ -740,26 +851,20 @@ class FrameParser:
         if where is None:
             return "system-wide"
 
-        # Special decoding for WHO 4 #4#INTERFACE suffixes and manual setpoints (WHERE#TEMP[#DURATION])
-        if who == 4 and where_params:
-            if "4" in where_params:
-                idx = where_params.index("4")
-                if idx + 1 < len(where_params):
-                    iface = where_params[idx + 1]
-                    prefix = where_params[:idx]
-                    target_desc = (
-                        f"Zone {where}, actuator {prefix[0]}"
-                        if len(prefix) == 1
-                        else f"Zone {where.lstrip('#')}"
-                    )
-                    return f"{target_desc} with unrouted #4#{iface} interface suffix"
-            if where_params[0].isdigit() and len(where_params[0]) >= 2:
-                t_val = int(where_params[0]) / 10.0
-                desc = f"Zone {where} with target setpoint {t_val:.1f}°C"
-                extra = where_params[1:]
-                if extra:
-                    desc += f" (duration {extra[0]} min)"
-                return desc
+        # Special decoding for WHO 4 #4#INTERFACE suffixes. Every other WHO 4
+        # WHERE (`#0#C`, `#Z#C`, `3#Z#N`, `Z#N`, ...) is described from the
+        # catalogue's where_forms; there is no `WHERE#TEMP` command in WHO_4.pdf.
+        if who == 4 and where_params and "4" in where_params:
+            idx = where_params.index("4")
+            if idx + 1 < len(where_params):
+                iface = where_params[idx + 1]
+                prefix = where_params[:idx]
+                target_desc = (
+                    f"Zone {where}, actuator {prefix[0]}"
+                    if len(prefix) == 1
+                    else f"Zone {where.lstrip('#')}"
+                )
+                return f"{target_desc} with unrouted #4#{iface} interface suffix"
 
         # Declared forms come first: WHERE 0 is not "general" in every family
         # (WHO=5 uses it for the alarm central unit).

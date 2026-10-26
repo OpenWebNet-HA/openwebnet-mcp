@@ -341,7 +341,11 @@
         },
         {
           "pattern": "^#([1-9][0-9]?)$",
-          "description": "Zone {1} (via central unit)"
+          "description": "Zone {1} via the central unit (#{1}, p. 6)"
+        },
+        {
+          "pattern": "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$",
+          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}; not in the Legrand document, a MyHOME_Suite OPEN.db / MHCatalogue form like #0#C)"
         },
         {
           "pattern": "^0#0$",
@@ -357,11 +361,15 @@
         },
         {
           "pattern": "^0(0[1-9]|[1-9][0-9])$",
-          "description": "Zone {1}, all probes (0{1})"
+          "description": "Zone {1}, all probes master and slave (0{1} = 001..099, pp. 6, 14)"
         },
         {
           "pattern": "^([1-8])(0[1-9]|[1-9][0-9])$",
-          "description": "Zone {2}, slave probe {1} ({1}{2})"
+          "description": "Zone {2}, slave probe {1} ({1}{2} = PZZ, P = 1..8, ZZ = 01..99, i.e. 101..899; pp. 6, 14, 59)"
+        },
+        {
+          "pattern": "^3#(0|[1-9][0-9]?)#([1-9])$",
+          "description": "Split (air-conditioner IR) actuator {2} of zone {1} (3#{1}#{2}: Z = 0..99, N = 1..9; dimension 22 only, pp. 66-67)"
         },
         {
           "pattern": "^([1-9][0-9]?)$",
@@ -383,9 +391,9 @@
         "111": "Automatic (weekly program) heating: reply only (`*4*111*#Z##`, p. 9)",
         "211": "Automatic conditioning: reply only (`*4*211*#Z##`)",
         "311": "Automatic (generic): `*4*311*#Z##` (p. 9), the only automatic command in the document; `*4*311*#0##` is not in it (the central unit's programs are the 11xx / 21xx / 31xx WHATs)",
-        "115#P": "Holiday daily plan, heating: `*4*115#P*#0##`, P = 1101-1103 (p. 40)",
-        "215#P": "Holiday daily plan, conditioning: `*4*215#P*#0##`, P = 2101-2103 (p. 42)",
-        "315#P": "Holiday daily plan, generic: `*4*315#P*#0##`, P = 3101-3103 (p. 43)",
+        "115": "Holiday daily plan, heating: `*4*115#P*#0##` with the program in the WHAT parameter, P = 1101-1103 (p. 40). The monitor session reports `*4*115#[1-3]*#0##` (program ordinal, pp. 40, 42, 43) while pp. 56, 64 list `115#[1101-1103]` and p. 5 bare `115`",
+        "215": "Holiday daily plan, conditioning: `*4*215#P*#0##`, P = 2101-2103 (p. 42); monitored as `215#[1-3]` (p. 42) or `215#[2101-2103]` (pp. 56, 64), bare `215` on p. 5",
+        "315": "Holiday daily plan, generic: `*4*315#P*#0##`, P = 3101-3103 (p. 43); monitored as `315#[1-3]` (p. 43), bare `315` on p. 5",
         "3000": "Vacation scenario disabled: `*4*3000*#0##` or `*4*3000#31PP*#0##` (pp. 51-52)",
         "3100": "Last set-up weekly program: `*4*3100*#0##` (p. 33)",
         "3200": "Last set-up scenario: `*4*3200*#0##` (p. 39)",
@@ -396,9 +404,7 @@
         "24": "At least one probe in manual: optional status reply (p. 24)",
         "30": "Failure discovered: optional status reply (p. 24, 64)",
         "31": "Central unit battery KO: optional status reply (p. 24, 64)",
-        "40": "Release of the sensor's local adjustment: `*4*40*Z##` (p. 13), the only plain-zone command in the document",
-        "301": "Manual setpoint with temperature in the WHAT parameter (`*4*301*Z#T##`): NOT in the Legrand document (its manual set point is the dimension 14 write); kept because the frame parser decodes this observed / Encyclopedia form",
-        "311#T#M": "Automatic / manual with timeout (`*4*311*Z#T#M##`, M minutes): NOT in the Legrand document; observed / Encyclopedia form decoded by the frame parser"
+        "40": "Release of the sensor's local adjustment: `*4*40*Z##` (p. 13), the only plain-zone command in the document"
       },
       "dimensions": {
         "0": {
