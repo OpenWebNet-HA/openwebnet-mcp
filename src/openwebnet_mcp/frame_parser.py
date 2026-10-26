@@ -408,7 +408,10 @@ class FrameParser:
             if dimension == 10 and values:
                 return f"{values[0]}% open"
             elif dimension == 11 and values:
-                return f"Slat tilt {values[0]}%"
+                # WHO_2.pdf p. 20: dimension 11 is the GoToLevel write
+                # (`*#2*WHERE*#11#<priority>*<level>##`); there is no tilt
+                # dimension in the document.
+                return f"Go to level {values[-1]}%"
 
         # WHO 16: Sound System / Audio
         elif who == 16:

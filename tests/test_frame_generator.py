@@ -75,9 +75,16 @@ def test_generate_climate():
     gen = FrameGenerator()
     assert gen.generate_climate(zone=1, target_temp=21.5, mode="heat") == "*#4*1*#14*0215*1##"
     assert gen.generate_climate(zone=1, target_temp=24.0, mode="cool") == "*#4*1*#14*0240*2##"
-    assert gen.generate_climate(zone=1, mode="off") == "*4*100*1##"
-    assert gen.generate_climate(zone=1, mode="antifreeze") == "*4*110*1##"
-    assert gen.generate_climate(zone=2, mode="heat") == "*4*101*2##"
+    # WHO_4.pdf: OFF is WHAT 303, anti-freeze 102, protection 202 and the
+    # automatic program 311, all on the zone via the central unit (pp. 9-11);
+    # WHATs 100 / 101 / 110 are not commands in the document.
+    assert gen.generate_climate(zone=1, mode="off") == "*4*303*#1##"
+    assert gen.generate_climate(zone=1, mode="antifreeze") == "*4*102*#1##"
+    assert gen.generate_climate(zone=1, mode="protection") == "*4*202*#1##"
+    assert gen.generate_climate(zone=1, mode="auto") == "*4*311*#1##"
+    assert gen.generate_climate(zone=1, target_temp=21.0, mode="generic") == "*#4*1*#14*0210*3##"
+    with pytest.raises(ValueError, match="dimension 14"):
+        gen.generate_climate(zone=2, mode="heat")
 
 
 def test_generate_cen():

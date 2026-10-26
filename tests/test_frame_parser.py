@@ -218,9 +218,10 @@ def test_parse_cen_frames():
     p_k = parser.parse("*#1*12*#3*3000##")
     assert "3000 K" in p_k.explanation
 
-    # WHO 2 Slat angle
-    p_slat = parser.parse("*#2*21*#11*45##")
-    assert "Slat tilt 45%" in p_slat.explanation
+    # WHO 2 dimension 11 is GoToLevel (WHO_2.pdf p. 20), not a tilt angle
+    p_level = parser.parse("*#2*21*#11#001*45##")
+    assert "Go to level 45%" in p_level.explanation
+    assert "tilt" not in p_level.explanation.lower()
 
     # WHO 4 Fancoil and offset
     p_fan = parser.parse("*#4*1*11*2##")

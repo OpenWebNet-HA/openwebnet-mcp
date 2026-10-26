@@ -105,23 +105,40 @@ class FrameGenerator:
         mode: str | None = None,
     ) -> str:
         """Generate climate temperature setpoint or mode frame."""
-        # Modes: 1 = heating, 2 = cooling, 3 = generic
+        # Modes: 1 = heating, 2 = cooling, 3 = generic (WHO_4.pdf p. 8, 23).
+        # Mode-only commands address the zone through the central unit
+        # (`#Z`): OFF is WHAT 303 (p. 10), anti-freeze 102 (p. 10), thermal
+        # protection 202 (p. 11), automatic 311 (p. 9). WHATs 100 / 101 / 103
+        # / 110 do not exist as commands in the document.
         mode_code = 1
         if mode:
             m = mode.lower()
             if "cool" in m:
                 mode_code = 2
+            elif "generic" in m:
+                mode_code = 3
             elif "off" in m:
-                return f"*4*100*{zone}##"
-            elif "antifreeze" in m:
-                return f"*4*110*{zone}##"
+                return f"*4*303*#{zone}##"
+            elif "antifreeze" in m or "anti-freeze" in m:
+                return f"*4*102*#{zone}##"
+            elif "protect" in m:
+                return f"*4*202*#{zone}##"
+            elif "auto" in m:
+                return f"*4*311*#{zone}##"
 
         if target_temp is not None:
             tenths = int(round(target_temp * 10))
             temp_str = f"{tenths:04d}"
+            # The plain-zone write is what physical F461 / MyHomeServer1
+            # gateways accept (and echo as dimension 12); the document's own
+            # form is `*#4*#Z*#14*T*M##`.
             return f"*#4*{zone}*#14*{temp_str}*{mode_code}##"
 
-        return f"*4*10{mode_code}*{zone}##"
+        raise ValueError(
+            "a manual heating / cooling mode needs target_temp: the document sets it "
+            "with the dimension 14 write (*#4*#Z*#14*T*M##); use mode='off', "
+            "'antifreeze', 'protection' or 'auto' for a mode-only command"
+        )
 
     def generate_cen(
         self,
