@@ -180,7 +180,7 @@ The `lookup_firmware_verdict` tool and `parse_and_validate_frame` integration pr
 | **1** | Lighting | `WHO_1.pdf` | 🟢 Archived | `light` |
 | **2** | Automation (Covers) | `WHO_2.pdf` | 🟢 Archived | `cover` |
 | **3** | Load Control | `WHO_3.pdf` | 🟡 Legacy | `switch`, `sensor` |
-| **4** | Thermoregulation | `WHO_4 2.pdf` | 🟢 Archived | `climate`, `sensor` |
+| **4** | Thermoregulation | `WHO_4.pdf` | 🟢 Archived | `climate`, `sensor` |
 | **5** | Burglar Alarm | `WHO_5.pdf` | 🟢 Archived | `alarm_control_panel` |
 | **6** | Door Entry Call & Lock | `WHO_6.pdf` | 🟡 Legacy | `lock`, `event` |
 | **7** | Video Door Entry | `WHO_7.pdf` | 🟢 Archived | `camera` |

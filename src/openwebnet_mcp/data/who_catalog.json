@@ -237,7 +237,7 @@
           "description": "Centralized Advanced STOP: Stop all covers (General '0') with priority 001"
         }
       ],
-      "notes": "The two dimensions and six WHATs above are everything Legrand's `WHO_2.pdf` (v1.0, 2015) defines; it has no tilt / slat dimension. Firmware notes: the dimension 11 echo carries `#<priority>#<type>*<level>`; `0#4#<interface>` and `<area>#4#<interface>` are not in the document's WHERE table (p. 10, point addresses only) but an MH200 2.1.0 was observed to accept them; a stop `*2*0*WHERE##` means the end position was reached (pp. 12-17), although F411/2 actuators timed shorter than their travel send it early."
+      "notes": "The two dimensions and six WHATs (0, 1, 2, 10, 11, 12; p. 11) above are everything Legrand's `WHO_2.pdf` (v1.0, 2015) defines (the three extra `what_commands` entries spell out the parameterised 10 / 11 / 12 frames of the LN-4660M2 centralised control); it has no tilt / slat dimension. Firmware notes: the dimension 11 echo carries `#<priority>#<type>*<level>`; the WHERE table on p. 10 defines General, Ambient, Light point, Group and Local bus, and only its Local bus row (`APL#4#<interface>`) is point-only, so `0#4#<interface>` and `<area>#4#<interface>` are not in the document; a physical MH200 2.1.0 was observed to accept General `0#4#02` (`*#2*0#4#02##` / `*2*0*0#4#02##`) only, `<area>#4#<interface>` was not observed (MyHOME fans area / group covers behind an interface out to point commands for that reason); a stop `*2*0*WHERE##` means the end position was reached (pp. 12-17), although F411/2 actuators timed shorter than their travel send it early."
     },
     {
       "who": 3,
@@ -315,7 +315,7 @@
       "name": "Heating / Thermoregulation",
       "italian_name": "Termoregolazione",
       "document_title": "Open Web Net Language - Heating adjustment",
-      "pdf_filename": "WHO_4 2.pdf",
+      "pdf_filename": "WHO_4.pdf",
       "version": "v2.0.0",
       "date": "2013-11-27",
       "status": "Archived & Verified",
@@ -399,11 +399,11 @@
         "3200": "Last set-up scenario: `*4*3200*#0##` (p. 39)",
         "20": "Remote control disabled: central-unit status reply (`*4*20*#0##`, p. 23-24, 55)",
         "21": "Remote control enabled: central-unit status reply (`*4*21*#0##`)",
-        "22": "At least one probe OFF: optional central-unit status reply (p. 24, 55)",
-        "23": "At least one probe in anti-freeze / protection: optional status reply (p. 24)",
-        "24": "At least one probe in manual: optional status reply (p. 24)",
-        "30": "Failure discovered: optional status reply (p. 24, 64)",
-        "31": "Central unit battery KO: optional status reply (p. 24, 64)",
+        "22": "At least one probe OFF: optional central-unit status reply `*4*22*#0##` (pp. 24, 55, 64)",
+        "23": "At least one probe in anti-freeze / protection: optional central-unit status reply `*4*23*#0##` (pp. 24, 56, 64)",
+        "24": "At least one probe in manual: optional central-unit status reply `*4*24*#0##` (pp. 24, 56, 64)",
+        "30": "Failure discovered: optional central-unit status reply `*4*30*#0##` (pp. 24, 56, 64)",
+        "31": "Central unit battery KO: optional central-unit status reply `*4*31*#0##` (pp. 24, 56, 64)",
         "40": "Release of the sensor's local adjustment: `*4*40*Z##` (p. 13), the only plain-zone command in the document"
       },
       "dimensions": {
@@ -449,7 +449,7 @@
         },
         "14": {
           "name": "Target Setpoint Temperature",
-          "description": "Set point: read `*#4*Z*14*T*3##` on zones 1..99 (T 0050..0400, p. 18); write `*#4*#Z*#14*T*M##` on a zone via the central unit or `*#4*#0*#14*T*M##` on the central unit, T in 0.5 °C steps, M = 1 heating / 2 conditioning / 3 generic (pp. 8, 23); the document echoes the write as `*#4*Z*0*T##` plus `*4*110/210/310*#Z##`. Physical F461 / MyHomeServer1 gateways also accept the write on the plain zone (`*#4*Z*#14*T*M##`) and echo dimension 12; that form is not in the document. A read on `#0` (`*#4*#0*14##`) is undefined (the central set point comes back inside `*4*110#T*#0##`, p. 56).",
+          "description": "Set point. Read `*#4*Z*14##` on zones 1..99 -> `*#4*Z*14*T*3##` (T 0050..0400 in 0.1 °C, trailing 3 fixed; p. 18). Write on a zone via the central unit `*#4*#Z*#14*T*M##` (p. 8) or on the central unit `*#4*#0*#14*T*M##` (p. 23), T 0050..0400 in 0.5 °C steps, M = 1 heating / 2 conditioning / 3 generic. The `#Z` write is echoed on the monitor as `*#4*Z*0*T_measured##` (dimension 0 carries the probe's measured temperature, 0000..0500, not the written set point) plus `*4*110*#Z##` / `*4*210*#Z##` / `*4*310*#Z##` (pp. 8-9). The `#0` write is echoed as `*4*110#T*#0##` or `*4*210#T*#0##` with the central unit's set point in the WHAT parameter (never 310; pp. 23-24). Physical F461 / MyHomeServer1 standalone-thermostat plants also accept the write on the plain zone (`*#4*Z*#14*T*M##`) and echo dimension 12; that form is not in the document, and five of the twelve oracle gateways (F453, F453AV, H4684, MH200, MH200N) NACK it. A read on `#0` (`*#4*#0*14##`) is undefined (the central set point comes back inside `*4*110#T*#0##`, p. 56).",
           "query": "*#4*WHERE*14##",
           "write": "*#4*#WHERE*#14*<TEMP>*<MODE>##"
         },
@@ -467,7 +467,7 @@
         },
         "22": {
           "name": "Split Control (air-conditioner IR actuator)",
-          "description": "Split-unit control on WHERE `3#Z#N` (pp. 66-68): read / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`; MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto, SP 000..1270 in 0.5 °C, VEL 0 auto / 1 min / 2 med / 3 max / 4 silent, SWING 0 / 1, NULL = keep. CAUTION: any dimension 22 frame crashes the thermoregulation daemon (`bt_termo`) of Linux IP gateways and reboots an F461 (OWNd refuses to send it). This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
+          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on; an empty (NULL) field keeps the current value. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). `oracle_index.json` has no replayed dimension 22 row, so the `3#Z#N` form and the other Linux gateways have not been tested and the oracle pre-flight does not catch it. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
           "query": "*#4*3#Z#N*22##",
           "write": "*#4*3#Z#N*#22*<MOD>*<SP>*<VEL>*<SWING>##"
         },
@@ -567,7 +567,7 @@
           "description": "Vacation generic for DDD days: `*4*33DDD#31PP*#0##` (p. 49)"
         }
       ],
-      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 presets and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 11 and 20 writes (both read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator)."
+      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 presets and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 11 and 20 writes (both read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
     },
     {
       "who": 5,
