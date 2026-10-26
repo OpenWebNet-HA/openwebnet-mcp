@@ -201,8 +201,10 @@ class FrameGenerator:
                 "'antifreeze', 'protection' or 'auto' for a mode-only command"
             )
         mode_code = self._CLIMATE_SETPOINT_MODES[mode_name or "heat"]
-        tenths = int(round(float(target_temp) * 10))
-        if not 50 <= tenths <= 400 or tenths % 5:
+        exact_tenths = float(target_temp) * 10
+        tenths = int(round(exact_tenths))
+        # Validate the value as given, not its rounding: 20.04 is not 20.0.
+        if abs(exact_tenths - tenths) > 1e-6 or not 50 <= tenths <= 400 or tenths % 5:
             raise ValueError(
                 f"target_temp must be 5.0..40.0 °C in 0.5 °C steps (WHO_4.pdf pp. 8, 23: T = 0050..0400 "
                 f"by 0.5° step), got {target_temp}"

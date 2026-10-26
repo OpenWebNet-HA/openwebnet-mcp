@@ -243,7 +243,7 @@ class FrameParser:
             return
 
         subsystem = family.get("name", f"WHO {parsed.who}")
-        where_desc = self._describe_where(parsed.where, parsed.where_params, who=parsed.who)
+        where_desc = self._describe_where(parsed.where, parsed.where_params, who=parsed.who, dimension=parsed.dimension)
         if parsed.who == 4:
             self._validate_who4(parsed)
 
@@ -793,7 +793,24 @@ class FrameParser:
         return "", where_desc
 
     @staticmethod
-    def _validate_who4(parsed: ParsedFrame) -> None:
+    def _is_who4_split_where(where: str | None, where_params: list[str], dimension: int | None) -> bool:
+        """``3#Z#N`` of a dimension 22 frame (WHO_4.pdf pp. 66-67): Z = 0..99, N = 1..9.
+
+        Zone 4 (``3#4#N``) must not be taken for a ``#4#INTERFACE`` suffix: an
+        interface is written with two digits (``01``..``15``), an actuator with one.
+        """
+        return (
+            dimension == 22
+            and where == "3"
+            and len(where_params) == 2
+            and where_params[0].isdigit()
+            and 0 <= int(where_params[0]) <= 99
+            and len(where_params[1]) == 1
+            and where_params[1] in "123456789"
+        )
+
+    @classmethod
+    def _validate_who4(cls, parsed: ParsedFrame) -> None:
         """Emit protocol/firmware warnings for unsupported or crashing WHO=4 WHERE forms."""
         if parsed.dimension == 22:
             parsed.warnings.append(
@@ -805,7 +822,7 @@ class FrameParser:
                 "gateways are untested, and the oracle pre-flight does not catch it."
             )
         wp = parsed.where_params
-        if "4" in wp:
+        if "4" in wp and not cls._is_who4_split_where(parsed.where, wp, parsed.dimension):
             idx = wp.index("4")
             if idx + 1 < len(wp):
                 iface = wp[idx + 1]
@@ -846,7 +863,9 @@ class FrameParser:
                 f"Query Dimension 20 instead (*#4*{parsed.where}#{wp[0]}*20## or *#4*#0*20##)."
             )
 
-    def _describe_where(self, where: str | None, where_params: list[str], who: int | None = None) -> str:
+    def _describe_where(
+        self, where: str | None, where_params: list[str], who: int | None = None, dimension: int | None = None
+    ) -> str:
         """Provide a readable description for the WHERE address."""
         if where is None:
             return "system-wide"
@@ -854,7 +873,12 @@ class FrameParser:
         # Special decoding for WHO 4 #4#INTERFACE suffixes. Every other WHO 4
         # WHERE (`#0#C`, `#Z#C`, `3#Z#N`, `Z#N`, ...) is described from the
         # catalogue's where_forms; there is no `WHERE#TEMP` command in WHO_4.pdf.
-        if who == 4 and where_params and "4" in where_params:
+        if (
+            who == 4
+            and where_params
+            and "4" in where_params
+            and not self._is_who4_split_where(where, where_params, dimension)
+        ):
             idx = where_params.index("4")
             if idx + 1 < len(where_params):
                 iface = where_params[idx + 1]

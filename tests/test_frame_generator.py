@@ -150,7 +150,7 @@ def test_generate_climate_setpoint_validation():
     gen = FrameGenerator()
     assert gen.generate_climate(zone=1, target_temp=40.0, mode="heat") == "*#4*#1*#14*0400*1##"
     assert gen.generate_climate(zone=1, target_temp=5.0, mode="heat") == "*#4*#1*#14*0050*1##"
-    for bad in (4.5, 40.5, 21.3, 21.25, 0.0, -5.0):
+    for bad in (4.5, 40.5, 21.3, 21.25, 0.0, -5.0, 20.04, 40.04, 4.96):
         with pytest.raises(ValueError, match="0.5 °C steps"):
             gen.generate_climate(zone=1, target_temp=bad, mode="heat")
 

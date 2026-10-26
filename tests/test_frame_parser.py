@@ -719,8 +719,18 @@ def test_who4_where_forms_from_the_catalogue():
         assert parsed.is_valid is True, frame
         assert "target setpoint" not in parsed.explanation, parsed.explanation
         assert expected in parsed.explanation, f"{frame}: {parsed.explanation}"
-    # Only the #4#INTERFACE suffix keeps its special decoding.
+    # Only the #4#INTERFACE suffix keeps its special decoding, and zone 4 of the
+    # split form (3#4#N, one-digit actuator) is not an interface (two digits, 01..15).
     assert "with unrouted #4#01" in parser.parse("*#4*3#4#01*20##").explanation
+    p_split_z4 = parser.parse("*#4*3#4#1*22##")
+    assert "Split (air-conditioner IR) actuator 1 of zone 4" in p_split_z4.explanation
+    assert not any("interface routing" in w for w in p_split_z4.warnings)
+    assert "Split (air-conditioner IR) actuator 4 of zone 2" in parser.parse("*#4*3#2#4*#22*1*0215*2*0##").explanation
+    p_iface = parser.parse("*#4*3#4#01*22##")
+    assert "with unrouted #4#01" in p_iface.explanation
+    assert any("interface routing" in w for w in p_iface.warnings)
+    # Without dimension 22 the form is not a split address.
+    assert "with unrouted #4#1" in parser.parse("*#4*3#4#1*20##").explanation
 
 
 def test_who4_holiday_whats_match_their_bare_key():
