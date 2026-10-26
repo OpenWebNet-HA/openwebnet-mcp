@@ -15,16 +15,20 @@ Modern installations and centralized controls emit parameterized movement frames
 - `*2*12#STEP#PRIORITY#SELECTOR*WHERE##`: Advanced DOWN (e.g. `*2*12#100#001#1*0##` to close all shutters to endpoint).
 - `*2*10#PRIORITY#SELECTOR*WHERE##`: Advanced STOP (e.g. `*2*10#001#1*0##`).
 
-### Percentage Positioning (Dimension 10)
-Standard physical actuators measure opening duration or use calibrated run-times. Actuators supporting absolute positioning (e.g. Legrand 067557) accept direct percentage writes:
-- Write frame: `*#2*WHERE*#10*<LEVEL>##`
-- Level `0`: Shutter fully closed.
-- Level `100`: Shutter fully open.
+### Position Status (Dimension 10, read-only)
+Standard physical actuators measure opening duration or use calibrated run-times. Advanced actuators with absolute positioning (e.g. Legrand 067557) report their position through dimension 10 (`WHO_2.pdf` pp. 6-7, 19):
+- Read frame: `*#2*WHERE*10##`
+- Reply / event: `*#2*WHERE*10*<STATUS>*<LEVEL>*<PRIORITY>*<INFO>##`
+  - `STATUS`: `10` stop, `11` up, `12` down, `13` step-by-step up, `14` step-by-step down.
+  - `LEVEL`: `0` fully closed .. `100` fully open, `255` position unknown.
+  - `INFO`: `0` normal, `12` PUL + disabled, `13` disabled, `14` command not executed, `15` PUL.
+- There is no dimension 10 write.
 
-### Slat / Louvre Angle (Dimension 11)
-For venetian blinds:
-- Write frame: `*#2*WHERE*#11*<ANGLE>##`
-- Angle range `0` to `100` degrees.
+### Go To Level (Dimension 11, write-only)
+The only level write in the document (p. 20):
+- Write frame: `*#2*WHERE*#11#<PRIORITY>*<LEVEL>##` (e.g. `*#2*21*#11#001*75##` moves cover 21 to 75 %).
+- The gateway echoes `*#2*WHERE*#11#<PRIORITY>#<TYPE>*<LEVEL>##`, then dimension 10 frames and `*2*0*WHERE##` when the level is reached.
+- There is no dimension 11 read and no tilt / slat / louvre angle dimension anywhere in `WHO_2.pdf`.
 
 ## 🎛️ Centralized Transmitters & Scope Covers
 
@@ -50,7 +54,7 @@ myhome:
     bedroom_venetian:
       where: "22"
       name: "Bedroom Venetian Blind"
-      tilt_support: true
+      advanced: true
     all_shutters:
       where: "0"
       name: "All House Shutters"

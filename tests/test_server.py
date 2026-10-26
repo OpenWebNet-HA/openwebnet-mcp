@@ -351,6 +351,14 @@ def test_prompt_boost():
     assert "lighting" in boost_text
     assert "WHO=1" in boost_text
     assert "myhome.yaml" in boost_text
+    # The WHO 2 / WHO 4 lines follow who_catalog.json (openwebnet-mcp#24 review):
+    # no dimension 10 write, no WHAT 100 / 101 / 110 commands, dimension 22 is not an offset.
+    assert "Dim 10=Position" not in boost_text
+    assert "WHAT 100=OFF" not in boost_text
+    assert "110=Antifreeze" not in boost_text
+    assert "*#2*WHERE*#11#001*LEVEL##" in boost_text
+    assert "303=OFF, 102=Anti-freeze, 202=Thermal protection, 311=Automatic program" in boost_text
+    assert "Dim 22=split air-conditioner control" in boost_text
 
 
 @pytest.mark.asyncio
