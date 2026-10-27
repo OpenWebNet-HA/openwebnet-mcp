@@ -908,8 +908,8 @@ Current requested context focus: **{topic}**
 
 2. **Primary WHO Subsystems**:
    - `WHO=1` (Lighting): WHAT 0=OFF, 1=ON, 2-10=Stepped dimming, 1#speed=Transition speed. Dim 1=exact 1-100% brightness.
-   - `WHO=2` (Automation / Covers): WHAT 0=Stop, 1=UP/Open, 2=DOWN/Close. Dim 10=Position 0-100%.
-   - `WHO=4` (Climate / Heating): WHAT 100=OFF, 101=Manual Heat, 102=Manual Cool, 110=Antifreeze. Dim 0=Temperature probe (tenths of °C), Dim 14=Target setpoint (tenths + mode).
+   - `WHO=2` (Automation / Covers): WHAT 0=Stop, 1=UP/Open, 2=DOWN/Close, 10/11/12=advanced stop/up/down with `#step#priority`. Dim 10=read-only status `*#2*WHERE*10*STATUS*LEVEL*PRIORITY*INFO##` (STATUS 10..14, LEVEL 0-100 or 255 unknown); Dim 11=write-only GoToLevel `*#2*WHERE*#11#001*LEVEL##`. No tilt dimension.
+   - `WHO=4` (Climate / Heating): mode commands on the zone via the central unit `#Z`: 303=OFF, 102=Anti-freeze, 202=Thermal protection, 311=Automatic program (110/210/310 and 111/211/311 are status replies). Dim 0=Measured temperature (tenths of °C), Dim 13=knob offset (read-only), Dim 14=Set point write `*#4*#Z*#14*T*M##` (T 0050..0400 in 0.5 °C steps, M 1=heat 2=cool 3=generic), Dim 22=split air-conditioner control on `3#Z#N` (crashes Linux IP gateways; never send it).
    - `WHO=15` (CEN Scenarios): `*15*BUTTON[#PHASE]*WHERE##`. WHAT is the button 00..31, WHERE the source (never the button). No phase = pressure, #1 = release after short press, #3 = extended pressure (repeats ~0.5 s), #2 = release after long press.
    - `WHO=25` (CEN+ Scenarios / Dry Contacts): CEN+ `*25*WHAT#PUSHBUTTON*WHERE##`, pushbutton 0..31, WHERE = `2` + Object 0..2047. 21 = whole short press (no release frame), 22 = start of hold, 23 = repeat (~0.5 s, zero or more), 24 = release after hold, 25..28 = rotary. Dry contact: 31 = ON, 32 = OFF, `#1` event / `#0` state reply.
    - `WHO=16` (Sound System): Multi-room audio matrix (F441), sources, amplifiers. WHAT 3=ON, 13=OFF (stereo channel), 1001..1015=volume up 1-15 steps, 1101..1115=volume down 1-15 steps. Dim 1=volume 0-31.

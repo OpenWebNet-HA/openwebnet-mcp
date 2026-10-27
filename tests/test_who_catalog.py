@@ -158,7 +158,7 @@ def test_who4_dimensions_and_where_forms():
     assert dims["19"]["write"] == ""
     assert dims["20"]["name"] == "Actuator Status"
     assert dims["20"]["write"] == ""
-    assert "9=Fan-coil ON" in dims["20"]["description"]
+    assert "ON Fan Coil" in dims["20"]["description"]
     assert dims["60"]["name"] == "Relative Humidity"
     assert dims["60"]["write"] == ""
     assert "F459" in dims["60"]["description"]
@@ -166,3 +166,88 @@ def test_who4_dimensions_and_where_forms():
     patterns = {wf["pattern"] for wf in who_4["where_forms"]}
     assert "^#0$" in patterns
     assert "^([1-9][0-9]?)#([1-9])$" in patterns
+
+
+def test_who4_catalog_follows_the_legrand_document():
+    """WHO_4.pdf (v2.0.0): dimension 22 is the split-unit control, the knob offset is 13,
+    the mode WHATs are 102 / 202 / 302 / 303 / 311 on `#Z`, and 100 / 101 / 103 / 301
+    are not WHAT codes (openwebnet-mcp#23)."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    dims = who_4["dimensions"]
+    assert "Split" in dims["22"]["name"]
+    assert "knob" not in dims["22"]["name"].lower()
+    assert dims["22"]["query"] == "*#4*3#Z#N*22##"
+    assert "knob" in dims["13"]["name"].lower()
+    for present in ("102", "202", "302", "303", "311", "40", "3000", "3100", "3200"):
+        assert present in who_4["what_commands"], present
+    for absent in ("100", "101"):
+        assert absent not in who_4["what_commands"], absent
+    assert "reply only" in who_4["what_commands"]["103"]
+    for absent in ("301", "311#T#M", "115#P", "215#P", "315#P"):
+        assert absent not in who_4["what_commands"], absent
+    for bare in ("115", "215", "315"):
+        assert "#P" in who_4["what_commands"][bare]
+    assert "1101-1103" in who_4["what_commands"]["115"] and "p. 40" in who_4["what_commands"]["115"]
+    patterns = [w["pattern"] for w in who_4["where_forms"]]
+    assert "^3#(0|[1-9][0-9]?)#([1-9])$" in patterns
+    assert "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$" in patterns
+    assert patterns.index("^3#(0|[1-9][0-9]?)#([1-9])$") < patterns.index("^([1-9][0-9]?)$")
+    assert "^0(0[1-9]|[1-9][0-9])$" in patterns and "^([1-8])(0[1-9]|[1-9][0-9])$" in patterns
+    assert "*4*311*#Z##" in who_4["what_commands"]["311"]
+    assert "*4*303*#Z##" in who_4["what_commands"]["303"]
+    assert {(r["from"], r["to"]) for r in who_4["what_ranges"]} >= {(1101, 1103), (1201, 1216), (13001, 13255)}
+    assert "31" in dims and "30" in dims
+    assert "CV = conditioning valve first" in dims["19"]["description"]
+    assert not any("#0#([1-4])" in w["pattern"] for w in who_4["where_forms"])
+    assert any("#0#" in w["pattern"] and "[1-9][0-9]?" in w["pattern"] for w in who_4["where_forms"])
+    md = catalog.format_family_details(4)
+    assert "Split Control" in md
+    assert "Local Knob Offset" not in md
+    assert "| `1101..1103` |" in md
+    assert not any(ex["frame"] == "*4*110*1##" for ex in who_4["examples"])
+
+
+def test_who2_catalog_follows_the_legrand_document():
+    """WHO_2.pdf (v1.0): dimension 10 is the status read, dimension 11 the GoToLevel write,
+    and there is no tilt dimension (openwebnet-mcp#23)."""
+    catalog = WhoCatalog()
+    who_2 = catalog.get_family(2)
+    dims = who_2["dimensions"]
+    assert set(dims) == {"10", "11"}
+    assert dims["10"]["write"] == ""
+    assert "<STATUS>*<LEVEL>*<PRIORITY>*<INFO>" in dims["10"]["description"]
+    assert dims["11"]["query"] == ""
+    assert dims["11"]["write"] == "*#2*WHERE*#11#<PRIORITY>*<LEVEL>##"
+    md = catalog.format_family_details(2)
+    assert "Slat / Louvre Tilt" not in md
+    assert not any("tilt" in dim["name"].lower() for dim in dims.values())
+    assert "*#2*21*#10*75##" not in md
+    assert "*#2*21*#11#001*75##" in md
+
+
+
+def test_who4_and_who2_catalogue_wording_follows_the_review():
+    """Review 5659295137 on #24: SP scaling and crash scope of dimension 22, p. 56 for
+    WHAT 23 / 24 / 30 / 31, the dimension 14 echo split, the WHO 2 notes and the
+    canonical `WHO_4.pdf` filename."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    assert who_4["pdf_filename"] == "WHO_4.pdf"
+    dim_22 = who_4["dimensions"]["22"]["description"]
+    assert "tenths of a degree Celsius in 0.5 °C steps" in dim_22
+    assert "`*0215*` = 21.5 °C" in dim_22
+    assert "in 0.5 °C, " not in dim_22
+    assert "F461 020011" in dim_22 and "bt_termo" in dim_22 and "OWNd (#136)" in dim_22
+    assert "no replayed dimension 22 row" in dim_22
+    for what in ("23", "24", "30", "31"):
+        assert "p. 56" in who_4["what_commands"][what] or "pp. 24, 56" in who_4["what_commands"][what], what
+    dim_14 = who_4["dimensions"]["14"]["description"]
+    assert "*#4*Z*0*T_measured##" in dim_14 and "pp. 8-9" in dim_14
+    assert "`*4*110#T*#0##` or `*4*210#T*#0##`" in dim_14 and "never 310" in dim_14
+    assert "301" in who_4["notes"] and "*4*312#T#D*WHERE##" in who_4["notes"]
+    who_2 = catalog.get_family(2)
+    assert "six WHATs (0, 1, 2, 10, 11, 12; p. 11)" in who_2["notes"]
+    assert "only its Local bus row" in who_2["notes"]
+    assert "`0#4#02`" in who_2["notes"] and "`<area>#4#<interface>` was not observed" in who_2["notes"]
+    assert "point addresses only" not in who_2["notes"]

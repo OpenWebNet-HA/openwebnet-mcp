@@ -65,19 +65,94 @@ def test_generate_cover():
     assert gen.generate_cover("21", "up") == "*2*1*21##"
     assert gen.generate_cover("21", "down") == "*2*2*21##"
     assert gen.generate_cover("21", "stop") == "*2*0*21##"
-    assert gen.generate_cover("21", "position", position_pct=60) == "*#2*21*#10*60##"
+    # WHO_2.pdf p. 20: the level write is the dimension 11 GoToLevel with a
+    # priority; dimension 10 is the read-only status and has no write form.
+    assert gen.generate_cover("21", "position", position_pct=60) == "*#2*21*#11#001*60##"
+    assert gen.generate_cover("21", "position", position_pct=0) == "*#2*21*#11#001*0##"
+    assert gen.generate_cover("21", "position", position_pct=100) == "*#2*21*#11#001*100##"
+    assert "*#10*" not in gen.generate_cover("21", "position", position_pct=60)
 
+    with pytest.raises(ValueError, match="0..100"):
+        gen.generate_cover("21", "position", position_pct=101)
+    with pytest.raises(ValueError, match="position_pct"):
+        gen.generate_cover("21", "position")
     with pytest.raises(ValueError):
         gen.generate_cover("21", "invalid_action")
 
 
-def test_generate_climate():
+def test_generate_climate_central_unit_plant():
+    """Default plant: the zone is addressed through the central unit (`#Z`) for
+    both the set point (WHO_4.pdf p. 8) and the mode commands (pp. 9-11)."""
     gen = FrameGenerator()
-    assert gen.generate_climate(zone=1, target_temp=21.5, mode="heat") == "*#4*1*#14*0215*1##"
-    assert gen.generate_climate(zone=1, target_temp=24.0, mode="cool") == "*#4*1*#14*0240*2##"
-    assert gen.generate_climate(zone=1, mode="off") == "*4*100*1##"
-    assert gen.generate_climate(zone=1, mode="antifreeze") == "*4*110*1##"
-    assert gen.generate_climate(zone=2, mode="heat") == "*4*101*2##"
+    assert gen.generate_climate(zone=1, target_temp=21.5, mode="heat") == "*#4*#1*#14*0215*1##"
+    assert gen.generate_climate(zone=1, target_temp=24.0, mode="cool") == "*#4*#1*#14*0240*2##"
+    assert gen.generate_climate(zone=1, target_temp=21.0, mode="generic") == "*#4*#1*#14*0210*3##"
+    assert gen.generate_climate(zone=1, target_temp=21.0) == "*#4*#1*#14*0210*1##"
+    assert gen.generate_climate(zone="12", target_temp=5.0, mode="heating") == "*#4*#12*#14*0050*1##"
+    # WHO_4.pdf: OFF is WHAT 303, anti-freeze 102, protection 202 and the
+    # automatic program 311, all on the zone via the central unit (pp. 9-11);
+    # WHATs 100 / 101 / 110 / 301 are not commands in the document.
+    assert gen.generate_climate(zone=1, mode="off") == "*4*303*#1##"
+    assert gen.generate_climate(zone=1, mode="antifreeze") == "*4*102*#1##"
+    assert gen.generate_climate(zone=1, mode="anti-freeze") == "*4*102*#1##"
+    assert gen.generate_climate(zone=1, mode="protection") == "*4*202*#1##"
+    assert gen.generate_climate(zone=1, mode="auto") == "*4*311*#1##"
+    # The central unit itself (#0, pp. 23-27)
+    assert gen.generate_climate(zone=0, mode="off") == "*4*303*#0##"
+    assert gen.generate_climate(zone=0, target_temp=20.0, mode="cool") == "*#4*#0*#14*0200*2##"
+
+
+def test_generate_climate_standalone_plant():
+    """Thermostats without a central unit take the bare zone for both forms
+    (live F461 / MyHomeServer1 plants); `#Z` is a no-op there."""
+    gen = FrameGenerator()
+    assert gen.generate_climate(zone=2, target_temp=21.5, mode="heat", standalone=True) == "*#4*2*#14*0215*1##"
+    assert gen.generate_climate(zone=2, mode="off", standalone=True) == "*4*303*2##"
+    assert gen.generate_climate(zone=2, mode="auto", standalone=True) == "*4*311*2##"
+    with pytest.raises(ValueError, match="standalone plant has none"):
+        gen.generate_climate(zone=0, mode="off", standalone=True)
+
+
+def test_generate_climate_zone_validation():
+    gen = FrameGenerator()
+    # A leading '#' is stripped: the addressing form is chosen by `standalone`.
+    assert gen.generate_climate(zone="#1", mode="off") == "*4*303*#1##"
+    assert gen.generate_climate(zone="#1", mode="off", standalone=True) == "*4*303*1##"
+    assert "##1" not in gen.generate_climate(zone="#1", mode="off")
+    for bad in ("100", "-1", "a", "", "1#4#01"):
+        with pytest.raises(ValueError, match="zone must be"):
+            gen.generate_climate(zone=bad, mode="off")
+    # *4*311*#0## is not in WHO_4.pdf and is NACKed by H4684 / MH200.
+    with pytest.raises(ValueError, match="not in WHO_4.pdf"):
+        gen.generate_climate(zone=0, mode="auto")
+
+
+def test_generate_climate_mode_validation():
+    gen = FrameGenerator()
+    # Modes match on their whole name, not on substrings.
+    for unknown in ("auto_cool", "cool_off", "eco", "heat_off", "offline"):
+        with pytest.raises(ValueError, match="Unknown climate mode"):
+            gen.generate_climate(zone=1, target_temp=21.0, mode=unknown)
+    with pytest.raises(ValueError, match="Unknown climate mode"):
+        gen.generate_climate(zone=1, mode="eco")
+    # A manual mode needs a set point; a mode-only command must not carry one.
+    with pytest.raises(ValueError, match="dimension 14"):
+        gen.generate_climate(zone=2, mode="heat")
+    with pytest.raises(ValueError, match="dimension 14"):
+        gen.generate_climate(zone=2)
+    for mode_only in ("off", "antifreeze", "protection", "auto"):
+        with pytest.raises(ValueError, match="mode-only command"):
+            gen.generate_climate(zone=1, target_temp=21.0, mode=mode_only)
+
+
+def test_generate_climate_setpoint_validation():
+    """WHO_4.pdf pp. 8, 23: T = 0050..0400 by 0.5° step."""
+    gen = FrameGenerator()
+    assert gen.generate_climate(zone=1, target_temp=40.0, mode="heat") == "*#4*#1*#14*0400*1##"
+    assert gen.generate_climate(zone=1, target_temp=5.0, mode="heat") == "*#4*#1*#14*0050*1##"
+    for bad in (4.5, 40.5, 21.3, 21.25, 0.0, -5.0, 20.04, 40.04, 4.96):
+        with pytest.raises(ValueError, match="0.5 °C steps"):
+            gen.generate_climate(zone=1, target_temp=bad, mode="heat")
 
 
 def test_generate_cen():

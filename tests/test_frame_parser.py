@@ -202,10 +202,11 @@ def test_parse_cen_frames():
     assert p_power.is_valid is True
     assert "1450 W" in p_power.explanation
 
-    # Rich dimension decoding: WHO 2 cover position
-    p_cov = parser.parse("*#2*21*10*60##")
+    # Rich dimension decoding: WHO 2 dimension 10 is <STATUS>*<LEVEL>*<PRIORITY>*<INFO> (WHO_2.pdf p. 19)
+    p_cov = parser.parse("*#2*21*10*10*75*001*0##")
     assert p_cov.is_valid is True
-    assert "60% open" in p_cov.explanation
+    assert "Stop, 75% open, priority 001, info normal" in p_cov.explanation
+    assert "10% open" not in p_cov.explanation
 
     # WHO 18 totalizer
     p_wh = parser.parse("*#18*1*52*12345##")
@@ -218,9 +219,10 @@ def test_parse_cen_frames():
     p_k = parser.parse("*#1*12*#3*3000##")
     assert "3000 K" in p_k.explanation
 
-    # WHO 2 Slat angle
-    p_slat = parser.parse("*#2*21*#11*45##")
-    assert "Slat tilt 45%" in p_slat.explanation
+    # WHO 2 dimension 11 is GoToLevel (WHO_2.pdf p. 20), not a tilt angle
+    p_level = parser.parse("*#2*21*#11#001*45##")
+    assert "Go to level 45%" in p_level.explanation
+    assert "tilt" not in p_level.explanation.lower()
 
     # WHO 4 Fancoil and offset
     p_fan = parser.parse("*#4*1*11*2##")
@@ -240,8 +242,10 @@ def test_parse_cen_frames():
     assert "Fancoil OFF" in p_fan_off_read.explanation
     assert len(p_fan_off_read.warnings) == 0
 
-    p_off = parser.parse("*#4*1*22*1##")
-    assert "Offset 1" in p_off.explanation
+    # WHO 4 dimension 13 is the knob offset (WHO_4.pdf p. 17); 22 is the split control
+    p_off = parser.parse("*#4*1*13*02##")
+    assert "Local offset knob at +2 °C" in p_off.explanation
+    assert not p_off.warnings
 
     # WHO 16 Sound system: volume is 0-31, and the tuner lives on DIMENSION 6
     p_vol = parser.parse("*#16*1*1*15##")
@@ -256,14 +260,6 @@ def test_parse_cen_frames():
     p_rds = parser.parse("*#16*101*8*32*82*97*100*105*111*32*49##")
     assert "RDS text" in p_rds.explanation
     assert "Radio 1" in p_rds.explanation
-
-    # WHO 4 Manual heating setpoint command (*4*301*Z#T##) and with timeout
-    p_sp = parser.parse("*4*301*2#0215##")
-    assert p_sp.is_valid is True
-    assert "Zone 2 with target setpoint 21.5" in p_sp.explanation
-
-    p_sp_timeout = parser.parse("*4*311*2#0215#60##")
-    assert "duration 60 min" in p_sp_timeout.explanation
 
     # CEN with non-bus extra WHERE parameters
     p_cen_extra = parser.parse("*15*1*11#2#8##")
@@ -567,9 +563,6 @@ def test_who4_addressing_dimensions_and_warnings():
         ("*#4*2*60*55##", "55% RH"),
         ("*#4*2#1*20*6##", "Actuator On Speed 1"),
         ("*#4*2#1*20*9##", "Actuator Fan-coil ON"),
-        ("*4*301*1#0210##", "Zone 1 with target setpoint 21.0°C"),
-        ("*4*301*1#50##", "Zone 1 with target setpoint 5.0°C"),
-        ("*4*311*1#0215#60##", "Zone 1 with target setpoint 21.5°C (duration 60 min)"),
     ]:
         parsed = parser.parse(frame)
         assert parsed.is_valid is True
@@ -603,3 +596,195 @@ def test_who4_addressing_dimensions_and_warnings():
     assert "Zone 2, actuator 1 with unrouted #4#01" in p_if_act_dim.explanation
     assert any("not implemented in gateway translators" in w for w in p_if_act_dim.warnings)
 
+
+
+def test_who4_dimension_22_is_the_split_control_and_warns():
+    """WHO_4.pdf pp. 66-68: dimension 22 on `3#Z#N` is MOD*SP*VEL*SWING, SP in tenths of a
+    degree in 0.5 °C steps (`0215` = 21.5 °C), NULL = keep. Any WHO 4 dimension 22 frame
+    warns: the live F461 020011 crashed bt_termo on *#4*2*22## (own-firmware-oracle
+    expected_divergences.yaml) and OWNd#136 refuses to send it."""
+    parser = FrameParser()
+
+    p_write = parser.parse("*#4*3#2#1*#22*1*0215*2*0##")
+    assert p_write.is_valid is True
+    assert p_write.dimension_values == ["1", "0215", "2", "0"]
+    assert "Split (air-conditioner IR) actuator 1 of zone 2" in p_write.explanation
+    assert "mode Winter, set point 21.5 °C, fan speed medium, swing off" in p_write.explanation
+    assert "Offset" not in p_write.explanation
+    assert "target setpoint" not in p_write.explanation
+    assert any("bt_termo" in w and "OWNd" in w for w in p_write.warnings)
+
+    # Positional NULL fields are kept: MOD=0 with SP, VEL and SWING unchanged.
+    p_null = parser.parse("*#4*3#2#1*#22*0***##")
+    assert p_null.dimension_values == ["0", "", "", ""]
+    assert "mode Off, set point unchanged, fan speed unchanged, swing unchanged" in p_null.explanation
+
+    p_reply = parser.parse("*#4*3#12#9*22*5*0050*4*1##")
+    assert "mode Auto, set point 5.0 °C, fan speed silent, swing on" in p_reply.explanation
+    assert "Split (air-conditioner IR) actuator 9 of zone 12" in p_reply.explanation
+    assert any("dimension 22" in w for w in p_reply.warnings)
+
+    # The request and the legacy plain-zone form warn as well (the F461 crash was *#4*2*22##).
+    for frame in ("*#4*3#2#1*22##", "*#4*2*22##", "*#4*1*22*1##"):
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True, frame
+        assert any("bt_termo" in w for w in parsed.warnings), frame
+        assert "Offset" not in parsed.explanation
+
+    p_bad = parser.parse("*#4*3#2#1*22*7*abc##") if False else parser.parse("*#4*3#2#1*22*7*0215*9*2##")
+    assert "mode code '7'" in p_bad.explanation
+    assert "fan speed code '9'" in p_bad.explanation
+    assert "swing code '2'" in p_bad.explanation
+
+
+def test_who4_dimension_13_local_offset_codes():
+    """WHO_4.pdf p. 17: 00 knob at 0, 01..03 +1..+3 °C, 11..13 -1..-3 °C, 4 local OFF, 5 local protection."""
+    parser = FrameParser()
+    expectations = {
+        "00": "knob at 0 (no offset)",
+        "01": "knob at +1 °C",
+        "03": "knob at +3 °C",
+        "11": "knob at -1 °C",
+        "13": "knob at -3 °C",
+        "4": "local OFF",
+        "5": "local protection",
+    }
+    for code, text in expectations.items():
+        parsed = parser.parse(f"*#4*1*13*{code}##")
+        assert parsed.is_valid is True
+        assert f"Local offset {text}" in parsed.explanation, parsed.explanation
+        assert not parsed.warnings, parsed.warnings
+    assert "OWNd extension" in parser.parse("*#4*1*13*6##").explanation
+    assert "not in WHO_4.pdf p. 17" in parser.parse("*#4*1*13*9##").explanation
+    # Dimension 13 is read-only in the document, but the direction warnings are
+    # gated on WHO 2 until the other families are audited (review 5664156193):
+    # a WHO 4 write stays warning-free and keeps its semantic decode.
+    p_w = parser.parse("*#4*1*#13*02##")
+    assert not p_w.warnings, p_w.warnings
+    assert "knob at +2 °C" in p_w.explanation, p_w.explanation
+
+
+def test_who2_dimension_10_status_and_read_write_direction_warnings():
+    """WHO_2.pdf: dimension 10 is the read-only status `<STATUS>*<LEVEL>*<PRIORITY>*<INFO>`
+    (pp. 6-7, 19), dimension 11 the write-only GoToLevel (p. 20)."""
+    parser = FrameParser()
+
+    for frame, expected in [
+        ("*#2*21*10*10*75*001*0##", "Stop, 75% open, priority 001, info normal"),
+        ("*#2*21*10*11*255*000*0##", "Up, position unknown (255), priority 000, info normal"),
+        ("*#2*21*10*12*0*001*14##", "Down, 0% open, priority 001, info command not executed"),
+        ("*#2*21*10*13*40*001*15##", "Step-by-step up, 40% open, priority 001, info PUL"),
+        ("*#2*21*10*14*100*001*13##", "Step-by-step down, 100% open, priority 001, info disabled"),
+        ("*#2*21*10*10*50*001*12##", "info PUL + disabled"),
+    ]:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True
+        assert not parsed.warnings, f"{frame}: {parsed.warnings}"
+        assert expected in parsed.explanation, parsed.explanation
+    assert "status code '99'" in parser.parse("*#2*21*10*99*50*001*0##").explanation
+
+    # A dimension 10 write does not exist (catalogue `"write": ""`).
+    p_w = parser.parse("*#2*21*#10*75##")
+    assert p_w.is_valid is True
+    assert any("read-only" in w and "Dimension 10" in w and "*#2*WHERE*#11#<PRIORITY>*<LEVEL>##" in w for w in p_w.warnings)
+    assert "% open" not in p_w.explanation
+
+    # A dimension 11 read does not exist (catalogue `"query": ""`).
+    p_r = parser.parse("*#2*21*11##")
+    assert p_r.is_valid is True
+    assert any("write-only" in w and "Dimension 11" in w for w in p_r.warnings)
+
+    # The direction checks are gated on WHO 2 (review 5664156193): a WHO 13
+    # date write and the WHO 4 `#20` / `#0` monitor echoes real gateways emit
+    # neither warn nor lose their semantic decode.
+    p_date = parser.parse("*#13**#1*04*15*10*2026##")
+    assert p_date.is_valid is True
+    assert not p_date.warnings, p_date.warnings
+    p_act = parser.parse("*#4*2#2*#20*8##")
+    assert p_act.is_valid is True
+    assert not p_act.warnings, p_act.warnings
+    assert "(Actuator On Speed 3)" in p_act.explanation, p_act.explanation
+    p_probe = parser.parse("*#4*50*#0*0215##")
+    assert not p_probe.warnings, p_probe.warnings
+    assert "21.5" in p_probe.explanation, p_probe.explanation
+
+    # The documented forms stay clean.
+    assert not parser.parse("*#2*21*10##").warnings
+    assert not parser.parse("*#2*21*#11#001*45##").warnings
+
+
+def test_who4_where_forms_from_the_catalogue():
+    """The legacy `WHERE#TEMP` heuristic is gone: `#0#C`, `#Z#C`, `3#Z#N` and the probe
+    forms are described from the catalogue's where_forms (WHO_4.pdf pp. 6, 14, 59, 66-67)."""
+    parser = FrameParser()
+    for frame, expected in [
+        ("*4*303*#0#12##", "4-zone central unit #12"),
+        ("*4*303*#0#05##", "4-zone central unit #05"),
+        ("*4*303*#0#99##", "4-zone central unit #99"),
+        ("*4*303*#0#1##", "4-zone central unit #1"),
+        ("*#4*#23#12*14##", "Zone 23 via 4-zone central unit 12"),
+        ("*#4*3#12#1*22##", "Split (air-conditioner IR) actuator 1 of zone 12"),
+        ("*#4*3#2#1*22##", "Split (air-conditioner IR) actuator 1 of zone 2"),
+        ("*#4*3#0#1*22##", "Split (air-conditioner IR) actuator 1 of zone 0"),
+        ("*#4*001*0##", "Zone 01, all probes master and slave"),
+        ("*#4*099*0##", "Zone 99, all probes master and slave"),
+        ("*#4*301*0*0270##", "Zone 01, slave probe 3"),
+        ("*#4*899*0##", "Zone 99, slave probe 8"),
+        ("*#4*#1*14##", "Zone 1 via the central unit"),
+    ]:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True, frame
+        assert "target setpoint" not in parsed.explanation, parsed.explanation
+        assert expected in parsed.explanation, f"{frame}: {parsed.explanation}"
+    # Only the #4#INTERFACE suffix keeps its special decoding, and zone 4 of the
+    # split form (3#4#N, one-digit actuator) is not an interface (two digits, 01..15).
+    assert "with unrouted #4#01" in parser.parse("*#4*3#4#01*20##").explanation
+    p_split_z4 = parser.parse("*#4*3#4#1*22##")
+    assert "Split (air-conditioner IR) actuator 1 of zone 4" in p_split_z4.explanation
+    assert not any("interface routing" in w for w in p_split_z4.warnings)
+    assert "Split (air-conditioner IR) actuator 4 of zone 2" in parser.parse("*#4*3#2#4*#22*1*0215*2*0##").explanation
+    p_iface = parser.parse("*#4*3#4#01*22##")
+    assert "with unrouted #4#01" in p_iface.explanation
+    assert any("interface routing" in w for w in p_iface.warnings)
+    # Without dimension 22 the form is not a split address.
+    assert "with unrouted #4#1" in parser.parse("*#4*3#4#1*20##").explanation
+
+
+def test_who4_holiday_whats_match_their_bare_key():
+    """`*4*115#P*#0##` (p. 40), `215#P` (p. 42), `315#P` (p. 43): the WHAT parameter is the
+    program (1101-1103 on pp. 56, 64; the ordinal 1..3 on the monitor, pp. 40-43)."""
+    parser = FrameParser()
+    for frame, expected in [
+        ("*4*115#1101*#0##", "Holiday daily plan, heating"),
+        ("*4*115#3*#0##", "Holiday daily plan, heating"),
+        ("*4*115*#0##", "Holiday daily plan, heating"),
+        ("*4*215#2101*#0##", "Holiday daily plan, conditioning"),
+        ("*4*315#3101*#0##", "Holiday daily plan, generic"),
+    ]:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True
+        assert not parsed.warnings, f"{frame}: {parsed.warnings}"
+        assert expected in parsed.explanation, parsed.explanation
+        assert "99-zone central unit (#0)" in parsed.explanation
+    assert "[WHAT parameter #1101]" in parser.parse("*4*115#1101*#0##").explanation
+    assert "[WHAT parameter" not in parser.parse("*4*115*#0##").explanation
+    # The central unit's manual-mode status carries the temperature in the WHAT (p. 56).
+    p_manual = parser.parse("*4*110#0215*#0##")
+    assert not p_manual.warnings
+    assert "Manual heating" in p_manual.explanation and "#0215" in p_manual.explanation
+
+
+def test_who4_301_and_311_t_m_are_not_commands():
+    """WHAT 301 and `*4*311*Z#T#M##` are not in WHO_4.pdf, the Encyclopedia or the oracle
+    (the TS10 timed manual is `*4*312#T#D*WHERE##` + dimension 32). They are no longer
+    described as set points."""
+    parser = FrameParser()
+    p_301 = parser.parse("*4*301*2#0215##")
+    assert p_301.is_valid is True
+    assert any("WHAT=301 is not standard" in w for w in p_301.warnings)
+    assert "Action 301 at Zone 2 with parameters (0215)" in p_301.explanation
+    assert "target setpoint" not in p_301.explanation
+    p_311 = parser.parse("*4*311*1#0215#60##")
+    assert "target setpoint" not in p_311.explanation
+    assert "duration" not in p_311.explanation
+    assert "with parameters (0215, 60)" in p_311.explanation
