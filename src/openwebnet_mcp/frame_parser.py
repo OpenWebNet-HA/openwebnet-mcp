@@ -260,8 +260,18 @@ class FrameParser:
                 parsed.warnings.append(f"Dimension {parsed.dimension} is not officially documented for WHO={parsed.who}.")
             # The catalogue records `"write": ""` for a read-only dimension and
             # `"query": ""` for a write-only one; the warnings follow those
-            # fields so they cannot drift from the documented forms.
-            read_only_write = parsed.frame_type == "DIMENSION_WRITING" and dim_meta.get("write", None) == ""
+            # fields so they cannot drift from the documented forms. Gated on
+            # WHO 2 until the other families are audited against the
+            # Encyclopedia: WHO 13's dimension 1 stub (really the R/W date)
+            # and WHO 4's `#20` / `#0` monitor echoes (`*#4*2#1*#20*1##`,
+            # `*#4*50*#0*0215##`, real F461 / MyHomeServer1 traffic) must not
+            # warn nor lose their semantic decode.
+            direction_checked = parsed.who == 2
+            read_only_write = (
+                direction_checked
+                and parsed.frame_type == "DIMENSION_WRITING"
+                and dim_meta.get("write", None) == ""
+            )
             if read_only_write:
                 writable = {k: v.get("write") for k, v in dims.items() if isinstance(v, dict) and v.get("write")}
                 hint = ""
@@ -274,7 +284,7 @@ class FrameParser:
                     f"defines no write form (*#{parsed.who}*WHERE*#{parsed.dimension}*...##). "
                     f"Read it with {dim_meta.get('query') or 'its query form'}.{hint}"
                 )
-            if parsed.frame_type == "DIMENSION_REQUEST" and dim_meta.get("query", None) == "":
+            if direction_checked and parsed.frame_type == "DIMENSION_REQUEST" and dim_meta.get("query", None) == "":
                 parsed.warnings.append(
                     f"Dimension {parsed.dimension} ({dim_name}) is write-only for WHO={parsed.who}: the document "
                     f"defines no read form (*#{parsed.who}*WHERE*{parsed.dimension}##). "

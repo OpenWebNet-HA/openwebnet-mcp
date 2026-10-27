@@ -656,9 +656,12 @@ def test_who4_dimension_13_local_offset_codes():
         assert not parsed.warnings, parsed.warnings
     assert "OWNd extension" in parser.parse("*#4*1*13*6##").explanation
     assert "not in WHO_4.pdf p. 17" in parser.parse("*#4*1*13*9##").explanation
-    # Dimension 13 is read-only: a write warns from the catalogue's `"write": ""`.
+    # Dimension 13 is read-only in the document, but the direction warnings are
+    # gated on WHO 2 until the other families are audited (review 5664156193):
+    # a WHO 4 write stays warning-free and keeps its semantic decode.
     p_w = parser.parse("*#4*1*#13*02##")
-    assert any("read-only" in w and "Dimension 13" in w for w in p_w.warnings)
+    assert not p_w.warnings, p_w.warnings
+    assert "knob at +2 °C" in p_w.explanation, p_w.explanation
 
 
 def test_who2_dimension_10_status_and_read_write_direction_warnings():
@@ -690,6 +693,20 @@ def test_who2_dimension_10_status_and_read_write_direction_warnings():
     p_r = parser.parse("*#2*21*11##")
     assert p_r.is_valid is True
     assert any("write-only" in w and "Dimension 11" in w for w in p_r.warnings)
+
+    # The direction checks are gated on WHO 2 (review 5664156193): a WHO 13
+    # date write and the WHO 4 `#20` / `#0` monitor echoes real gateways emit
+    # neither warn nor lose their semantic decode.
+    p_date = parser.parse("*#13**#1*04*15*10*2026##")
+    assert p_date.is_valid is True
+    assert not p_date.warnings, p_date.warnings
+    p_act = parser.parse("*#4*2#2*#20*8##")
+    assert p_act.is_valid is True
+    assert not p_act.warnings, p_act.warnings
+    assert "(Actuator On Speed 3)" in p_act.explanation, p_act.explanation
+    p_probe = parser.parse("*#4*50*#0*0215##")
+    assert not p_probe.warnings, p_probe.warnings
+    assert "21.5" in p_probe.explanation, p_probe.explanation
 
     # The documented forms stay clean.
     assert not parser.parse("*#2*21*10##").warnings
