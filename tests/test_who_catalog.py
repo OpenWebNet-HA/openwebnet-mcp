@@ -251,3 +251,26 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "only its Local bus row" in who_2["notes"]
     assert "`0#4#02`" in who_2["notes"] and "`<area>#4#<interface>` was not observed" in who_2["notes"]
     assert "point addresses only" not in who_2["notes"]
+
+
+def test_who4_myhome_suite_forms_are_cited_as_implementation_evidence():
+    """Encyclopedia who-4-temperature-control/dimensions.md: the dimension 7 presets and
+    the dimension 11 write are MyHOME_Suite ScenarioDevices templates, not WHO_4.pdf;
+    dimension 22 NULL fields are empty fields between `*`; `#Z#C` is not an actuator."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    dims = who_4["dimensions"]
+    assert dims["7"]["query"] == "" and dims["7"]["write"] == "*#4*WHERE*#7*<CTX>*<STATE>*<T>##"
+    assert "ScenarioDevices" in dims["7"]["description"] and "Not in WHO_4.pdf" in dims["7"]["description"]
+    assert "*#4*ZAZB*#7*0*5*##" in dims["7"]["description"]
+    assert list(dims)[:3] == ["0", "7", "11"]
+    assert "ScenarioDevices" in dims["11"]["description"] and "*#4*ZAZB*#11*val##" in dims["11"]["description"]
+    assert "implementation evidence" in dims["11"]["description"]
+    assert "*#4*45#1*#22*3**1*1##" in dims["22"]["description"]
+    assert "Never send the letters NULL" in dims["22"]["description"]
+    assert "ScenarioDevices" in who_4["notes"] and "not an actuator" in who_4["notes"]
+    assert "configured zone ZAZB" not in who_4["addressing"]
+    assert "central-unit selector" in who_4["addressing"]
+    zc = next(w for w in who_4["where_forms"] if w["pattern"] == "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$")
+    assert "not an actuator address" in zc["description"]
+

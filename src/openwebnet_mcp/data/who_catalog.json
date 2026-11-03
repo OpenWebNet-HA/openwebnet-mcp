@@ -329,7 +329,7 @@
         "F430/4"
       ],
       "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, actuator statuses, humidity readings, and local knob offsets.",
-      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured zone ZAZB = 1..99, a form from the MyHOME Suite catalogue, not from the document, '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
+      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured central-unit selector ZAZB = 1..99, and '#Z#C' zone Z under that unit; both come from the MyHOME Suite catalogue / touchscreen configuration, not from the document, and neither is an actuator address; '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
       "where_forms": [
         {
           "pattern": "^#0$",
@@ -337,7 +337,7 @@
         },
         {
           "pattern": "^#0#(0[1-9]|[1-9][0-9]?)$",
-          "description": "4-zone central unit #{1} (the 4695 unit's configured zone ZAZB = 1..99, also written 01..99; #0#C is not in the Legrand document, it comes from MyHOME_Suite OPEN.db / MHCatalogue)"
+          "description": "4-zone central unit #{1} (the 4695 unit's configured central-unit selector ZAZB = 1..99, also written 01..99; #0#C is not in the Legrand document, it comes from MyHOME_Suite OPEN.db / MHCatalogue)"
         },
         {
           "pattern": "^#([1-9][0-9]?)$",
@@ -345,7 +345,7 @@
         },
         {
           "pattern": "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$",
-          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}; not in the Legrand document, a MyHOME_Suite OPEN.db / MHCatalogue form like #0#C)"
+          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}, not an actuator address: actuators are `Z#N` without the leading `#`; not in the Legrand document, a MyHOME_Suite OPEN.db / MHCatalogue form like #0#C and the touchscreen's set-point write target, Encyclopedia who-4-temperature-control/addressing.md)"
         },
         {
           "pattern": "^0#0$",
@@ -413,9 +413,15 @@
           "query": "*#4*WHERE*0##",
           "write": ""
         },
+        "7": {
+          "name": "Thermal Action Preset (MyHOME_Suite ScenarioDevices)",
+          "description": "Not in WHO_4.pdf: the MyHOME_Suite ScenarioDevices scenario-action templates (Encyclopedia who-4-temperature-control/dimensions.md, \"MyHOME_Suite DIMENSION 7 action model\"), implementation evidence rather than the published specification. Write only, `*#4*ZAZB*#7*CTX*STATE*T##`: CTX = thermal context 0 generic / 1 heating / 2 cooling / 3 automatic; STATE = 1 set point (T = c1c2c3c4, four digits) / 2 protection (antifreeze in heating) / 3 comfort / 4 eco / 5 OFF (generic context only, `*#4*ZAZB*#7*0*5*##`); T is an empty field for every state but 1 (comfort heating is `*#4*ZAZB*#7*1*3*##`). No read form; which gateways accept it is not established.",
+          "query": "",
+          "write": "*#4*WHERE*#7*<CTX>*<STATE>*<T>##"
+        },
         "11": {
           "name": "Fan Coil Speed",
-          "description": "Fan coil speed (`*#4*Z*11*S##`): 0 = automatic, 1 / 2 / 3 = speed, 15 = OFF (p. 15). Read-only in the document (p. 7); the write form `*#4*Z*#11*S##` is not in it but is accepted by physical thermostats, which cycle automatic -> 1 -> 2 -> 3 -> automatic and drop 4 and 15.",
+          "description": "Fan coil speed (`*#4*Z*11*S##`): 0 = automatic, 1 / 2 / 3 = speed, 15 = OFF (p. 15). Read-only in the document (p. 7). The write form `*#4*Z*#11*S##` is not in it: it is the MyHOME_Suite ScenarioDevices scenario-action template `*#4*ZAZB*#11*val##` (Encyclopedia who-4-temperature-control/dimensions.md, \"MyHOME_Suite local-control and fan-coil writes\"), implementation evidence rather than the published specification. Physical thermostats accept it and cycle automatic -> 1 -> 2 -> 3 -> automatic, dropping 4 and 15; the touchscreen sends it to the plain zone `Z` even on a 4-zone plant (`#Z#C` is the set-point target, addressing.md, \"Historical central-unit variants\").",
           "query": "*#4*WHERE*11##",
           "write": "*#4*WHERE*#11*<SPEED>##",
           "allowed_values": {
@@ -467,7 +473,7 @@
         },
         "22": {
           "name": "Split Control (air-conditioner IR actuator)",
-          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on; an empty (NULL) field keeps the current value. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). `oracle_index.json` has no replayed dimension 22 row, so the `3#Z#N` form and the other Linux gateways have not been tested and the oracle pre-flight does not catch it. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
+          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on. The document marks a field to leave unchanged `NULL` without giving it a wire spelling; the touchscreen (TS10 tests, Encyclopedia who-4-temperature-control/dimensions.md, \"Historical partial split writes\") sends such a field empty between the `*` separators, e.g. fan mode `*#4*45#1*#22*3**1*1##` and OFF `*#4*3#Z#N*#22*0***##`. Never send the letters NULL; the empty-field form is implementation evidence, not proof that every split unit accepts partial writes. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). `oracle_index.json` has no replayed dimension 22 row, so the `3#Z#N` form and the other Linux gateways have not been tested and the oracle pre-flight does not catch it. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
           "query": "*#4*3#Z#N*22##",
           "write": "*#4*3#Z#N*#22*<MOD>*<SP>*<VEL>*<SWING>##"
         },
@@ -567,7 +573,7 @@
           "description": "Vacation generic for DDD days: `*4*33DDD#31PP*#0##` (p. 49)"
         }
       ],
-      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 presets and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 11 and 20 writes (both read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
+      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and the zone-under-central-unit form `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue, Encyclopedia who-4-temperature-control/addressing.md; C is the central-unit selector, not an actuator: actuators are `Z#N`), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 action presets and the dimension 11 fan-coil write (both MyHOME_Suite ScenarioDevices scenario-action templates, Encyclopedia who-4-temperature-control/dimensions.md: implementation evidence, not the published specification) and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 20 write echoes (read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
     },
     {
       "who": 5,
