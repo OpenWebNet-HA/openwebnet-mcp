@@ -913,7 +913,7 @@ Current requested context focus: **{topic}**
    - `WHO=15` (CEN Scenarios): `*15*BUTTON[#PHASE]*WHERE##`. WHAT is the button 00..31, WHERE the source (never the button). No phase = pressure, #1 = release after short press, #3 = extended pressure (repeats ~0.5 s), #2 = release after long press.
    - `WHO=25` (CEN+ Scenarios / Dry Contacts): CEN+ `*25*WHAT#PUSHBUTTON*WHERE##`, pushbutton 0..31, WHERE = `2` + Object 0..2047. 21 = whole short press (no release frame), 22 = start of hold, 23 = repeat (~0.5 s, zero or more), 24 = release after hold, 25..28 = rotary. Dry contact: 31 = ON, 32 = OFF, `#1` event / `#0` state reply.
    - `WHO=16` (Sound System): Multi-room audio matrix (F441), sources, amplifiers. WHAT 3=ON, 13=OFF (stereo channel), 1001..1015=volume up 1-15 steps, 1101..1115=volume down 1-15 steps. Dim 1=volume 0-31.
-   - `WHO=18` (Energy Management): Dim 1=Instantaneous active power (W), Dim 52=Active energy totalizer (Wh).
+   - `WHO=18` (Energy Management): WHERE `5N`=meter (F520), `7N#0`=actuator, `1N`=Stop&Go. Dim 113=Active power (W), Dim 51=Energy/unit totalizer, 52#Y#M=monthly, 53/54=partial month/day, 511..514=historical series started by WHAT 57#M#D / 58#M / 59#M / 510#M, `*#18*WHERE*#1200#1*Time##`=automatic updates. There are no dimensions 1..4 / 11.
 
 3. **Home Assistant MyHOME Integration (v0.9+)**:
    - Configuration file: `/config/myhome.yaml` (placed in the same folder as `configuration.yaml`).
