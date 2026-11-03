@@ -328,3 +328,16 @@ def test_who18_catalog_follows_the_published_forms():
     assert "active power" not in examples["*#18*51*51##"].lower()
     md = catalog.format_family_details(18)
     assert "### Dimension 113: Active Power" in md and "Dimension 1: Instantaneous" not in md
+
+
+def test_who4_zc_provenance_and_who18_series_read_forms_are_ts10():
+    """Review follow-up: `#0#C` is the OPEN.db rule `#0#[ZA][ZB]`, `#Z#C` the touchscreen
+    Configuration mapping; the 512..514 direct reads are TS10 old-PIC variants."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    assert "`#0#[ZA][ZB]`" in who_4["notes"] and "not an OPEN.db rule" in who_4["notes"]
+    zc = next(w for w in who_4["where_forms"] if w["pattern"] == "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$")
+    assert "OPEN.db / MHCatalogue" not in zc["description"] and "Historical central-unit variants" in zc["description"]
+    dims = catalog.get_family(18)["dimensions"]
+    for k in ("512", "513", "514"):
+        assert "TS10" in dims[k]["name"] and "not a published query" in dims[k]["description"], k

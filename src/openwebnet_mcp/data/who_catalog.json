@@ -329,7 +329,7 @@
         "F430/4"
       ],
       "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, actuator statuses, humidity readings, and local knob offsets.",
-      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured central-unit selector ZAZB = 1..99, and '#Z#C' zone Z under that unit; both come from the MyHOME Suite catalogue / touchscreen configuration, not from the document, and neither is an actuator address; '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
+      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured central-unit selector ZAZB = 1..99, and '#Z#C' zone Z under that unit; '#0#C' is a MyHOME_Suite OPEN.db address rule and '#Z#C' the touchscreen Configuration mapping, neither is in the document, and neither is an actuator address; '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
       "where_forms": [
         {
           "pattern": "^#0$",
@@ -345,7 +345,7 @@
         },
         {
           "pattern": "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$",
-          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}, not an actuator address: actuators are `Z#N` without the leading `#`; not in the Legrand document, a MyHOME_Suite OPEN.db / MHCatalogue form like #0#C and the touchscreen's set-point write target, Encyclopedia who-4-temperature-control/addressing.md)"
+          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}, not an actuator address: actuators are `Z#N` without the leading `#`; not in the Legrand document and not an OPEN.db rule: the BTouch / touchscreen Configuration mapping for the controlled-zone command and set-point write, Encyclopedia who-4-temperature-control/addressing.md, \"Historical central-unit variants\")"
         },
         {
           "pattern": "^0#0$",
@@ -573,7 +573,7 @@
           "description": "Vacation generic for DDD days: `*4*33DDD#31PP*#0##` (p. 49)"
         }
       ],
-      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and the zone-under-central-unit form `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue, Encyclopedia who-4-temperature-control/addressing.md; C is the central-unit selector, not an actuator: actuators are `Z#N`), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 action presets and the dimension 11 fan-coil write (both MyHOME_Suite ScenarioDevices scenario-action templates, Encyclopedia who-4-temperature-control/dimensions.md: implementation evidence, not the published specification) and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 20 write echoes (read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
+      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` (MyHOME_Suite OPEN.db address rule `#0#[ZA][ZB]`, Encyclopedia who-4-temperature-control/addressing.md, \"MyHOME_Suite address rules\") and the zone-under-central-unit form `#Z#C` (the BTouch / touchscreen Configuration mapping, zone Z controlled through 4-zone central unit C, addressing.md, \"Historical central-unit variants\"; not an OPEN.db rule; C is the central-unit selector, not an actuator: actuators are `Z#N`), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 action presets and the dimension 11 fan-coil write (both MyHOME_Suite ScenarioDevices scenario-action templates, Encyclopedia who-4-temperature-control/dimensions.md: implementation evidence, not the published specification) and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 20 write echoes (read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
     },
     {
       "who": 5,
@@ -1479,20 +1479,20 @@
           "write": ""
         },
         "512": {
-          "name": "Monthly-Average Hourly Historical Series",
-          "description": "Monthly-average hourly series of month M: `*#18*WHERE*512#M*Tag*Val##`, tags 1..24, 25 monthly-average total; started by WHAT 58#M.",
+          "name": "Monthly-Average Hourly Historical Series (read form TS10)",
+          "description": "Monthly-average hourly series of month M: `*#18*WHERE*512#M*Tag*Val##`, tags 1..24, 25 monthly-average total; started by WHAT 58#M (dimensions.md, \"DIMENSION 512\"). The published protocol defines no request for this dimension; the direct read `*#18*WHERE*512#M##` is the TS10 touchscreen old-PIC / forced-read compatibility variant (what.md, \"Historical graph request variants\"), implementation evidence, not a published query.",
           "query": "*#18*WHERE*512#M##",
           "write": ""
         },
         "513": {
-          "name": "Current-Year Daily Monthly Series",
-          "description": "Current-year daily series of month M: `*#18*WHERE*513#M*Tag*Val##`, tag = day 1..31; started by WHAT 59#M.",
+          "name": "Current-Year Daily Monthly Series (read form TS10)",
+          "description": "Current-year daily series of month M: `*#18*WHERE*513#M*Tag*Val##`, tag = day 1..31; started by WHAT 59#M (dimensions.md, \"DIMENSION 513\"). The published protocol defines no request for this dimension; the direct read `*#18*WHERE*513#M##` is the TS10 touchscreen old-PIC / forced-read compatibility variant (what.md, \"Historical graph request variants\"), implementation evidence, not a published query.",
           "query": "*#18*WHERE*513#M##",
           "write": ""
         },
         "514": {
-          "name": "Previous-Year Daily Monthly Series",
-          "description": "Previous-year daily series of month M: `*#18*WHERE*514#M*Tag*Val##`, tag = day 1..31; started by WHAT 510#M.",
+          "name": "Previous-Year Daily Monthly Series (read form TS10)",
+          "description": "Previous-year daily series of month M: `*#18*WHERE*514#M*Tag*Val##`, tag = day 1..31; started by WHAT 510#M (dimensions.md, \"DIMENSION 514\"). The published protocol defines no request for this dimension and the TS10 forced-read matrix has no 514 row (what.md, \"Historical graph request variants\"); the read `*#18*WHERE*514#M##` is the catalogue's analogue of the 511..513 TS10 variants, implementation evidence at best, not a published query.",
           "query": "*#18*WHERE*514#M##",
           "write": ""
         },
