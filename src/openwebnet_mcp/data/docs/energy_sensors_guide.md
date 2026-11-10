@@ -9,7 +9,7 @@ WHERE is `5N` for a meter (F520 / F523 / 3522, N = 1..255), `7N#0` for an Energy
 - **Active Power (Dimension 113)**: current load in Watts.
   - Query: `*#18*WHERE*113##`
   - Response: `*#18*WHERE*113*<WATTS>##` (e.g. `*#18*51*113*2350##` = 2350 W).
-- **Energy/Unit Totalizer (Dimension 51)**: the all-time totalizer (`*#18*WHERE*51*<VAL>##`; the document labels its unit Watt).
+- **Energy/Unit Totalizer (Dimension 51)**: the all-time totalizer (`*#18*WHERE*51*<VAL>##`; the document labels its unit Watt, physical captures read it in Wh, e.g. `*#18*51*51*23791364##`, OWNd#157).
 - **Monthly Totalizer (Dimension 52)**: `*#18*WHERE*52#Y#M##` -> `*#18*WHERE*52#Y#M*<VAL>##` (Y = yy).
 - **Partial Totalizers (Dimensions 53, 54)**: current month and current day.
 - **Actuator Totalizers (Dimension 72)**: `*#18*7N#0*72#<Tot_N>##` -> `Energy*D*M*Y*H*m`, Energy in Wh since the last reset (`*18*75#<Tot_N>*7N#0##`).

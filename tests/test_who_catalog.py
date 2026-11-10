@@ -239,7 +239,8 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "`*0215*` = 21.5 °C" in dim_22
     assert "in 0.5 °C, " not in dim_22
     assert "F461 020011" in dim_22 and "bt_termo" in dim_22 and "OWNd (#136)" in dim_22
-    assert "no replayed dimension 22 row" in dim_22
+    assert "`thermo-dim22`" in dim_22 and "crash the thermoregulation daemon on 10 of 13" in dim_22
+    assert "no replayed dimension 22 row" not in dim_22
     for what in ("23", "24", "30", "31"):
         assert "p. 56" in who_4["what_commands"][what] or "pp. 24, 56" in who_4["what_commands"][what], what
     dim_14 = who_4["dimensions"]["14"]["description"]
