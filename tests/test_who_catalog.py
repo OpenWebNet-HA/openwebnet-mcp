@@ -254,6 +254,40 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "point addresses only" not in who_2["notes"]
 
 
+def test_who4_interface_caution_matches_the_bundled_oracle_rows():
+    """own-firmware-oracle `thermo-zone-requests`: no gateway routes `*#4*2#4#01*20##` to an
+    interface. Those that forward it send the telegram of the plain-zone `*#4*2*20##`; the
+    MH202 ACKs it and sends another telegram; five refuse it silently. The bundled index has
+    twelve emulated gateways; the 3488 row is in the oracle's later index."""
+    import json
+
+    from openwebnet_mcp._paths import get_data_dir
+
+    index = json.loads((get_data_dir() / "oracle_index.json").read_text(encoding="utf-8"))
+    routed = {row["product"]: row for row in index["verdicts"]["*#4*2#4#01*20##"]}
+    plain = {row["product"]: row for row in index["verdicts"]["*#4*2*20##"]}
+    same_as_plain = sorted(
+        product
+        for product, row in routed.items()
+        if row["verdict"] == "out" and row["bus_frames"] == plain[product]["bus_frames"]
+    )
+    refused = sorted(product for product, row in routed.items() if row["verdict"] == "silent")
+    assert same_as_plain == ["F450", "F454", "F459", "F460", "F461", "MyHomeServer1"]
+    assert refused == ["F453", "F453AV", "H4684", "MH200", "MH200N"]
+    assert routed["MH202"]["reply"] == "ack"
+    assert routed["MH202"]["bus_frames"] and routed["MH202"]["bus_frames"] != plain["MH202"]["bus_frames"]
+
+    addressing = WhoCatalog().get_family(4)["addressing"]
+    assert "0 of the 13 emulated firmware-oracle gateways emit $06EC/$06E4 frames" in addressing
+    assert (
+        "leaves the 3488, F450, F454, F459, F460, F461 and MyHomeServer1 as the same telegram as the "
+        "plain-zone `*#4*2*20##`"
+    ) in addressing
+    assert "the MH202 ACKs it and sends the actuator telegram `$0499843110`" in addressing
+    assert "F453, F453AV, H4684, MH200 and MH200N refuse it silently" in addressing
+    assert "refused by the rest" not in addressing
+
+
 def test_who4_myhome_suite_forms_are_cited_as_implementation_evidence():
     """Encyclopedia who-4-temperature-control/dimensions.md: the dimension 7 presets and
     the dimension 11 write are MyHOME_Suite ScenarioDevices templates, not WHO_4.pdf;
