@@ -262,7 +262,7 @@ class FrameParser:
             # `"query": ""` for a write-only one; the warnings follow those
             # fields so they cannot drift from the documented forms. Gated on
             # WHO 2 until the other families are audited against the
-            # Encyclopedia: WHO 13's dimension 1 stub (really the R/W date)
+            # Encyclopedia: WHO 13's dimension 1 (the R/W date, `*#13**#1*W*D*M*Y##`)
             # and WHO 4's `#20` / `#0` monitor echoes (`*#4*2#1*#20*1##`,
             # `*#4*50*#0*0215##`, real F461 / MyHomeServer1 traffic) must not
             # warn nor lose their semantic decode.

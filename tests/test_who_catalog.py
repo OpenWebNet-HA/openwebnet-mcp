@@ -239,7 +239,8 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "`*0215*` = 21.5 °C" in dim_22
     assert "in 0.5 °C, " not in dim_22
     assert "F461 020011" in dim_22 and "bt_termo" in dim_22 and "OWNd (#136)" in dim_22
-    assert "no replayed dimension 22 row" in dim_22
+    assert "`thermo-dim22`" in dim_22 and "crash the thermoregulation daemon on 10 of 13" in dim_22
+    assert "no replayed dimension 22 row" not in dim_22
     for what in ("23", "24", "30", "31"):
         assert "p. 56" in who_4["what_commands"][what] or "pp. 24, 56" in who_4["what_commands"][what], what
     dim_14 = who_4["dimensions"]["14"]["description"]
@@ -251,3 +252,127 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "only its Local bus row" in who_2["notes"]
     assert "`0#4#02`" in who_2["notes"] and "`<area>#4#<interface>` was not observed" in who_2["notes"]
     assert "point addresses only" not in who_2["notes"]
+
+
+def test_who4_interface_caution_matches_the_bundled_oracle_rows():
+    """own-firmware-oracle `thermo-zone-requests`: no gateway routes `*#4*2#4#01*20##` to an
+    interface. Those that forward it send the telegram of the plain-zone `*#4*2*20##`; the
+    MH202 ACKs it and sends another telegram; five refuse it silently. The bundled index has
+    twelve emulated gateways; the 3488 row is in the oracle's later index."""
+    import json
+
+    from openwebnet_mcp._paths import get_data_dir
+
+    index = json.loads((get_data_dir() / "oracle_index.json").read_text(encoding="utf-8"))
+    routed = {row["product"]: row for row in index["verdicts"]["*#4*2#4#01*20##"]}
+    plain = {row["product"]: row for row in index["verdicts"]["*#4*2*20##"]}
+    same_as_plain = sorted(
+        product
+        for product, row in routed.items()
+        if row["verdict"] == "out" and row["bus_frames"] == plain[product]["bus_frames"]
+    )
+    refused = sorted(product for product, row in routed.items() if row["verdict"] == "silent")
+    assert same_as_plain == ["F450", "F454", "F459", "F460", "F461", "MyHomeServer1"]
+    assert refused == ["F453", "F453AV", "H4684", "MH200", "MH200N"]
+    assert routed["MH202"]["reply"] == "ack"
+    assert routed["MH202"]["bus_frames"] and routed["MH202"]["bus_frames"] != plain["MH202"]["bus_frames"]
+
+    addressing = WhoCatalog().get_family(4)["addressing"]
+    assert "0 of the 13 emulated firmware-oracle gateways emit $06EC/$06E4 frames" in addressing
+    assert (
+        "leaves the 3488, F450, F454, F459, F460, F461 and MyHomeServer1 as the same telegram as the "
+        "plain-zone `*#4*2*20##`"
+    ) in addressing
+    assert "the MH202 ACKs it and sends the actuator telegram `$0499843110`" in addressing
+    assert "F453, F453AV, H4684, MH200 and MH200N refuse it silently" in addressing
+    assert "refused by the rest" not in addressing
+
+
+def test_who4_myhome_suite_forms_are_cited_as_implementation_evidence():
+    """Encyclopedia who-4-temperature-control/dimensions.md: the dimension 7 presets and
+    the dimension 11 write are MyHOME_Suite ScenarioDevices templates, not WHO_4.pdf;
+    dimension 22 NULL fields are empty fields between `*`; `#Z#C` is not an actuator."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    dims = who_4["dimensions"]
+    assert dims["7"]["query"] == "" and dims["7"]["write"] == "*#4*WHERE*#7*<CTX>*<STATE>*<T>##"
+    assert "ScenarioDevices" in dims["7"]["description"] and "Not in WHO_4.pdf" in dims["7"]["description"]
+    assert "*#4*ZAZB*#7*0*5*##" in dims["7"]["description"]
+    assert list(dims)[:3] == ["0", "7", "11"]
+    assert "ScenarioDevices" in dims["11"]["description"] and "*#4*ZAZB*#11*val##" in dims["11"]["description"]
+    assert "implementation evidence" in dims["11"]["description"]
+    assert "*#4*45#1*#22*3**1*1##" in dims["22"]["description"]
+    assert "Never send the letters NULL" in dims["22"]["description"]
+    assert "ScenarioDevices" in who_4["notes"] and "not an actuator" in who_4["notes"]
+    assert "configured zone ZAZB" not in who_4["addressing"]
+    assert "central-unit selector" in who_4["addressing"]
+    zc = next(w for w in who_4["where_forms"] if w["pattern"] == "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$")
+    assert "not an actuator address" in zc["description"]
+
+
+def test_who13_catalog_follows_the_published_registry():
+    """Encyclopedia who-13-integration-gateway/dimensions.md: 0 time, 1 date, 22 date-time
+    (R/W); 10 IP, 11 netmask, 12 MAC, 16 firmware, 19 uptime (R); empty WHERE; no WHAT."""
+    catalog = WhoCatalog()
+    who_13 = catalog.get_family(13)
+    dims = who_13["dimensions"]
+    assert set(dims) == {"0", "1", "10", "11", "12", "16", "19", "22"}
+    assert dims["1"]["name"] == "Date" and dims["1"]["write"] == "*#13**#1*<W>*<D>*<M>*<YYYY>##"
+    assert dims["0"]["write"] == "*#13**#0*<H>*<M>*<S>*<T>##"
+    assert dims["22"]["write"].startswith("*#13**#22*<H>*<M>*<S>*<T>*<W>")
+    assert dims["16"]["name"] == "Firmware Version" and dims["16"]["write"] == ""
+    assert dims["19"]["name"] == "Uptime" and dims["19"]["query"] == "*#13**19##"
+    assert dims["12"]["query"] == "*#13**12##" and "decimal" in dims["12"]["description"]
+    assert who_13["what_commands"] == {}
+    assert "WHERE is empty" in who_13["addressing"]
+    assert "Reboot" in who_13["notes"] and "dimension 15" in who_13["notes"]
+    frames = {ex["frame"] for ex in who_13["examples"]}
+    assert "*#13**16##" in frames and "*#13**#1*04*15*10*2026##" in frames and "*#13**1##" not in frames
+    md = catalog.format_family_details(13)
+    assert "No standard WHAT commands" in md and "### Dimension 1: Date" in md
+
+
+def test_who18_catalog_follows_the_published_forms():
+    """Encyclopedia who-18-energy-management/{addressing,what,dimensions}.md: WHERE 1N / 5N /
+    7N#0, active power is 113, totalizers 51..54 / 72, 57 / 58 / 59 / 510 are the published
+    series commands, 73#Time is in tens of minutes, 251 / 258 are one-bit flags."""
+    catalog = WhoCatalog()
+    who_18 = catalog.get_family(18)
+    dims = who_18["dimensions"]
+    for absent in ("1", "2", "3", "4", "11"):
+        assert absent not in dims, absent
+    assert dims["113"]["name"] == "Active Power" and "tariff" not in dims["113"]["name"].lower()
+    assert "Not the active power" in dims["51"]["description"]
+    assert dims["72"]["query"] == "*#18*WHERE*72#<Tot_N>##" and "Wh" in dims["72"]["description"]
+    assert "forcing" not in dims["73"]["name"].lower() and "1..3" in dims["73"]["description"]
+    assert "1..180" in dims["212"]["description"] and "TS10" in dims["212"]["name"]
+    assert dims["251"]["name"] == "Stop&Go Open / Closed"
+    assert "counter" not in dims["258"]["name"].lower() and "b8" in dims["258"]["description"]
+    assert "EXCEEDED1*ENABLED1" in dims["516"]["description"] and "totalizer" not in dims["516"]["name"].lower()
+    assert "Watts" not in dims["517"]["description"]
+    assert dims["1200"]["query"] == "" and "1..255 minutes" in dims["1200"]["description"]
+    whats = who_18["what_commands"]
+    assert "TS10" not in whats["57#M#D"] and "511" in whats["57#M#D"]
+    assert "514" in whats["510#M"] and "512" in whats["58#M"] and "513" in whats["59#M"]
+    assert "self-test" in whats["23"] and "positive" not in whats["23"]
+    assert "Time x 10 minutes" in whats["73#Time"] and "indefinite" not in whats["73#Time"].split("not")[0]
+    assert "'1N' Stop&Go, N = 1..127" in who_18["addressing"] and "'7N#0'" in who_18["addressing"]
+    assert "phase line" not in who_18["addressing"].split("No bare")[0]
+    examples = {ex["frame"]: ex["description"] for ex in who_18["examples"]}
+    assert "*#18*51*113##" in examples and "150 minutes" in examples["*18*73#15*71#0##"]
+    assert "active power" not in examples["*#18*51*51##"].lower()
+    md = catalog.format_family_details(18)
+    assert "### Dimension 113: Active Power" in md and "Dimension 1: Instantaneous" not in md
+
+
+def test_who4_zc_provenance_and_who18_series_read_forms_are_ts10():
+    """Review follow-up: `#0#C` is the OPEN.db rule `#0#[ZA][ZB]`, `#Z#C` the touchscreen
+    Configuration mapping; the 512..514 direct reads are TS10 old-PIC variants."""
+    catalog = WhoCatalog()
+    who_4 = catalog.get_family(4)
+    assert "`#0#[ZA][ZB]`" in who_4["notes"] and "not an OPEN.db rule" in who_4["notes"]
+    zc = next(w for w in who_4["where_forms"] if w["pattern"] == "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$")
+    assert "OPEN.db / MHCatalogue" not in zc["description"] and "Historical central-unit variants" in zc["description"]
+    dims = catalog.get_family(18)["dimensions"]
+    for k in ("512", "513", "514"):
+        assert "TS10" in dims[k]["name"] and "not a published query" in dims[k]["description"], k

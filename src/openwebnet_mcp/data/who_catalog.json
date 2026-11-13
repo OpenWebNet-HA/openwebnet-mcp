@@ -329,7 +329,7 @@
         "F430/4"
       ],
       "description": "Manages HVAC zones, heating/cooling modes, target temperatures, external temperature probes, fan speeds, actuator statuses, humidity readings, and local knob offsets.",
-      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured zone ZAZB = 1..99, a form from the MyHOME Suite catalogue, not from the document, '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of 12 firmware-oracle gateways emit $06EC/$06E4 frames), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
+      "addressing": "WHERE is zone number ('1' to '99', or '#1' to '#99' via central unit), central unit ('#0' for 99-zone, '#0#C' for a 4-zone unit (4695) with C its configured central-unit selector ZAZB = 1..99, and '#Z#C' zone Z under that unit; '#0#C' is a MyHOME_Suite OPEN.db address rule and '#Z#C' the touchscreen Configuration mapping, neither is in the document, and neither is an actuator address; '0' general), probe ('001'..'099' all probes of zone Z, '101'..'899' slave probe P of zone Z), or actuator ('0#0' all zones/actuators, 'Z#0' zone Z all actuators, 'Z#1'..'Z#9' zone Z actuator N). Cautions: #4#INTERFACE sub-bus routing is NOT implemented in gateway WHO=4 translators (0 of the 13 emulated firmware-oracle gateways emit $06EC/$06E4 frames: `*#4*2#4#01*20##` leaves the 3488, F450, F454, F459, F460, F461 and MyHomeServer1 as the same telegram as the plain-zone `*#4*2*20##`, the MH202 ACKs it and sends the actuator telegram `$0499843110` (`*#4*2#1*20##` gives `$0499823110`), and F453, F453AV, H4684, MH200 and MH200N refuse it silently, own-firmware-oracle `thermo-zone-requests`), and dimensionless actuator status requests (*#4*Z#N##) are unsupported and crash coso on MH202 010024 (query Dimension 20 via *#4*Z#N*20## instead).",
       "where_forms": [
         {
           "pattern": "^#0$",
@@ -337,7 +337,7 @@
         },
         {
           "pattern": "^#0#(0[1-9]|[1-9][0-9]?)$",
-          "description": "4-zone central unit #{1} (the 4695 unit's configured zone ZAZB = 1..99, also written 01..99; #0#C is not in the Legrand document, it comes from MyHOME_Suite OPEN.db / MHCatalogue)"
+          "description": "4-zone central unit #{1} (the 4695 unit's configured central-unit selector ZAZB = 1..99, also written 01..99; #0#C is not in the Legrand document, it comes from MyHOME_Suite OPEN.db / MHCatalogue)"
         },
         {
           "pattern": "^#([1-9][0-9]?)$",
@@ -345,7 +345,7 @@
         },
         {
           "pattern": "^#([1-9][0-9]?)#(0[1-9]|[1-9][0-9]?)$",
-          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}; not in the Legrand document, a MyHOME_Suite OPEN.db / MHCatalogue form like #0#C)"
+          "description": "Zone {1} via 4-zone central unit {2} (#{1}#{2}, not an actuator address: actuators are `Z#N` without the leading `#`; not in the Legrand document and not an OPEN.db rule: the BTouch / touchscreen Configuration mapping for the controlled-zone command and set-point write, Encyclopedia who-4-temperature-control/addressing.md, \"Historical central-unit variants\")"
         },
         {
           "pattern": "^0#0$",
@@ -413,9 +413,15 @@
           "query": "*#4*WHERE*0##",
           "write": ""
         },
+        "7": {
+          "name": "Thermal Action Preset (MyHOME_Suite ScenarioDevices)",
+          "description": "Not in WHO_4.pdf: the MyHOME_Suite ScenarioDevices scenario-action templates (Encyclopedia who-4-temperature-control/dimensions.md, \"MyHOME_Suite DIMENSION 7 action model\"), implementation evidence rather than the published specification. Write only, `*#4*ZAZB*#7*CTX*STATE*T##`: CTX = thermal context 0 generic / 1 heating / 2 cooling / 3 automatic; STATE = 1 set point (T = c1c2c3c4, four digits) / 2 protection (antifreeze in heating) / 3 comfort / 4 eco / 5 OFF (generic context only, `*#4*ZAZB*#7*0*5*##`); T is an empty field for every state but 1 (comfort heating is `*#4*ZAZB*#7*1*3*##`). No read form; which gateways accept it is not established.",
+          "query": "",
+          "write": "*#4*WHERE*#7*<CTX>*<STATE>*<T>##"
+        },
         "11": {
           "name": "Fan Coil Speed",
-          "description": "Fan coil speed (`*#4*Z*11*S##`): 0 = automatic, 1 / 2 / 3 = speed, 15 = OFF (p. 15). Read-only in the document (p. 7); the write form `*#4*Z*#11*S##` is not in it but is accepted by physical thermostats, which cycle automatic -> 1 -> 2 -> 3 -> automatic and drop 4 and 15.",
+          "description": "Fan coil speed (`*#4*Z*11*S##`): 0 = automatic, 1 / 2 / 3 = speed, 15 = OFF (p. 15). Read-only in the document (p. 7). The write form `*#4*Z*#11*S##` is not in it: it is the MyHOME_Suite ScenarioDevices scenario-action template `*#4*ZAZB*#11*val##` (Encyclopedia who-4-temperature-control/dimensions.md, \"MyHOME_Suite local-control and fan-coil writes\"), implementation evidence rather than the published specification. Physical thermostats accept it and cycle automatic -> 1 -> 2 -> 3 -> automatic, dropping 4 and 15; the touchscreen sends it to the plain zone `Z` even on a 4-zone plant (`#Z#C` is the set-point target, addressing.md, \"Historical central-unit variants\").",
           "query": "*#4*WHERE*11##",
           "write": "*#4*WHERE*#11*<SPEED>##",
           "allowed_values": {
@@ -467,7 +473,7 @@
         },
         "22": {
           "name": "Split Control (air-conditioner IR actuator)",
-          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on; an empty (NULL) field keeps the current value. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). `oracle_index.json` has no replayed dimension 22 row, so the `3#Z#N` form and the other Linux gateways have not been tested and the oracle pre-flight does not catch it. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
+          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on. The document marks a field to leave unchanged `NULL` without giving it a wire spelling; the touchscreen (TS10 tests, Encyclopedia who-4-temperature-control/dimensions.md, \"Historical partial split writes\") sends such a field empty between the `*` separators, e.g. fan mode `*#4*45#1*#22*3**1*1##` and OFF `*#4*3#Z#N*#22*0***##`. Never send the letters NULL; the empty-field form is implementation evidence, not proof that every split unit accepts partial writes. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). own-firmware-oracle suite `thermo-dim22` (13 emulated gateways) has since replayed the forms: the zone and central forms `*#4*Z*22##`, `*#4*#0*22##`, `*#4*0*22##` and the zone write `*#4*Z*#22*MOD*SP*VEL*SWING##` crash the thermoregulation daemon on 10 of 13 (3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1) and are NACKed silently by H4684, MH200 and MH202; the published split forms `*#4*3#Z#N*22##` and `*#4*3#Z#N*#22*...##` go out on the bus (F461: nack, out), and the actuator form `*#4*Z#N*22##` / `*#4*Z#N*#22*...##` and the touchscreen partial writes are refused silently. The bundled `oracle_index.json` predates that suite, so this server's pre-flight only catches dimension 22 once the index is refreshed from `results/mcp_index.json`. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
           "query": "*#4*3#Z#N*22##",
           "write": "*#4*3#Z#N*#22*<MOD>*<SP>*<VEL>*<SWING>##"
         },
@@ -567,7 +573,7 @@
           "description": "Vacation generic for DDD days: `*4*33DDD#31PP*#0##` (p. 49)"
         }
       ],
-      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` and `#Z#C` (MyHOME_Suite OPEN.db / MHCatalogue), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 presets and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 11 and 20 writes (both read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
+      "notes": "The WHAT codes, dimensions and WHERE forms above are the ones in Legrand's `WHO_4.pdf` (v2.0.0, 2013; the canonical Encyclopedia archive filename), with page numbers. Forms seen on real gateways but absent from that document are marked \"not in the document\": the 4-zone central-unit selector `#0#C` (MyHOME_Suite OPEN.db address rule `#0#[ZA][ZB]`, Encyclopedia who-4-temperature-control/addressing.md, \"MyHOME_Suite address rules\") and the zone-under-central-unit form `#Z#C` (the BTouch / touchscreen Configuration mapping, zone Z controlled through 4-zone central unit C, addressing.md, \"Historical central-unit variants\"; not an OPEN.db rule; C is the central-unit selector, not an actuator: actuators are `Z#N`), the plain-zone setpoint write `*#4*Z*#14*T*M##` with its dimension 12 echo (the document writes on `#Z` / `#0` and echoes `*4*110*#Z##`), the plain-zone 102 / 303 commands (the document lists them on plain zones as monitor frames only), the dimension 7 action presets and the dimension 11 fan-coil write (both MyHOME_Suite ScenarioDevices scenario-action templates, Encyclopedia who-4-temperature-control/dimensions.md: implementation evidence, not the published specification) and WHAT 107 / 108 / 208, dimension 60 (humidity), the dimension 20 write echoes (read-only in the document), and `#4#II` interface routing (a WHO 1 convention, not routed by any WHO 4 translator). WHAT 301 (`*4*301*Z#T##`) and `*4*311*Z#T#M##` are in none of the document, the Encyclopedia, the firmware oracle, OWNd or MyHOME and are not listed; the historical TS10 timed manual is `*4*312#T#D*WHERE##` followed by `*#4*WHERE*#32*H*MIN##` (Encyclopedia who-4 dimensions, oracle thermo-ts10), also outside this document."
     },
     {
       "who": 5,
@@ -938,53 +944,74 @@
         "MH202",
         "MyHOMEServer1"
       ],
-      "description": "Gateway device management, clock/calendar synchronization, firmware versions, MAC address, uptime, and reboot commands.",
-      "addressing": "WHERE is usually empty or '0' for the local gateway.",
-      "what_commands": {
-        "1": "Reboot gateway"
-      },
+      "description": "Gateway (external interface device) properties, all on an empty WHERE: clock and calendar (dimensions 0 time, 1 date, 22 date and time; read / write), network identity (10 IP address, 11 netmask, 12 MAC; read-only), model (15), firmware / kernel / distribution versions (16 / 23 / 24) and uptime (19).",
+      "addressing": "WHERE is empty: the gateway itself is the target (`*#13**DIMENSION##`, `*#13**#DIMENSION*VALUE1*...*VALUEn##`; Encyclopedia who-13-integration-gateway/capabilities.md, \"Command-session behavior\"). There is no '0' form in the published registry. The ZigBee WHO 13 variant has its own WHERE / WHAT / DIMENSION sets that must not be merged by number.",
+      "what_commands": {},
       "dimensions": {
         "0": {
-          "name": "Date & Time Synchronization",
-          "description": "Set or read gateway RTC clock: hour, minute, second, day of week, day, month, year.",
+          "name": "Time",
+          "description": "Gateway time `H*M*S*T` (hour 00..23, minute, second, T = time zone as three digits: first digit 0 = positive / 1 = negative offset, then the hour offset, 001 = GMT+1, 102 = GMT-2). Read `*#13**0##` -> `*#13**0*H*M*S*T##`, write `*#13**#0*H*M*S*T##` (Encyclopedia who-13-integration-gateway/dimensions.md, \"DIMENSION 0 - Time\").",
           "query": "*#13**0##",
-          "write": "*#13**#0*<HH>*<MM>*<SS>*<DAY>*<DD>*<MM>*<YYYY>##"
+          "write": "*#13**#0*<H>*<M>*<S>*<T>##"
         },
         "1": {
-          "name": "Firmware Version",
-          "description": "Read gateway firmware build release string.",
+          "name": "Date",
+          "description": "Gateway date `W*D*M*Y` (W = day of week 00 Sunday .. 06 Saturday, day 01..31, month 01..12, four-digit year). Read `*#13**1##` -> `*#13**1*W*D*M*Y##`, write `*#13**#1*W*D*M*Y##` (dimensions.md, \"DIMENSION 1 - Date\"); the write `*#13**#1*04*15*10*2026##` is live traffic on F454, MH201, MyHomeServer1 and F461. Not the firmware version, which is dimension 16.",
           "query": "*#13**1##",
+          "write": "*#13**#1*<W>*<D>*<M>*<YYYY>##"
+        },
+        "10": {
+          "name": "IP Address",
+          "description": "IPv4 address as four decimal octets `IP1*IP2*IP3*IP4` (192.168.10.1 -> `192*168*10*1`). Read-only (dimensions.md, \"DIMENSION 10 - IP address\").",
+          "query": "*#13**10##",
           "write": ""
         },
-        "2": {
-          "name": "IP Address & Netmask",
-          "description": "Query Ethernet network parameters.",
-          "query": "*#13**2##",
+        "11": {
+          "name": "Netmask",
+          "description": "Network mask as four decimal octets `MASK1*MASK2*MASK3*MASK4` (255.255.255.0 -> `255*255*255*0`). Read-only (dimensions.md, \"DIMENSION 11 - Netmask\").",
+          "query": "*#13**11##",
           "write": ""
         },
-        "3": {
+        "12": {
           "name": "MAC Address",
-          "description": "Hardware MAC address string.",
-          "query": "*#13**3##",
+          "description": "MAC address as six decimal octets `MAC1*...*MAC6`, not hexadecimal text; format it at the presentation layer. Read-only (dimensions.md, \"DIMENSION 12 - MAC address\").",
+          "query": "*#13**12##",
           "write": ""
         },
-        "4": {
-          "name": "Uptime",
-          "description": "Gateway uptime seconds since last reboot.",
-          "query": "*#13**4##",
+        "16": {
+          "name": "Firmware Version",
+          "description": "OpenWebNet server / device firmware version `V*R*B` (version, release, build). Read-only; the kernel is dimension 23 and the distribution 24 (dimensions.md, \"DIMENSION 16 - Firmware version\").",
+          "query": "*#13**16##",
           "write": ""
+        },
+        "19": {
+          "name": "Uptime",
+          "description": "Elapsed time since the last gateway start-up `D*H*M*S` (days 00..31, hours, minutes, seconds), not a boot timestamp. Read-only (dimensions.md, \"DIMENSION 19 - Uptime\").",
+          "query": "*#13**19##",
+          "write": ""
+        },
+        "22": {
+          "name": "Date and Time",
+          "description": "Combined clock `H*M*S*T*W*D*M*Y` (the payloads of dimensions 0 and 1). Read `*#13**22##`, write `*#13**#22*H*M*S*T*W*D*M*Y##` (dimensions.md, \"DIMENSION 22 - Date and time\"); the touchscreen writes it with an empty T and weekday 00.",
+          "query": "*#13**22##",
+          "write": "*#13**#22*<H>*<M>*<S>*<T>*<W>*<D>*<M>*<YYYY>##"
         }
       },
       "examples": [
         {
           "frame": "*#13**0##",
-          "description": "Request date and time from gateway"
+          "description": "Request the gateway time; reply `*#13**0*H*M*S*T##`"
         },
         {
-          "frame": "*#13**1##",
-          "description": "Request gateway firmware version"
+          "frame": "*#13**#1*04*15*10*2026##",
+          "description": "Set the date to Thursday 15 October 2026 (W = 04)"
+        },
+        {
+          "frame": "*#13**16##",
+          "description": "Request the firmware version; reply `*#13**16*V*R*B##`"
         }
-      ]
+      ],
+      "notes": "Dimensions, payloads and access follow the published classic SCS/TCP WHO 13 registry as mirrored by the Encyclopedia (who-13-integration-gateway/dimensions.md, \"DIMENSION Reference\"): 0, 1, 22 are read / write, everything else read-only, and the registry defines no WHAT command (capabilities.md, \"Functional model\"); the earlier catalogue WHAT 1 \"Reboot gateway\" and the dimension 1 \"firmware\", 2 \"IP and netmask\", 3 \"MAC\", 4 \"uptime\" stubs had no source and were replaced. Not yet entered: dimension 15 (device type / model: 2 MHServer, 4 MH200, 6 F452, 7 F452V, 11 MHServer2, 13 H4684; an F454 and an MH202 both report 200), 23 (kernel version `V*R*B`), 24 (distribution version; an MH202 answers `*#13**24*##` empty), the TS10 touchscreen properties 9 (LAN enabled, R/W), 20 (PIC version), 50 / 51 / 52 (gateway, DNS), and the observed `*#13**40*4*0##` of unknown meaning on F454 / MH202. The ZigBee WHO 13 variant (WHAT 12 boot mode, 22 reset, 30..34 network, dimension 17 hardware version) is a separate registry."
     },
     {
       "who": 14,
@@ -1349,197 +1376,172 @@
         "F16EB (Stop&Go automatic reset breaker)",
         "3523"
       ],
-      "description": "Monitors electricity, water, and gas meters. Provides instantaneous active/reactive power, total accumulated energy in Wh/kWh, historical graph series (8-bit, 16-bit, 32-bit), automatic reporting (Dim 1200), energy actuator forcing/reset, and Stop&Go automatic reset breaker management.",
-      "addressing": "WHERE indicates meter probe line ('1' to '255', '51'..), tariff probe ('1N', '5N', '7N#0' for actuators), Stop&Go breaker ('1N'), or phase line ('#1' to '#3').",
+      "description": "Energy Management: active power (dimension 113), energy/unit totalizers (51..54), historical series (511..514, started by WHAT 57 / 58 / 59 / 510), Energy Management actuator forcing and totalizers (WHAT 71 / 73 / 74 / 75, dimensions 71..73), Stop&Go status (250..263) and automatic reset (WHAT 26 / 27), and automatic updates (1200). Water / gas / heating counters and the power thresholds are TS10 touchscreen extensions.",
+      "addressing": "WHERE encodes the device family (Encyclopedia who-18-energy-management/addressing.md, \"Published WHERE forms\"): '1N' Stop&Go, N = 1..127; '5N' Energy Management central unit / pulse counter / power meter (F520, F523, 3522), N = 1..255; '7N#0' Energy Management actuator (F522, F523), N = 1..255, the '#0' suffix being part of the address. No bare meter line '1'..'255', tariff probe or phase line '#1'..'#3' is in the document, and there is no broadcast inventory request. The TS10 touchscreen configurations address Stop&Go as '2N' (addressing.md, \"Historical Stop&Go address discrepancy\"), a product choice with no established gateway translation.",
       "what_commands": {
-        "21": "Stop&Go: Open breaker",
-        "22": "Stop&Go: Close breaker",
-        "23": "Stop&Go: Trigger differential test (positive)",
-        "24": "Stop&Go: Trigger differential test (negative)",
-        "26": "Stop&Go: Activate automatic reset",
-        "27": "Stop&Go: Deactivate automatic reset",
-        "28": "Stop&Go: Activate tracking mode",
-        "29": "Stop&Go: Deactivate tracking mode",
-        "52#M#D": "TS10 8-bit daily graph request (month M, day D)",
-        "53#M": "TS10 8-bit daily average graph request (month M)",
-        "56#M": "TS10 8-bit monthly graph request (month M)",
-        "57#M#D": "TS10 16-bit cumulative daily graph request (month M, day D)",
-        "58#M": "TS10 16-bit daily average graph request (month M)",
-        "59#M": "TS10 32-bit cumulative monthly graph request (month M)",
-        "510#M": "TS10 cumulative monthly series request (month M)",
-        "71": "Actuator: Enable command (*18*71*WHERE##; distinct from Dim 71 status)",
-        "73#Time": "Actuator: Force OFF for specified minutes (e.g. *18*73#15*71#0##) or indefinite (*18*73*71#0##)",
-        "74": "Actuator: End forced OFF operation (*18*74*71#0##)",
-        "75#Tot_N": "Actuator: Reset totalizer N (e.g. *18*75#1*71#0##)"
+        "21": "Stop&Go: open (TS10_1_0_23 touchscreen tests, not in WHO_18.pdf; Encyclopedia who-18-energy-management/what.md, \"Historical Stop&Go controls\")",
+        "22": "Stop&Go: close (TS10 touchscreen, not in WHO_18.pdf)",
+        "23": "Stop&Go: enable the differential self-test (TS10 touchscreen, not in WHO_18.pdf)",
+        "24": "Stop&Go: disable the differential self-test (TS10 touchscreen, not in WHO_18.pdf)",
+        "26": "Stop&Go: activate automatic reset (`*18*26*1N##`, what.md, \"Stop&Go automatic reset\")",
+        "27": "Stop&Go: deactivate automatic reset (`*18*27*1N##`)",
+        "28": "Stop&Go: enable tracking (TS10 touchscreen, not in WHO_18.pdf)",
+        "29": "Stop&Go: disable tracking (TS10 touchscreen, not in WHO_18.pdf)",
+        "52#M#D": "TS10 older (8-bit packet) daily graph request for month M, day D; the old-PIC read form is `*#18*WHERE*56#M#D##` and the report dimension 56 (what.md, \"Historical graph request variants\"; not in WHO_18.pdf)",
+        "53#M": "TS10 older monthly-average graph request for month M; old-PIC read `*#18*WHERE*57#M##`, report dimension 57 (not in WHO_18.pdf)",
+        "56#M": "TS10 older monthly graph request for month M; old-PIC read `*#18*WHERE*510#M##`, report dimension 510 (not in WHO_18.pdf)",
+        "57#M#D": "Start the daily hourly series of month M, day D: `*18*57#M#D*WHERE##`, data in dimension 511 (tags 1..24 hourly, 25 daily total; what.md, \"Historical-series commands\")",
+        "58#M": "Start the monthly-average hourly series of month M: `*18*58#M*WHERE##`, data in dimension 512 (tags 1..24, 25 average total)",
+        "59#M": "Start the current-year monthly series of month M: `*18*59#M*WHERE##`, data in dimension 513 (tag = day 1..31)",
+        "510#M": "Start the previous-year monthly series of month M: `*18*510#M*WHERE##`, data in dimension 514 (tag = day 1..31). 57 / 58 / 59 / 510 are an enumerated set, not the interval 57..510",
+        "71": "Enable the Energy Management actuator: `*18*71*7N#0##` (distinct from the dimension 71 status read)",
+        "73#Time": "Force the actuator for Time x 10 minutes, Time = 1..254 (`*18*73#15*71#0##` = 150 minutes); `*18*73*WHERE##` without Time requests the device's default forcing duration, not an indefinite forcing (what.md, \"Force for a specified time\")",
+        "74": "End the forcing: `*18*74*71#0##`",
+        "75#Tot_N": "Reset totalizer Tot_N = 1..2 of the actuator: `*18*75#1*71#0##`; its state is read with dimension 72#Tot_N"
       },
       "dimensions": {
-        "1": {
-          "name": "Instantaneous Active Power",
-          "description": "Current power consumption in Watts.",
-          "query": "*#18*WHERE*1##",
-          "write": ""
-        },
-        "2": {
-          "name": "Hourly Consumption Totalizer",
-          "description": "Energy consumed in the current hour (Wh).",
-          "query": "*#18*WHERE*2##",
-          "write": ""
-        },
-        "3": {
-          "name": "Daily Consumption Totalizer",
-          "description": "Energy consumed in current day (Wh).",
-          "query": "*#18*WHERE*3##",
-          "write": ""
-        },
-        "4": {
-          "name": "Monthly Consumption Totalizer",
-          "description": "Energy consumed in current month (Wh).",
-          "query": "*#18*WHERE*4##",
-          "write": ""
-        },
-        "11": {
-          "name": "Lifetime Accumulated Energy Totalizer",
-          "description": "Total cumulative energy recorded by meter (Wh).",
-          "query": "*#18*WHERE*11##",
-          "write": ""
-        },
         "51": {
           "name": "Energy/Unit Totalizer",
-          "description": "Active power and cumulative energy totalizer.",
+          "description": "Energy/unit totalizer (`*#18*WHERE*51*Val##`); the document labels its unit Watt and the Encyclopedia keeps that wording (physical captures read it in Wh, e.g. `*#18*51*51*23791364##`, OWNd#157), the TS10 library treats it as the all-time totalizer (dimensions.md, \"DIMENSION 51 - energy/unit totalizer\"). Not the active power, which is dimension 113.",
           "query": "*#18*WHERE*51##",
           "write": ""
         },
         "52": {
           "name": "Monthly Energy/Unit Totalizer",
-          "description": "Dated energy totalizer per month (query: *#18*WHERE*52#Y#M##).",
+          "description": "Energy/unit totalizer of month M of year Y (`*#18*WHERE*52#Y#M*Val##`, Y two-digit yy, M month; dimensions.md, \"DIMENSION 52\").",
           "query": "*#18*WHERE*52#Y#M##",
           "write": ""
         },
         "53": {
           "name": "Current-Month Partial Totalizer",
-          "description": "Partial energy consumed in current month (distinct from TS10 WHAT 53#M daily average graph).",
+          "description": "Partial totalizer of the current month (`*#18*WHERE*53*Val##`); distinct from the TS10 older graph command 53#M.",
           "query": "*#18*WHERE*53##",
           "write": ""
         },
         "54": {
           "name": "Current-Day Partial Totalizer",
-          "description": "Partial energy consumed in current day.",
+          "description": "Partial totalizer of the current day (`*#18*WHERE*54*Val##`).",
           "query": "*#18*WHERE*54##",
           "write": ""
         },
         "71": {
           "name": "Energy Actuator Status",
-          "description": "Status query reporting disabled, forcing, threshold, protection, phase, and advanced flags.",
+          "description": "Actuator status, six positional fields `*#18*WHERE*71*disabled*forcing*threshold*protection*phase*advanced##`: disabled 0 enabled / 1 disabled; forcing 0 not forced / 1 forced; threshold 0 above / 1 below; protection 0 / 1; phase 0 disable of other phase / 1 of local phase; advanced 1 advanced / 2 basic (dimensions.md, \"DIMENSION 71 - actuator status\").",
           "query": "*#18*WHERE*71##",
           "write": ""
         },
         "72": {
           "name": "Energy Actuator Totalizer",
-          "description": "Cumulative totalizer N of energy actuator (e.g. *#18*WHERE*72#N##).",
-          "query": "*#18*WHERE*72#N##",
+          "description": "Totalizer Tot_N = 1..2 of the actuator: `*#18*WHERE*72#Tot_N*Energy*D*M*Y*H*m##`, Energy in Wh since the reset dated D/M/Y H:m (dimensions.md, \"DIMENSION 72 - totalizer state\").",
+          "query": "*#18*WHERE*72#<Tot_N>##",
           "write": ""
         },
         "73": {
           "name": "Energy Actuator Differential-Current Level",
-          "description": "Current forcing state / differential-current level of actuator probe.",
+          "description": "Differential-current level 1..3 (`*#18*WHERE*73*level##`); the document labels no level, the TS10 library shows 1 OK / 2 warning / 3 critical (dimensions.md, \"DIMENSION 73\"). Not the forcing state, which is a field of dimension 71.",
           "query": "*#18*WHERE*73##",
           "write": ""
         },
         "113": {
-          "name": "Measurement Probe Active Power / Tariff Form",
-          "description": "Instantaneous active power in Watts and configured tariff form.",
+          "name": "Active Power",
+          "description": "Active power in W, one value (`*#18*WHERE*113*Val##`); also the event payload of the automatic updates enabled with dimension 1200 (dimensions.md, \"DIMENSION 113 - active power\"). No tariff field.",
           "query": "*#18*WHERE*113##",
           "write": ""
         },
         "212": {
-          "name": "Stop&Go Self-Test Interval",
-          "description": "Differential breaker self-test period in days (1..90).",
+          "name": "Stop&Go Self-Test Interval (TS10)",
+          "description": "Differential self-test period in days, DAYS = 1..180 (TS10_1_0_23 touchscreen library, not in WHO_18.pdf; dimensions.md, \"Stop&Go self-test interval\").",
           "query": "*#18*WHERE*212##",
-          "write": "*#18*WHERE*#212*Days##"
+          "write": "*#18*WHERE*#212*<DAYS>##"
         },
         "250": {
           "name": "Stop&Go Complete Status Mask",
-          "description": "Bitmask reporting breaker contacts, line state, and auto-reset status.",
+          "description": "13-bit mask `*#18*WHERE*250*MASC##` ordered b13..b1, b1 = open (251), b2 failure (252), b3 blocked (253), b4 neutral short circuit (254), b5 ground fault (255), b6 maximum voltage (256), b7 self-test disabled (257), b8 automatic reset off (258), b9 check off (259), b10 waiting for closing (260), b11 first 24 h of opening (261), b12 downstream (262) and b13 upstream power failure (263) (dimensions.md, \"DIMENSION 250\").",
           "query": "*#18*WHERE*250##",
           "write": ""
         },
         "251": {
-          "name": "Stop&Go Line Status",
-          "description": "Mains supply line status detected by Stop&Go probe.",
+          "name": "Stop&Go Open / Closed",
+          "description": "1 = open, 0 = closed (bit b1 of dimension 250; dimensions.md, \"Individual Stop&Go flags\").",
           "query": "*#18*WHERE*251##",
           "write": ""
         },
         "258": {
-          "name": "Stop&Go Failure / Trip Count",
-          "description": "Lifetime trip and auto-reset counter.",
+          "name": "Stop&Go Automatic Reset Off / On",
+          "description": "1 = automatic reset off, 0 = on (bit b8 of dimension 250; dimensions.md, \"Individual Stop&Go flags\"). Not a trip counter.",
           "query": "*#18*WHERE*258##",
           "write": ""
         },
         "511": {
           "name": "Daily Hourly Historical Series",
-          "description": "Hourly consumption profile for month M, day D (reported via DIMENSION 511 tags 1..24 and daily total 25).",
+          "description": "Daily hourly series of month M, day D: `*#18*WHERE*511#M#D*Tag*Val##`, tags 1..24 hourly measures, 25 daily total; started by WHAT 57#M#D, or read directly in the TS10 old-PIC mode (dimensions.md, \"DIMENSION 511\").",
           "query": "*#18*WHERE*511#M#D##",
           "write": ""
         },
         "512": {
-          "name": "Monthly-Average Hourly Historical Series",
-          "description": "Monthly-average hourly consumption profile for month M (reported via DIMENSION 512 tags 1..24 and average total 25).",
+          "name": "Monthly-Average Hourly Historical Series (read form TS10)",
+          "description": "Monthly-average hourly series of month M: `*#18*WHERE*512#M*Tag*Val##`, tags 1..24, 25 monthly-average total; started by WHAT 58#M (dimensions.md, \"DIMENSION 512\"). The published protocol defines no request for this dimension; the direct read `*#18*WHERE*512#M##` is the TS10 touchscreen old-PIC / forced-read compatibility variant (what.md, \"Historical graph request variants\"), implementation evidence, not a published query.",
           "query": "*#18*WHERE*512#M##",
           "write": ""
         },
         "513": {
-          "name": "Current-Year Daily Monthly Series",
-          "description": "Current-year daily consumption profile for month M (reported via DIMENSION 513 tags 1..31).",
+          "name": "Current-Year Daily Monthly Series (read form TS10)",
+          "description": "Current-year daily series of month M: `*#18*WHERE*513#M*Tag*Val##`, tag = day 1..31; started by WHAT 59#M (dimensions.md, \"DIMENSION 513\"). The published protocol defines no request for this dimension; the direct read `*#18*WHERE*513#M##` is the TS10 touchscreen old-PIC / forced-read compatibility variant (what.md, \"Historical graph request variants\"), implementation evidence, not a published query.",
           "query": "*#18*WHERE*513#M##",
           "write": ""
         },
         "514": {
-          "name": "Previous-Year Daily Monthly Series",
-          "description": "Previous-year comparison profile for month M (reported via DIMENSION 514 tags 1..31).",
+          "name": "Previous-Year Daily Monthly Series (read form TS10)",
+          "description": "Previous-year daily series of month M: `*#18*WHERE*514#M*Tag*Val##`, tag = day 1..31; started by WHAT 510#M (dimensions.md, \"DIMENSION 514\"). The published protocol defines no request for this dimension and the TS10 forced-read matrix has no 514 row (what.md, \"Historical graph request variants\"); the read `*#18*WHERE*514#M##` is the catalogue's analogue of the 511..513 TS10 variants, implementation evidence at best, not a published query.",
           "query": "*#18*WHERE*514#M##",
           "write": ""
         },
         "516": {
-          "name": "Energy Totalizer Query",
-          "description": "Accumulated energy totalizer query.",
+          "name": "Threshold State (TS10)",
+          "description": "Electricity threshold state `*#18*WHERE*516*EXCEEDED1*ENABLED1*EXCEEDED2*ENABLED2##` (TS10_1_0_23 touchscreen library, not in WHO_18.pdf; dimensions.md, \"Electricity thresholds\"). Not an energy totalizer.",
           "query": "*#18*WHERE*516##",
           "write": ""
         },
         "517": {
-          "name": "Power Threshold Setting",
-          "description": "Power limit threshold N setting in Watts.",
-          "query": "*#18*WHERE*517#N##",
-          "write": "*#18*WHERE*#517#N*Value##"
+          "name": "Threshold Value (TS10)",
+          "description": "Threshold N = 1..2: read `*#18*WHERE*517#N##` -> `*#18*WHERE*517#N*VALUE##`, write `*#18*WHERE*#517#N*VALUE##`; the touchscreen writes 0 to disable a threshold; the source establishes no unit or range for every target (TS10, not in WHO_18.pdf; dimensions.md, \"Electricity thresholds\").",
+          "query": "*#18*WHERE*517#<N>##",
+          "write": "*#18*WHERE*#517#<N>*<VALUE>##"
         },
         "1200": {
-          "name": "Automatic Periodic Reporting",
-          "description": "Controls periodic active-power push (Time=0 to stop, Time=255 to start).",
-          "query": "*#18*WHERE*1200##",
-          "write": "*#18*WHERE*#1200#Type*Time##"
+          "name": "Automatic Update Configuration",
+          "description": "`*#18*WHERE*#1200#Type*Time##`: Type 1 = active power (the published value; the TS10 library also uses 2 gas, 3 heating, 4 water), Time = 1..255 minutes after which a changed value is reported, Time = 0 stops the updates; they arrive as `*#18*WHERE*113*Val##` (dimensions.md, \"DIMENSION 1200\"). 255 is the touchscreen's own choice, not a start sentinel, and the document defines no read form.",
+          "query": "",
+          "write": "*#18*WHERE*#1200#<Type>*<Time>##"
         }
       },
       "examples": [
         {
+          "frame": "*#18*51*113##",
+          "description": "Request the active power of meter 51 (5N family); reply `*#18*51*113*1450##` = 1450 W"
+        },
+        {
           "frame": "*#18*51*51##",
-          "description": "Request instantaneous active power from meter 51"
+          "description": "Request the energy/unit totalizer of meter 51"
         },
         {
           "frame": "*18*26*11##",
-          "description": "Activate Stop&Go automatic reset for breaker 11"
+          "description": "Activate the automatic reset of Stop&Go 11 (1N family, N = 1)"
         },
         {
           "frame": "*18*57#10#1*51##",
-          "description": "TS10 16-bit cumulative daily graph for month 10, day 1 on line 51"
+          "description": "Start the daily hourly series of 1 October on meter 51; data follow as `*#18*51*511#10#1*Tag*Val##`"
         },
         {
           "frame": "*#18*51*#1200#1*255##",
-          "description": "Start automatic periodic reporting on meter 51"
+          "description": "Automatic active-power updates on meter 51, Time 255 minutes"
         },
         {
           "frame": "*18*73#15*71#0##",
-          "description": "Force OFF energy actuator 71#0 for 15 minutes"
+          "description": "Force actuator 71#0 for 15 x 10 = 150 minutes"
         }
-      ]
+      ],
+      "notes": "Published forms are those of WHO_18.pdf as mirrored by the Encyclopedia who-18-energy-management pages (addressing.md, what.md, dimensions.md). TS10_1_0_23 touchscreen extensions are marked as such: WHAT 21..24 / 28 / 29, the older graph commands 52#M#D / 53#M / 56#M with their old-PIC read dimensions 56 / 57 / 510, dimensions 212, 516, 517, the water / gas / heating current-value dimensions 1134 / 1130 / 1132 and the 1200 Types 2..4. The earlier catalogue dimensions 1..4 and 11 (instantaneous power, hourly / daily / monthly / lifetime totalizers in Wh) are in none of the document, the Encyclopedia or MyHOME and were removed: active power is 113 and the totalizers are 51..54 and 72. Not yet entered: the individual Stop&Go flags 252..257 and 259..263 (one bit each, dimensions.md, \"Individual Stop&Go flags\"), the TS10 dimensions 1130 / 1132 / 1134, and where_forms patterns for 1N / 5N / 7N#0."
     },
     {
       "who": 22,
