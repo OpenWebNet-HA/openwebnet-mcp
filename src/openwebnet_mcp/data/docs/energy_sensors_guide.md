@@ -10,7 +10,7 @@ WHERE is `5N` for a meter (F520 / F523 / 3522, N = 1..255), `7N#0` for an Energy
   - Query: `*#18*WHERE*113##`
   - Response: `*#18*WHERE*113*<WATTS>##` (e.g. `*#18*51*113*2350##` = 2350 W).
 - **Energy/Unit Totalizer (Dimension 51)**: the all-time totalizer (`*#18*WHERE*51*<VAL>##`; the document labels its unit Watt, physical captures read it in Wh, e.g. `*#18*51*51*23791364##`, OWNd#157).
-- **Monthly Totalizer (Dimension 52)**: `*#18*WHERE*52#Y#M##` -> `*#18*WHERE*52#Y#M*<VAL>##` (Y = yy).
+- **Monthly Totalizer (Dimension 52)**: `*#18*WHERE*52#Y#M##` -> `*#18*WHERE*52#Y#M*<VAL>##` (`Y` **must** be two digits `00..99`; a four-digit year like `*#18*51*52#2026#10##` overflows a one-byte year field and crashes a gateway daemon on `F460` `020012`, `F461` `020011`, and `3488` `030205` per `own-firmware-oracle` `ownd-audit-frames`, and `OWNd#157` blocks non-two-digit years on send).
 - **Partial Totalizers (Dimensions 53, 54)**: current month and current day.
 - **Actuator Totalizers (Dimension 72)**: `*#18*7N#0*72#<Tot_N>##` -> `Energy*D*M*Y*H*m`, Energy in Wh since the last reset (`*18*75#<Tot_N>*7N#0##`).
 - **Historical series (Dimensions 511..514)**: started by WHAT `57#M#D`, `58#M`, `59#M`, `510#M`; the values arrive as `*#18*WHERE*511#M#D*Tag*Val##` (tags 1..24 hourly, 25 daily total).
@@ -28,7 +28,7 @@ The MyHOME integration automatically configures energy sensors with:
 myhome:
   sensors:
     main_power_meter:
-      where: "1"
+      where: "51"
       name: "Main Grid Power Meter"
       type: "power"
 ```

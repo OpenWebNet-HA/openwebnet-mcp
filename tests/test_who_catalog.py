@@ -240,6 +240,8 @@ def test_who4_and_who2_catalogue_wording_follows_the_review():
     assert "in 0.5 °C, " not in dim_22
     assert "F461 020011" in dim_22 and "bt_termo" in dim_22 and "OWNd (#136)" in dim_22
     assert "`thermo-dim22`" in dim_22 and "crash the thermoregulation daemon on 10 of 13" in dim_22
+    assert "*#4*45#1*#22*0***##" in dim_22 and "11 of 13" in dim_22
+    assert "MH202" in dim_22 and "bundled `oracle_index.json`" in dim_22
     assert "no replayed dimension 22 row" not in dim_22
     for what in ("23", "24", "30", "31"):
         assert "p. 56" in who_4["what_commands"][what] or "pp. 24, 56" in who_4["what_commands"][what], what
@@ -312,20 +314,31 @@ def test_who4_myhome_suite_forms_are_cited_as_implementation_evidence():
 
 def test_who13_catalog_follows_the_published_registry():
     """Encyclopedia who-13-integration-gateway/dimensions.md: 0 time, 1 date, 22 date-time
-    (R/W); 10 IP, 11 netmask, 12 MAC, 16 firmware, 19 uptime (R); empty WHERE; no WHAT."""
+    (R/W); 10 IP, 11 netmask, 12 MAC, 15 device type, 16 firmware, 19 uptime, 23 kernel,
+    24 distribution (R); empty WHERE (`^$`); no WHAT; H4684/MH200 crash cautions on 10..12."""
     catalog = WhoCatalog()
     who_13 = catalog.get_family(13)
     dims = who_13["dimensions"]
-    assert set(dims) == {"0", "1", "10", "11", "12", "16", "19", "22"}
+    assert set(dims) == {"0", "1", "10", "11", "12", "15", "16", "19", "22", "23", "24"}
     assert dims["1"]["name"] == "Date" and dims["1"]["write"] == "*#13**#1*<W>*<D>*<M>*<YYYY>##"
     assert dims["0"]["write"] == "*#13**#0*<H>*<M>*<S>*<T>##"
     assert dims["22"]["write"].startswith("*#13**#22*<H>*<M>*<S>*<T>*<W>")
+    assert dims["15"]["name"] == "Device Type / Model" and dims["15"]["query"] == "*#13**15##"
+    assert dims["15"]["write"] == "" and "who13-identification" in dims["15"]["description"]
     assert dims["16"]["name"] == "Firmware Version" and dims["16"]["write"] == ""
     assert dims["19"]["name"] == "Uptime" and dims["19"]["query"] == "*#13**19##"
+    assert dims["23"]["name"] == "Kernel Version" and dims["23"]["query"] == "*#13**23##" and dims["23"]["write"] == ""
+    assert dims["24"]["name"] == "Distribution Version" and dims["24"]["query"] == "*#13**24##" and dims["24"]["write"] == ""
     assert dims["12"]["query"] == "*#13**12##" and "decimal" in dims["12"]["description"]
+    for k in ("10", "11", "12"):
+        assert "H4684" in dims[k]["description"] and "MH200" in dims[k]["description"], k
+        assert "who13-identification" in dims[k]["description"], k
     assert who_13["what_commands"] == {}
+    assert who_13["where_forms"] == [{"pattern": "^$", "description": "the local gateway (empty WHERE)"}]
     assert "WHERE is empty" in who_13["addressing"]
-    assert "Reboot" in who_13["notes"] and "dimension 15" in who_13["notes"]
+    assert "Reboot" in who_13["notes"]
+    assert "H4684" in who_13["notes"] and "MH200" in who_13["notes"]
+    assert "dimension 15" not in who_13["notes"].split("Not yet entered")[1]
     frames = {ex["frame"] for ex in who_13["examples"]}
     assert "*#13**16##" in frames and "*#13**#1*04*15*10*2026##" in frames and "*#13**1##" not in frames
     md = catalog.format_family_details(13)
@@ -334,8 +347,9 @@ def test_who13_catalog_follows_the_published_registry():
 
 def test_who18_catalog_follows_the_published_forms():
     """Encyclopedia who-18-energy-management/{addressing,what,dimensions}.md: WHERE 1N / 5N /
-    7N#0, active power is 113, totalizers 51..54 / 72, 57 / 58 / 59 / 510 are the published
-    series commands, 73#Time is in tens of minutes, 251 / 258 are one-bit flags."""
+    7N#0 (`where_forms`), active power is 113, totalizers 51..54 / 72, dim 52 crash caution,
+    bare WHAT keys 52 / 53 / 56 / 57 / 58 / 59 / 510 / 73 / 75, 73#Time in tens of minutes,
+    251 / 258 are one-bit flags."""
     catalog = WhoCatalog()
     who_18 = catalog.get_family(18)
     dims = who_18["dimensions"]
@@ -343,6 +357,8 @@ def test_who18_catalog_follows_the_published_forms():
         assert absent not in dims, absent
     assert dims["113"]["name"] == "Active Power" and "tariff" not in dims["113"]["name"].lower()
     assert "Not the active power" in dims["51"]["description"]
+    for tok in ("F460", "F461", "3488", "ownd-audit-frames", "OWNd (#157)"):
+        assert tok in dims["52"]["description"], tok
     assert dims["72"]["query"] == "*#18*WHERE*72#<Tot_N>##" and "Wh" in dims["72"]["description"]
     assert "forcing" not in dims["73"]["name"].lower() and "1..3" in dims["73"]["description"]
     assert "1..180" in dims["212"]["description"] and "TS10" in dims["212"]["name"]
@@ -352,12 +368,17 @@ def test_who18_catalog_follows_the_published_forms():
     assert "Watts" not in dims["517"]["description"]
     assert dims["1200"]["query"] == "" and "1..255 minutes" in dims["1200"]["description"]
     whats = who_18["what_commands"]
-    assert "TS10" not in whats["57#M#D"] and "511" in whats["57#M#D"]
-    assert "514" in whats["510#M"] and "512" in whats["58#M"] and "513" in whats["59#M"]
+    assert all("#" not in k for k in whats)
+    assert "TS10" not in whats["57"] and "511" in whats["57"]
+    assert "514" in whats["510"] and "512" in whats["58"] and "513" in whats["59"]
+    assert "56#M#D" in whats["52"] and "57#M" in whats["53"] and "510#M" in whats["56"]
     assert "self-test" in whats["23"] and "positive" not in whats["23"]
-    assert "Time x 10 minutes" in whats["73#Time"] and "indefinite" not in whats["73#Time"].split("not")[0]
+    assert "Time x 10 minutes" in whats["73"] and "indefinite" not in whats["73"].split("not")[0]
+    assert "75#Tot_N" in whats["75"]
+    assert len(who_18["where_forms"]) == 3
     assert "'1N' Stop&Go, N = 1..127" in who_18["addressing"] and "'7N#0'" in who_18["addressing"]
     assert "phase line" not in who_18["addressing"].split("No bare")[0]
+    assert "where_forms patterns" not in who_18["notes"]
     examples = {ex["frame"]: ex["description"] for ex in who_18["examples"]}
     assert "*#18*51*113##" in examples and "150 minutes" in examples["*18*73#15*71#0##"]
     assert "active power" not in examples["*#18*51*51##"].lower()
@@ -376,3 +397,18 @@ def test_who4_zc_provenance_and_who18_series_read_forms_are_ts10():
     dims = catalog.get_family(18)["dimensions"]
     for k in ("512", "513", "514"):
         assert "TS10" in dims[k]["name"] and "not a published query" in dims[k]["description"], k
+
+
+def test_guides_reflect_who18_and_who4_review_fixes():
+    """Bundled energy and climate guides stay aligned with the verified WHO 18 / WHO 4 forms."""
+    from openwebnet_mcp._paths import get_data_dir
+
+    docs_dir = get_data_dir() / "docs"
+    energy_guide = (docs_dir / "energy_sensors_guide.md").read_text(encoding="utf-8")
+    assert 'where: "51"' in energy_guide and 'where: "1"' not in energy_guide
+    for tok in ("F460", "F461", "3488", "ownd-audit-frames"):
+        assert tok in energy_guide, tok
+
+    climate_guide = (docs_dir / "climate_thermoregulation_guide.md").read_text(encoding="utf-8")
+    assert "10 of 13" in climate_guide and "13 emulated gateways" in climate_guide
+    assert "OWNd (#136)" in climate_guide and "twelve" not in climate_guide

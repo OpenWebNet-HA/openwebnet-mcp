@@ -89,6 +89,15 @@ async def test_tool_parse_and_validate_frame():
     assert "- **Valid Grammar**: `YES`" in res_climate
     assert "Measured Temperature" in res_climate
 
+    # Parameterized dimension request (WHO 18 dim 52#26#9) and empty-WHERE WHO 13 frame
+    res_dim_param = await server.parse_and_validate_frame("*#18*51*52#26#9##")
+    assert "- **Valid Grammar**: `YES`" in res_dim_param
+    assert "- **Dimension**: `52#26#9`" in res_dim_param
+
+    res_who13 = await server.parse_and_validate_frame("*#13**16##")
+    assert "- **Valid Grammar**: `YES`" in res_who13
+    assert "- **Address (WHERE)**: `(empty)`" in res_who13
+
     # Invalid frame syntax
     res_invalid = await server.parse_and_validate_frame("*invalid*frame##")
     assert "- **Valid Grammar**: `NO`" in res_invalid

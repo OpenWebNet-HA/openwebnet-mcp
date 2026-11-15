@@ -473,7 +473,7 @@
         },
         "22": {
           "name": "Split Control (air-conditioner IR actuator)",
-          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on. The document marks a field to leave unchanged `NULL` without giving it a wire spelling; the touchscreen (TS10 tests, Encyclopedia who-4-temperature-control/dimensions.md, \"Historical partial split writes\") sends such a field empty between the `*` separators, e.g. fan mode `*#4*45#1*#22*3**1*1##` and OFF `*#4*3#Z#N*#22*0***##`. Never send the letters NULL; the empty-field form is implementation evidence, not proof that every split unit accepts partial writes. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). own-firmware-oracle suite `thermo-dim22` (13 emulated gateways) has since replayed the forms: the zone and central forms `*#4*Z*22##`, `*#4*#0*22##`, `*#4*0*22##` and the zone write `*#4*Z*#22*MOD*SP*VEL*SWING##` crash the thermoregulation daemon on 10 of 13 (3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1) and are NACKed silently by H4684, MH200 and MH202; the published split forms `*#4*3#Z#N*22##` and `*#4*3#Z#N*#22*...##` go out on the bus (F461: nack, out), and the actuator form `*#4*Z#N*22##` / `*#4*Z#N*#22*...##` and the touchscreen partial writes are refused silently. The bundled `oracle_index.json` predates that suite, so this server's pre-flight only catches dimension 22 once the index is refreshed from `results/mcp_index.json`. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
+          "description": "Split-unit (air-conditioner IR actuator) control on WHERE `3#Z#N`, Z = 0..99, N = 1..9 (pp. 66-68): read `*#4*3#Z#N*22##`, reply / monitor `*#4*3#Z#N*22*MOD*SP*VEL*SWING##`, write `*#4*3#Z#N*#22*MOD*SP*VEL*SWING##`. MOD 0 off / 1 winter / 2 summer / 3 fan / 4 dehumidification / 5 auto; SP is the set point in tenths of a degree Celsius in 0.5 °C steps, 000 = 0 °C, 005 = 0.5 °C, 010 = 1 °C ... 1265 = 126.5 °C, 1270 = 127 °C (so `*0215*` = 21.5 °C); VEL 0 auto / 1 minimum / 2 medium / 3 maximum / 4 silent; SWING 0 off / 1 on. The document marks a field to leave unchanged `NULL` without giving it a wire spelling; the touchscreen (TS10 tests, Encyclopedia who-4-temperature-control/dimensions.md, \"Historical partial split writes\") sends such a field empty between the `*` separators, e.g. fan mode `*#4*45#1*#22*3**1*1##` and OFF `*#4*45#1*#22*0***##` (`*#4*3#Z#N*#22*0***##` in the published `3#Z#N` address form). Never send the letters NULL; the empty-field form is implementation evidence, not proof that every split unit accepts partial writes. CAUTION (crash evidence): on the live F461 020011 the request `*#4*2*22##` killed the `bt_termo` thermoregulation daemon and the watchdog rebooted the gateway about 3 minutes later (own-firmware-oracle `tools/expected_divergences.yaml`); OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (`destructive_frame`). own-firmware-oracle suite `thermo-dim22` (13 emulated gateways) has since replayed the forms: the zone and central forms `*#4*Z*22##`, `*#4*#0*22##`, `*#4*0*22##` and the zone write `*#4*Z*#22*MOD*SP*VEL*SWING##` crash the thermoregulation daemon on 10 of 13 (3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MyHomeServer1) and are NACKed silently by H4684, MH200 and MH202; the published split forms `*#4*3#Z#N*22##` and `*#4*3#Z#N*#22*...##` (tested on `3#2#1`) go out on the bus on 11 of 13 (3488, F450, F453, F453AV, F454, F459, F460, F461, MH200N, MH202, MyHomeServer1; MH202 ACKs immediately, while the write returns `nack, out` on 3488/F460/F461/MyHomeServer1 per the empty-bus TX-ACK rule) and are `nack, silent` on H4684 and MH200; the unprefixed actuator forms `*#4*2#1*22##` / `*#4*2#1*#22*1*0215*2*0##` and the touchscreen non-OFF partial writes `*#4*45#1*#22*3**1*1##` / `*#4*45#1*#22*4**1*1##` are `ack, out` on MH202 (`coso` emits the same `$06D1...` split telegrams without requiring the `3#` prefix) and `nack, silent` on the other 12, while OFF `*#4*45#1*#22*0***##` is `nack, silent` on all 13 (partial writes on `3#Z#N` were not in the suite). The bundled `oracle_index.json` predates `thermo-dim22`, so when falling back to the bundled snapshot (no `OPENWEBNET_ORACLE_INDEX` or sibling `../own-firmware-oracle/results/mcp_index.json`) this server's pre-flight does not yet see those rows. This is NOT the knob offset: the thermostat's knob setting is read with dimension 13 (read-only) and the set point is written with dimension 14.",
           "query": "*#4*3#Z#N*22##",
           "write": "*#4*3#Z#N*#22*<MOD>*<SP>*<VEL>*<SWING>##"
         },
@@ -946,6 +946,12 @@
       ],
       "description": "Gateway (external interface device) properties, all on an empty WHERE: clock and calendar (dimensions 0 time, 1 date, 22 date and time; read / write), network identity (10 IP address, 11 netmask, 12 MAC; read-only), model (15), firmware / kernel / distribution versions (16 / 23 / 24) and uptime (19).",
       "addressing": "WHERE is empty: the gateway itself is the target (`*#13**DIMENSION##`, `*#13**#DIMENSION*VALUE1*...*VALUEn##`; Encyclopedia who-13-integration-gateway/capabilities.md, \"Command-session behavior\"). There is no '0' form in the published registry. The ZigBee WHO 13 variant has its own WHERE / WHAT / DIMENSION sets that must not be merged by number.",
+      "where_forms": [
+        {
+          "pattern": "^$",
+          "description": "the local gateway (empty WHERE)"
+        }
+      ],
       "what_commands": {},
       "dimensions": {
         "0": {
@@ -962,20 +968,26 @@
         },
         "10": {
           "name": "IP Address",
-          "description": "IPv4 address as four decimal octets `IP1*IP2*IP3*IP4` (192.168.10.1 -> `192*168*10*1`). Read-only (dimensions.md, \"DIMENSION 10 - IP address\").",
+          "description": "IPv4 address as four decimal octets `IP1*IP2*IP3*IP4` (192.168.10.1 -> `192*168*10*1`). Read-only (dimensions.md, \"DIMENSION 10 - IP address\"). CAUTION (crash evidence): requesting `*#13**10##`, `*#13**11##` or `*#13**12##` crashes a gateway daemon on H4684 020054 and MH200 020102 (own-firmware-oracle `who13-identification`, MyHOME#799), while F453, F453AV and MH200N ACK without a reply frame; identify the model via dimension 15 / WHO 1013 before querying 10..12.",
           "query": "*#13**10##",
           "write": ""
         },
         "11": {
           "name": "Netmask",
-          "description": "Network mask as four decimal octets `MASK1*MASK2*MASK3*MASK4` (255.255.255.0 -> `255*255*255*0`). Read-only (dimensions.md, \"DIMENSION 11 - Netmask\").",
+          "description": "Network mask as four decimal octets `MASK1*MASK2*MASK3*MASK4` (255.255.255.0 -> `255*255*255*0`). Read-only (dimensions.md, \"DIMENSION 11 - Netmask\"). CAUTION: `*#13**11##` crashes a daemon on H4684 020054 and MH200 020102 (`who13-identification`, MyHOME#799); identify via dimension 15 first.",
           "query": "*#13**11##",
           "write": ""
         },
         "12": {
           "name": "MAC Address",
-          "description": "MAC address as six decimal octets `MAC1*...*MAC6`, not hexadecimal text; format it at the presentation layer. Read-only (dimensions.md, \"DIMENSION 12 - MAC address\").",
+          "description": "MAC address as six decimal octets `MAC1*...*MAC6`, not hexadecimal text; format it at the presentation layer. Read-only (dimensions.md, \"DIMENSION 12 - MAC address\"). CAUTION: `*#13**12##` crashes a daemon on H4684 020054 and MH200 020102 (`who13-identification`, MyHOME#799; F459, F460, F461, MyHomeServer1 and 3488 answer `0*0*0*0` on factory config); identify via dimension 15 first.",
           "query": "*#13**12##",
+          "write": ""
+        },
+        "15": {
+          "name": "Device Type / Model",
+          "description": "Gateway model code `MODEL` (published table: 2 MHServer, 4 MH200, 6 F452, 7 F452V, 11 MHServer2, 13 H4684; later Linux IP gateways F450, F454, F459, F460, F461, MH202, MyHomeServer1 and 3488 all share 200, while F453, F453AV and MH200N report 0 in own-firmware-oracle `who13-identification`). Read-only; when `MODEL` is 200, continue identification with diagnostic `WHO 1013` dimension 1 (`*#1013**1##`) and keep its object-model namespace distinct (dimensions.md, \"DIMENSION 15 - Device type\").",
+          "query": "*#13**15##",
           "write": ""
         },
         "16": {
@@ -995,6 +1007,18 @@
           "description": "Combined clock `H*M*S*T*W*D*M*Y` (the payloads of dimensions 0 and 1). Read `*#13**22##`, write `*#13**#22*H*M*S*T*W*D*M*Y##` (dimensions.md, \"DIMENSION 22 - Date and time\"); the touchscreen writes it with an empty T and weekday 00.",
           "query": "*#13**22##",
           "write": "*#13**#22*<H>*<M>*<S>*<T>*<W>*<D>*<M>*<YYYY>##"
+        },
+        "23": {
+          "name": "Kernel Version",
+          "description": "Underlying OS kernel version `V*R*B` (version, release, build), distinct from the OpenWebNet server firmware in dimension 16; F453, F453AV and MH200N return an empty payload `*#13**23*##` (`who13-identification`). Read-only (dimensions.md, \"DIMENSION 23 - Kernel version\").",
+          "query": "*#13**23##",
+          "write": ""
+        },
+        "24": {
+          "name": "Distribution Version",
+          "description": "OS distribution version `V*R*B` (version, release, build); together with dimensions 16 and 23 exposes firmware, kernel and distribution layers. Read-only; MH202, F450, F459, F460 and F461 have been observed returning empty `*#13**24*##` and F454 bare `*#13**24##`, so parsers must tolerate missing fields (dimensions.md, \"DIMENSION 24 - Distribution version\"; `who13-identification`).",
+          "query": "*#13**24##",
+          "write": ""
         }
       },
       "examples": [
@@ -1011,7 +1035,7 @@
           "description": "Request the firmware version; reply `*#13**16*V*R*B##`"
         }
       ],
-      "notes": "Dimensions, payloads and access follow the published classic SCS/TCP WHO 13 registry as mirrored by the Encyclopedia (who-13-integration-gateway/dimensions.md, \"DIMENSION Reference\"): 0, 1, 22 are read / write, everything else read-only, and the registry defines no WHAT command (capabilities.md, \"Functional model\"); the earlier catalogue WHAT 1 \"Reboot gateway\" and the dimension 1 \"firmware\", 2 \"IP and netmask\", 3 \"MAC\", 4 \"uptime\" stubs had no source and were replaced. Not yet entered: dimension 15 (device type / model: 2 MHServer, 4 MH200, 6 F452, 7 F452V, 11 MHServer2, 13 H4684; an F454 and an MH202 both report 200), 23 (kernel version `V*R*B`), 24 (distribution version; an MH202 answers `*#13**24*##` empty), the TS10 touchscreen properties 9 (LAN enabled, R/W), 20 (PIC version), 50 / 51 / 52 (gateway, DNS), and the observed `*#13**40*4*0##` of unknown meaning on F454 / MH202. The ZigBee WHO 13 variant (WHAT 12 boot mode, 22 reset, 30..34 network, dimension 17 hardware version) is a separate registry."
+      "notes": "Dimensions, payloads and access follow the published classic SCS/TCP WHO 13 registry as mirrored by the Encyclopedia (who-13-integration-gateway/dimensions.md, \"DIMENSION Reference\"): all 11 published dimensions (0, 1, 10, 11, 12, 15, 16, 19, 22, 23, 24) are entered, 0 / 1 / 22 are read / write, everything else read-only, and the registry defines no WHAT command (capabilities.md, \"Functional model\"); the earlier catalogue WHAT 1 \"Reboot gateway\" and the dimension 1 \"firmware\", 2 \"IP and netmask\", 3 \"MAC\", 4 \"uptime\" stubs had no source and were replaced. Note that querying network dimensions 10, 11 or 12 crashes a daemon on H4684 020054 and MH200 020102 (`who13-identification`, MyHOME#799). Not yet entered (non-published extensions): the TS10 touchscreen properties 9 (LAN enabled, R/W), 20 (PIC version), 50 / 51 / 52 (gateway, DNS), the observed `*#13**40*4*0##` of unknown meaning on F454 / MH202, and `*#13**27##` (`#`-separated decimal ASCII model/machine descriptor, OWNd#139; emits malformed ACK-swallowing `*#13**27*#*#*1##` when unpopulated on MH200, MH200N and factory MyHomeServer1 028206 / 3488 030205, `who13-identification`). The ZigBee WHO 13 variant (WHAT 12 boot mode, 22 reset, 30..34 network, dimension 17 hardware version) is a separate registry."
     },
     {
       "who": 14,
@@ -1378,6 +1402,20 @@
       ],
       "description": "Energy Management: active power (dimension 113), energy/unit totalizers (51..54), historical series (511..514, started by WHAT 57 / 58 / 59 / 510), Energy Management actuator forcing and totalizers (WHAT 71 / 73 / 74 / 75, dimensions 71..73), Stop&Go status (250..263) and automatic reset (WHAT 26 / 27), and automatic updates (1200). Water / gas / heating counters and the power thresholds are TS10 touchscreen extensions.",
       "addressing": "WHERE encodes the device family (Encyclopedia who-18-energy-management/addressing.md, \"Published WHERE forms\"): '1N' Stop&Go, N = 1..127; '5N' Energy Management central unit / pulse counter / power meter (F520, F523, 3522), N = 1..255; '7N#0' Energy Management actuator (F522, F523), N = 1..255, the '#0' suffix being part of the address. No bare meter line '1'..'255', tariff probe or phase line '#1'..'#3' is in the document, and there is no broadcast inventory request. The TS10 touchscreen configurations address Stop&Go as '2N' (addressing.md, \"Historical Stop&Go address discrepancy\"), a product choice with no established gateway translation.",
+      "where_forms": [
+        {
+          "pattern": "^1([1-9]|[1-9][0-9]|1[01][0-9]|12[0-7])$",
+          "description": "Stop&Go 1{1} (1N family, N = {1})"
+        },
+        {
+          "pattern": "^5([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+          "description": "Energy Management meter / central unit / pulse counter 5{1} (5N family, N = {1})"
+        },
+        {
+          "pattern": "^7([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])#0$",
+          "description": "Energy Management actuator 7{1}#0 (7N#0 family, N = {1})"
+        }
+      ],
       "what_commands": {
         "21": "Stop&Go: open (TS10_1_0_23 touchscreen tests, not in WHO_18.pdf; Encyclopedia who-18-energy-management/what.md, \"Historical Stop&Go controls\")",
         "22": "Stop&Go: close (TS10 touchscreen, not in WHO_18.pdf)",
@@ -1387,17 +1425,17 @@
         "27": "Stop&Go: deactivate automatic reset (`*18*27*1N##`)",
         "28": "Stop&Go: enable tracking (TS10 touchscreen, not in WHO_18.pdf)",
         "29": "Stop&Go: disable tracking (TS10 touchscreen, not in WHO_18.pdf)",
-        "52#M#D": "TS10 older (8-bit packet) daily graph request for month M, day D; the old-PIC read form is `*#18*WHERE*56#M#D##` and the report dimension 56 (what.md, \"Historical graph request variants\"; not in WHO_18.pdf)",
-        "53#M": "TS10 older monthly-average graph request for month M; old-PIC read `*#18*WHERE*57#M##`, report dimension 57 (not in WHO_18.pdf)",
-        "56#M": "TS10 older monthly graph request for month M; old-PIC read `*#18*WHERE*510#M##`, report dimension 510 (not in WHO_18.pdf)",
-        "57#M#D": "Start the daily hourly series of month M, day D: `*18*57#M#D*WHERE##`, data in dimension 511 (tags 1..24 hourly, 25 daily total; what.md, \"Historical-series commands\")",
-        "58#M": "Start the monthly-average hourly series of month M: `*18*58#M*WHERE##`, data in dimension 512 (tags 1..24, 25 average total)",
-        "59#M": "Start the current-year monthly series of month M: `*18*59#M*WHERE##`, data in dimension 513 (tag = day 1..31)",
-        "510#M": "Start the previous-year monthly series of month M: `*18*510#M*WHERE##`, data in dimension 514 (tag = day 1..31). 57 / 58 / 59 / 510 are an enumerated set, not the interval 57..510",
+        "52": "TS10 older (8-bit packet) daily graph request (`*18*52#M#D*WHERE##`) for month M, day D; the old-PIC read form is `*#18*WHERE*56#M#D##` and the report dimension 56 (what.md, \"Historical graph request variants\"; not in WHO_18.pdf)",
+        "53": "TS10 older monthly-average graph request (`*18*53#M*WHERE##`) for month M; old-PIC read `*#18*WHERE*57#M##`, report dimension 57 (not in WHO_18.pdf)",
+        "56": "TS10 older monthly graph request (`*18*56#M*WHERE##`) for month M; old-PIC read `*#18*WHERE*510#M##`, report dimension 510 (not in WHO_18.pdf)",
+        "57": "Start the daily hourly series (`57#M#D`) of month M, day D: `*18*57#M#D*WHERE##`, data in dimension 511 (tags 1..24 hourly, 25 daily total; what.md, \"Historical-series commands\")",
+        "58": "Start the monthly-average hourly series (`58#M`) of month M: `*18*58#M*WHERE##`, data in dimension 512 (tags 1..24, 25 average total)",
+        "59": "Start the current-year monthly series (`59#M`) of month M: `*18*59#M*WHERE##`, data in dimension 513 (tag = day 1..31)",
+        "510": "Start the previous-year monthly series (`510#M`) of month M: `*18*510#M*WHERE##`, data in dimension 514 (tag = day 1..31). 57 / 58 / 59 / 510 are an enumerated set, not the interval 57..510",
         "71": "Enable the Energy Management actuator: `*18*71*7N#0##` (distinct from the dimension 71 status read)",
-        "73#Time": "Force the actuator for Time x 10 minutes, Time = 1..254 (`*18*73#15*71#0##` = 150 minutes); `*18*73*WHERE##` without Time requests the device's default forcing duration, not an indefinite forcing (what.md, \"Force for a specified time\")",
+        "73": "Force the actuator (`73#Time`) for Time x 10 minutes, Time = 1..254 (`*18*73#15*71#0##` = 150 minutes); `*18*73*WHERE##` without Time requests the device's default forcing duration, not an indefinite forcing (what.md, \"Force for a specified time\")",
         "74": "End the forcing: `*18*74*71#0##`",
-        "75#Tot_N": "Reset totalizer Tot_N = 1..2 of the actuator: `*18*75#1*71#0##`; its state is read with dimension 72#Tot_N"
+        "75": "Reset totalizer (`75#Tot_N`), Tot_N = 1..2 of the actuator: `*18*75#1*71#0##`; its state is read with dimension 72#Tot_N"
       },
       "dimensions": {
         "51": {
@@ -1408,7 +1446,7 @@
         },
         "52": {
           "name": "Monthly Energy/Unit Totalizer",
-          "description": "Energy/unit totalizer of month M of year Y (`*#18*WHERE*52#Y#M*Val##`, Y two-digit yy, M month; dimensions.md, \"DIMENSION 52\").",
+          "description": "Energy/unit totalizer of month M of year Y (`*#18*WHERE*52#Y#M*Val##`, Y two-digit yy 00..99, M month 1..12; dimensions.md, \"DIMENSION 52\"). CAUTION (crash evidence): `Y` MUST be two digits (`00..99`); a four-digit year (`*#18*51*52#2026#10##` or `*#18*51*52#2026#10*100##`) overflows the one-byte year field in the outbound `$006D1...` telegram and crashes a gateway daemon on F460 020012, F461 020011 and 3488 030205 (own-firmware-oracle `ownd-audit-frames`, `findings/audit-crash-frames.md`); OWNd (#157) refuses non-two-digit years on send (`destructive_frame`), and the bundled `oracle_index.json` predates `ownd-audit-frames`.",
           "query": "*#18*WHERE*52#Y#M##",
           "write": ""
         },
@@ -1541,7 +1579,7 @@
           "description": "Force actuator 71#0 for 15 x 10 = 150 minutes"
         }
       ],
-      "notes": "Published forms are those of WHO_18.pdf as mirrored by the Encyclopedia who-18-energy-management pages (addressing.md, what.md, dimensions.md). TS10_1_0_23 touchscreen extensions are marked as such: WHAT 21..24 / 28 / 29, the older graph commands 52#M#D / 53#M / 56#M with their old-PIC read dimensions 56 / 57 / 510, dimensions 212, 516, 517, the water / gas / heating current-value dimensions 1134 / 1130 / 1132 and the 1200 Types 2..4. The earlier catalogue dimensions 1..4 and 11 (instantaneous power, hourly / daily / monthly / lifetime totalizers in Wh) are in none of the document, the Encyclopedia or MyHOME and were removed: active power is 113 and the totalizers are 51..54 and 72. Not yet entered: the individual Stop&Go flags 252..257 and 259..263 (one bit each, dimensions.md, \"Individual Stop&Go flags\"), the TS10 dimensions 1130 / 1132 / 1134, and where_forms patterns for 1N / 5N / 7N#0."
+      "notes": "Published forms are those of WHO_18.pdf as mirrored by the Encyclopedia who-18-energy-management pages (addressing.md, what.md, dimensions.md). TS10_1_0_23 touchscreen extensions are marked as such: WHAT 21..24 / 28 / 29, the older graph commands 52#M#D / 53#M / 56#M with their old-PIC read dimensions 56 / 57 / 510, dimensions 212, 516, 517, the water / gas / heating current-value dimensions 1134 / 1130 / 1132 and the 1200 Types 2..4. The earlier catalogue dimensions 1..4 and 11 (instantaneous power, hourly / daily / monthly / lifetime totalizers in Wh) are in none of the document, the Encyclopedia or MyHOME and were removed: active power is 113 and the totalizers are 51..54 and 72. Not yet entered: the individual Stop&Go flags 252..257 and 259..263 (one bit each, dimensions.md, \"Individual Stop&Go flags\") and the TS10 dimensions 1130 / 1132 / 1134."
     },
     {
       "who": 22,

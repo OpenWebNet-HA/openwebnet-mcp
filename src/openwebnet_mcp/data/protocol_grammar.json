@@ -53,10 +53,10 @@
     },
     {
       "type": "DIMENSION_REQUEST",
-      "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*(?P<dimension>\\d+)##$",
-      "template": "*#WHO*WHERE*DIMENSION##",
+      "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*(?P<dimension>\\d+)(?P<dimension_param>(?:#\\d+)*)?##$",
+      "template": "*#WHO*WHERE*DIMENSION## or *#WHO*WHERE*DIMENSION#PARAM1#...##",
       "description": "Queries specific dimension parameter(s) from a device.",
-      "examples": ["*#4*1*0##", "*#18*1*1##", "*#13**1##"]
+      "examples": ["*#4*1*0##", "*#18*51*113##", "*#18*51*52#26#9##", "*#13**16##"]
     },
     {
       "type": "DIMENSION_WRITING",
@@ -70,7 +70,7 @@
       "pattern": "^\\*#(?P<who>\\d+)\\*(?P<where>#?\\d+)?(?P<where_param>(?:#\\d+)*)?\\*(?P<dimension>\\d+)(?P<dimension_param>(?:#\\d+)*)?(?P<dimension_value>(?:\\*\\d*)+)##$",
       "template": "*#WHO*WHERE*DIMENSION*VAL1*...*VALn##",
       "description": "Gateway reply to a dimension request conveying measured values or settings.",
-      "examples": ["*#4*1*0*0215##", "*#18*1*1*1450##"]
+      "examples": ["*#4*1*0*0215##", "*#18*51*113*1450##"]
     }
   ],
   "addressing_conventions": {
