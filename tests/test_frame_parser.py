@@ -197,10 +197,17 @@ def test_parse_cen_frames():
     assert "Target 21.5" in p_target.explanation
     assert "Heating mode" in p_target.explanation
 
-    # Rich dimension decoding: WHO 18 power
-    p_power = parser.parse("*#18*1*1*1450##")
+    # Rich dimension decoding: WHO 18 active power (Dimension 113, meter 51)
+    p_power = parser.parse("*#18*51*113*1450##")
     assert p_power.is_valid is True
+    assert p_power.warnings == []
     assert "1450 W" in p_power.explanation
+
+    # Unlisted WHO 18 Dimension 1 warns instead of decoding as active power
+    p_legacy = parser.parse("*#18*51*1*1450##")
+    assert p_legacy.is_valid is True
+    assert any("Dimension 1 is not officially documented" in w for w in p_legacy.warnings)
+    assert "1450 W" not in p_legacy.explanation
 
     # Rich dimension decoding: WHO 2 dimension 10 is <STATUS>*<LEVEL>*<PRIORITY>*<INFO> (WHO_2.pdf p. 19)
     p_cov = parser.parse("*#2*21*10*10*75*001*0##")
@@ -208,8 +215,12 @@ def test_parse_cen_frames():
     assert "Stop, 75% open, priority 001, info normal" in p_cov.explanation
     assert "10% open" not in p_cov.explanation
 
-    # WHO 18 totalizer
-    p_wh = parser.parse("*#18*1*52*12345##")
+    # WHO 18 monthly totalizer (Dimension 52#Y#M)
+    p_wh = parser.parse("*#18*51*52#26#9*12345##")
+    assert p_wh.is_valid is True
+    assert p_wh.warnings == []
+    assert p_wh.dimension == 52
+    assert p_wh.dimension_params == ["26", "9"]
     assert "12345 Wh" in p_wh.explanation
 
     # WHO 1 RGB and Kelvin
@@ -628,7 +639,8 @@ def test_who4_dimension_22_is_the_split_control_and_warns():
     for frame in ("*#4*3#2#1*22##", "*#4*2*22##", "*#4*1*22*1##"):
         parsed = parser.parse(frame)
         assert parsed.is_valid is True, frame
-        assert any("bt_termo" in w for w in parsed.warnings), frame
+        assert any("bt_termo" in w and "10 of 13" in w and "11 of 13" in w for w in parsed.warnings), frame
+        assert all("no replayed dimension 22 row" not in w for w in parsed.warnings), frame
         assert "Offset" not in parsed.explanation
 
     p_bad = parser.parse("*#4*3#2#1*22*7*abc##") if False else parser.parse("*#4*3#2#1*22*7*0215*9*2##")
@@ -788,3 +800,109 @@ def test_who4_301_and_311_t_m_are_not_commands():
     assert "target setpoint" not in p_311.explanation
     assert "duration" not in p_311.explanation
     assert "with parameters (0215, 60)" in p_311.explanation
+
+
+def test_parameterized_dimension_requests_and_who18_who13_parsing():
+    """Verify parameterized DIMENSION_REQUEST parsing, WHO 18 bare WHAT keys + where_forms +
+    dim 52 year-length warning + dim 72 decode, WHO 13 empty WHERE + dims 15/23/24, and
+    catalog examples across WHO 4, 13, and 18."""
+    from openwebnet_mcp.who_catalog import WhoCatalog
+
+    parser = FrameParser()
+
+    dim_req_cases = [
+        ("*#18*51*52#26#9##", 52, ["26", "9"]),
+        ("*#18*71#0*72#1##", 72, ["1"]),
+        ("*#18*51*511#10#1##", 511, ["10", "1"]),
+        ("*#18*51*512#10##", 512, ["10"]),
+        ("*#18*51*513#10##", 513, ["10"]),
+        ("*#18*51*514#10##", 514, ["10"]),
+        ("*#18*51*517#1##", 517, ["1"]),
+    ]
+    for frame, expected_dim, expected_params in dim_req_cases:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True, frame
+        assert parsed.frame_type == "DIMENSION_REQUEST", frame
+        assert parsed.dimension == expected_dim, frame
+        assert parsed.dimension_params == expected_params, frame
+        assert parsed.warnings == [], (frame, parsed.warnings)
+        assert f"[dimension parameter #{('#'.join(expected_params))}]" in parsed.explanation, frame
+
+    p_undoc_dim_param = parser.parse("*#4*11*15#1##")
+    assert p_undoc_dim_param.is_valid is True
+    assert p_undoc_dim_param.frame_type == "DIMENSION_REQUEST"
+    assert p_undoc_dim_param.dimension == 15
+    assert p_undoc_dim_param.dimension_params == ["1"]
+    assert any("Dimension 15 is not officially documented" in w for w in p_undoc_dim_param.warnings)
+
+    who18_what_cases = [
+        ("*18*52#10#1*51##", None),
+        ("*18*53#10*51##", None),
+        ("*18*56#10*51##", None),
+        ("*18*57#10#1*51##", None),
+        ("*18*58#10*51##", None),
+        ("*18*59#10*51##", None),
+        ("*18*510#10*51##", None),
+        ("*18*73#15*71#0##", "Energy Management actuator 71#0"),
+        ("*18*73*71#0##", "Energy Management actuator 71#0"),
+        ("*18*75#1*71#0##", "Energy Management actuator 71#0"),
+    ]
+    for frame, expected_substr in who18_what_cases:
+        parsed = parser.parse(frame)
+        assert parsed.is_valid is True, frame
+        assert parsed.warnings == [], (frame, parsed.warnings)
+        if expected_substr:
+            assert expected_substr in parsed.explanation, frame
+
+    for good_where, expected_family in (
+        ("*#18*11*113##", "Stop&Go 11 (1N family, N = 1)"),
+        ("*#18*1127*113##", "Stop&Go 1127 (1N family, N = 127)"),
+        ("*#18*51*113##", "5N family, N = 1"),
+        ("*#18*5255*113##", "5N family, N = 255"),
+        ("*#18*71#0*71##", "Energy Management actuator 71#0 (7N#0 family, N = 1)"),
+        ("*#18*7255#0*71##", "Energy Management actuator 7255#0 (7N#0 family, N = 255)"),
+    ):
+        parsed = parser.parse(good_where)
+        assert parsed.is_valid is True, good_where
+        assert parsed.warnings == [], (good_where, parsed.warnings)
+        assert expected_family in parsed.explanation, (good_where, parsed.explanation)
+
+    for bad_where in ("*#18*10*113##", "*#18*1128*113##", "*#18*50*113##", "*#18*5256*113##", "*#18*71#1*71##", "*#18*7256#0*71##"):
+        parsed = parser.parse(bad_where)
+        assert parsed.is_valid is True, bad_where
+        assert "family" not in parsed.explanation, (bad_where, parsed.explanation)
+        assert "address '" in parsed.explanation, (bad_where, parsed.explanation)
+
+    for bad_dim52 in ("*#18*51*52#2026#10##", "*#18*51*52#2026#10*100##"):
+        parsed = parser.parse(bad_dim52)
+        assert parsed.is_valid is True, bad_dim52
+        assert any("F460" in w and "3488" in w and "ownd-audit-frames" in w for w in parsed.warnings), (bad_dim52, parsed.warnings)
+
+    for good_dim52 in ("*#18*51*52#26#9##", "*#18*51*52#26#9*100##"):
+        parsed = parser.parse(good_dim52)
+        assert parsed.is_valid is True, good_dim52
+        assert parsed.warnings == [], (good_dim52, parsed.warnings)
+
+    p_dim72 = parser.parse("*#18*71#0*72#1*450*15*10*26*14*30##")
+    assert p_dim72.is_valid is True
+    assert p_dim72.warnings == []
+    assert "450 Wh since 15/10/26 14:30" in p_dim72.explanation
+
+    for dim in ("15", "16", "23", "24"):
+        p_13 = parser.parse(f"*#13**{dim}##")
+        assert p_13.is_valid is True
+        assert p_13.where == ""
+        assert p_13.warnings == []
+        assert "the local gateway (empty WHERE)" in p_13.explanation
+
+    p_1013 = parser.parse("*#1013**1##")
+    assert p_1013.is_valid is True
+    assert p_1013.where == ""
+    assert "empty WHERE" in p_1013.explanation
+
+    catalog = WhoCatalog()
+    for who_num in (4, 13, 18):
+        for ex in catalog.get_family(who_num)["examples"]:
+            parsed = parser.parse(ex["frame"])
+            assert parsed.is_valid is True, (who_num, ex["frame"], parsed.errors)
+            assert parsed.warnings == [], (who_num, ex["frame"], parsed.warnings)

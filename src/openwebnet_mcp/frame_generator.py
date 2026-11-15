@@ -146,7 +146,7 @@ class FrameGenerator:
           the set-point write (``*#4*#Z*#14*T*M##``, p. 8). ``zone=0`` is the
           central unit itself (``#0``: ``*4*303*#0##`` p. 24, ``*4*102*#0##``
           p. 27, ``*4*202*#0##`` p. 26, ``*#4*#0*#14*T*M##`` p. 23). Five of
-          the twelve firmware-oracle gateways (F453, F453AV, H4684, MH200,
+          the thirteen firmware-oracle gateways (F453, F453AV, H4684, MH200,
           MH200N) NACK a bare-zone set-point write on such a plant.
         * ``standalone=True``: thermostats without a central unit (4691 on
           the live F461 plant, the MyHomeServer1 plant of issue 466). They

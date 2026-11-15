@@ -28,7 +28,7 @@ _RE_STATUS_REQUEST = re.compile(
     r"^\*#(?P<who>\d+)(?:\*(?P<where>#?\d+)(?P<where_param>(?:#\d+)*))?##$"
 )
 _RE_DIMENSION_REQUEST = re.compile(
-    r"^\*#(?P<who>\d+)\*(?P<where>#?\d+)?(?P<where_param>(?:#\d+)*)?\*(?P<dimension>\d+)##$"
+    r"^\*#(?P<who>\d+)\*(?P<where>#?\d+)?(?P<where_param>(?:#\d+)*)?\*(?P<dimension>\d+)(?P<dimension_param>(?:#\d+)*)?##$"
 )
 _RE_DIMENSION_WRITING = re.compile(
     r"^\*#(?P<who>\d+)\*(?P<where>#?\d+)?(?P<where_param>(?:#\d+)*)?\*#(?P<dimension>\d+)(?P<dimension_param>(?:#\d+)*)?(?P<dimension_value>(?:\*\d*)+)##$"
@@ -154,7 +154,7 @@ class FrameParser:
             result.is_valid = True
             result.frame_type = "DIMENSION_WRITING"
             result.who = int(m_dim_w.group("who"))
-            result.where = m_dim_w.group("where") or "0"
+            result.where = m_dim_w.group("where") or ""
             result.where_params = [p for p in (m_dim_w.group("where_param") or "").split("#") if p]
             result.dimension = int(m_dim_w.group("dimension"))
             result.dimension_params = [p for p in (m_dim_w.group("dimension_param") or "").split("#") if p]
@@ -171,7 +171,7 @@ class FrameParser:
             result.is_valid = True
             result.frame_type = "DIMENSION_REPLY"
             result.who = int(m_dim_r.group("who"))
-            result.where = m_dim_r.group("where") or "0"
+            result.where = m_dim_r.group("where") or ""
             result.where_params = [p for p in (m_dim_r.group("where_param") or "").split("#") if p]
             result.dimension = int(m_dim_r.group("dimension"))
             result.dimension_params = [p for p in (m_dim_r.group("dimension_param") or "").split("#") if p]
@@ -185,9 +185,10 @@ class FrameParser:
             result.is_valid = True
             result.frame_type = "DIMENSION_REQUEST"
             result.who = int(m_dim_req.group("who"))
-            result.where = m_dim_req.group("where") or "0"
+            result.where = m_dim_req.group("where") or ""
             result.where_params = [p for p in (m_dim_req.group("where_param") or "").split("#") if p]
             result.dimension = int(m_dim_req.group("dimension"))
+            result.dimension_params = [p for p in (m_dim_req.group("dimension_param") or "").split("#") if p]
             self._enrich(result)
             return result
 
@@ -246,6 +247,8 @@ class FrameParser:
         where_desc = self._describe_where(parsed.where, parsed.where_params, who=parsed.who, dimension=parsed.dimension)
         if parsed.who == 4:
             self._validate_who4(parsed)
+        elif parsed.who == 18:
+            self._validate_who18(parsed)
 
         if parsed.frame_type == "STATUS_REQUEST":
             parsed.explanation = f"Query status of {subsystem} at {where_desc}"
@@ -262,7 +265,7 @@ class FrameParser:
             # `"query": ""` for a write-only one; the warnings follow those
             # fields so they cannot drift from the documented forms. Gated on
             # WHO 2 until the other families are audited against the
-            # Encyclopedia: WHO 13's dimension 1 stub (really the R/W date)
+            # Encyclopedia: WHO 13's dimension 1 (the R/W date, `*#13**#1*W*D*M*Y##`)
             # and WHO 4's `#20` / `#0` monitor echoes (`*#4*2#1*#20*1##`,
             # `*#4*50*#0*0215##`, real F461 / MyHomeServer1 traffic) must not
             # warn nor lose their semantic decode.
@@ -291,8 +294,13 @@ class FrameParser:
                     f"Write it with {dim_meta.get('write') or 'its write form'}."
                 )
 
+            dim_param_suffix = (
+                f" [dimension parameter #{'#'.join(parsed.dimension_params)}]"
+                if parsed.dimension_params
+                else ""
+            )
             if parsed.frame_type == "DIMENSION_REQUEST":
-                parsed.explanation = f"Request {dim_name} from {subsystem} at {where_desc}"
+                parsed.explanation = f"Request {dim_name}{dim_param_suffix} from {subsystem} at {where_desc}"
             else:
                 vals = ", ".join(parsed.dimension_values)
                 semantic = (
@@ -302,9 +310,9 @@ class FrameParser:
                 )
                 semantic_suffix = f" ({semantic})" if semantic else ""
                 if parsed.frame_type == "DIMENSION_WRITING":
-                    parsed.explanation = f"Write values [{vals}]{semantic_suffix} to {dim_name} for {subsystem} at {where_desc}"
+                    parsed.explanation = f"Write values [{vals}]{semantic_suffix} to {dim_name}{dim_param_suffix} for {subsystem} at {where_desc}"
                 else:
-                    parsed.explanation = f"{subsystem} reports {dim_name} = [{vals}]{semantic_suffix} for {where_desc}"
+                    parsed.explanation = f"{subsystem} reports {dim_name}{dim_param_suffix} = [{vals}]{semantic_suffix} for {where_desc}"
             return
 
         if parsed.frame_type in ("STATUS_EVENT", "COMMAND_TRANSLATION"):
@@ -432,9 +440,13 @@ class FrameParser:
 
         # WHO 18: Energy management
         elif who == 18:
-            if dimension == 1 and values:
+            if dimension == 113 and values:
                 return f"{values[0]} W"
-            elif dimension == 52 and values:
+            elif dimension in (51, 52, 53, 54) and values:
+                return f"{values[0]} Wh"
+            elif dimension == 72 and values:
+                if len(values) >= 6:
+                    return f"{values[0]} Wh since {values[1]}/{values[2]}/{values[3]} {values[4]}:{values[5]}"
                 return f"{values[0]} Wh"
 
         # WHO 1: Lighting
@@ -824,12 +836,13 @@ class FrameParser:
         """Emit protocol/firmware warnings for unsupported or crashing WHO=4 WHERE forms."""
         if parsed.dimension == 22:
             parsed.warnings.append(
-                "WHO=4 dimension 22 (split control) crashes Linux IP gateways: on the live F461 020011 "
-                "*#4*2*22## killed the bt_termo thermoregulation daemon and the watchdog rebooted the gateway "
-                "about 3 minutes later (own-firmware-oracle tools/expected_divergences.yaml); OWNd (#136) "
-                "refuses to send any WHO 4 dimension 22 frame as a safety guard (destructive_frame). "
-                "oracle_index.json has no replayed dimension 22 row, so the 3#Z#N form and the other Linux "
-                "gateways are untested, and the oracle pre-flight does not catch it."
+                "WHO=4 dimension 22 (split control) crashes gateway thermoregulation daemons on non-actuator WHERE "
+                "forms: on the live F461 020011 *#4*2*22## killed the bt_termo daemon and the watchdog rebooted the "
+                "gateway about 3 minutes later, and own-firmware-oracle suite thermo-dim22 confirms nack, crash on "
+                "10 of 13 emulated gateways for *#4*Z*22##, *#4*#0*22##, *#4*0*22## and *#4*Z*#22*...## (while the "
+                "published split form 3#Z#N goes out on 11 of 13 without crashing; H4684 and MH200 NACK it silently). "
+                "OWNd (#136) refuses to send any WHO 4 dimension 22 frame as a safety guard (destructive_frame), and "
+                "the bundled oracle_index.json predates thermo-dim22."
             )
         wp = parsed.where_params
         if "4" in wp and not cls._is_who4_split_where(parsed.where, wp, parsed.dimension):
@@ -845,14 +858,14 @@ class FrameParser:
                 ):
                     parsed.warnings.append(
                         f"WHO=4 #4#{iface} interface routing is not implemented in gateway translators "
-                        "(0 of 12 emulated gateways emit $06EC/$06E4 sub-bus frames). Worse, MH202 (010024) "
+                        "(0 of 13 emulated gateways emit $06EC/$06E4 sub-bus frames). Worse, MH202 (010024) "
                         f"misparses 3-token *#4*{parsed.where}#4#{iface}## (tested on 2#4#01; static range "
                         "01..09 in libthermo.so) as actuator address M#Z#N and crashes coso with SIGSEGV."
                     )
                 else:
                     parsed.warnings.append(
                         f"WHO=4 #4#{iface} interface routing is not implemented in gateway translators: "
-                        "0 of 12 emulated gateways emit $06EC/$06E4 sub-bus frames (gateways either NACK/drop "
+                        "0 of 13 emulated gateways emit $06EC/$06E4 sub-bus frames (gateways either NACK/drop "
                         f"or truncate WHERE at '#' to local zone {parsed.where} on the main bus; MH202 010024 "
                         "misparses tested 2#4#01 / 2#1#4#01 as local zone 4 actuator 1, static range 1..9)."
                     )
@@ -872,6 +885,19 @@ class FrameParser:
                 "SIGSEGV (confirmed on *#4*2#1##; static range 1..9 in libthermo.so). "
                 f"Query Dimension 20 instead (*#4*{parsed.where}#{wp[0]}*20## or *#4*#0*20##)."
             )
+
+    @staticmethod
+    def _validate_who18(parsed: ParsedFrame) -> None:
+        """Emit protocol/firmware warnings for crashing WHO=18 forms."""
+        if parsed.dimension == 52 and parsed.dimension_params:
+            year_str = parsed.dimension_params[0]
+            if len(year_str) > 2:
+                parsed.warnings.append(
+                    f"WHO=18 dimension 52 requires a two-digit year yy (00..99), got {year_str!r}: "
+                    "a four-digit year (*#18*51*52#2026#10##) overflows the one-byte year field and crashes "
+                    "a gateway daemon on F460 (020012), F461 (020011) and 3488 (030205) "
+                    "(own-firmware-oracle ownd-audit-frames); OWNd (#157) refuses non-two-digit years."
+                )
 
     def _describe_where(
         self, where: str | None, where_params: list[str], who: int | None = None, dimension: int | None = None
@@ -907,6 +933,9 @@ class FrameParser:
             declared = self._describe_where_form(family, where, where_params)
             if declared:
                 return declared
+
+        if where == "":
+            return "empty WHERE" + self._describe_routing(where_params)
 
         if where == "0":
             return "General (all devices)"
